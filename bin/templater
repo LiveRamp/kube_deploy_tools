@@ -1,0 +1,173 @@
+#!/usr/bin/env ruby
+# Utility for templating Kubernetes manifests with ERB.
+#
+# Example usage:
+#
+# templater \
+# --template kubernetes/ds-datadog.yaml.erb \
+# --set environment=staging \
+# --set tag=$(git rev-parse --short=7 HEAD) \
+# --values staging.yaml \
+# > pkg/kubernetes/ds-datadog.yaml
+#
+# Templater accepts either a file or directory for --template,
+# and an output file or directory for --output:
+#
+# templater \
+#   --template kubernetes/ \
+#   --output pkg/kubernetes/
+#
+# Values can be passed to templater to expose variables available in
+# the ERB templates, such as a git tag or the environment name.
+# Values can be passed with:
+# * 1 or more key-value pairs e.g. --set git_tag=123456 --set environment=local
+# * a YAML file e.g. --values production.yaml
+
+require 'erb'
+require 'ostruct'
+require 'yaml'
+require 'optparse'
+
+class Object
+  def present?
+    self && to_s.strip != ''
+  end
+
+  def blank?
+    !present?
+  end
+end
+
+class Templater
+  def template_out(template, values, outputFile = nil)
+    output = render_erb_with_hash File.read(template), values
+    if !outputFile
+      $stdout.puts output
+    else
+      File.open(outputFile, "w") { |f| f << output }
+    end
+  end
+
+  def render_erb_with_hash(template, values)
+    begin
+      renderer = ERB.new(template)
+      config = OpenStruct.new(values)
+      renderer.result(binding)
+    rescue Exception => e
+      raise "Error rendering template #{template} with #{values}: #{e}"
+    end
+  end
+
+  def template(template, values, maybeOutput)
+    if File.file?(template)
+      if maybeOutput.present? && File.directory?(maybeOutput)
+        output = File.join(maybeOutput, File.basename(template, ".erb"))
+      end
+      template_out(template, values, output)
+    elsif File.directory?(template)
+      # Get all .yaml.erb or .yaml files one level deep
+      files = Dir[File.join(template, '*{.yaml.erb,.yaml}')]
+      files.each do |file|
+        next if File.directory?(file)
+        if maybeOutput.present? && File.directory?(maybeOutput)
+          output = File.join(maybeOutput, File.basename(file, ".erb"))
+        end
+        template_out(file, values, output)
+        if maybeOutput.blank? && ! file.equal?(files.last)
+          puts "---"
+        end
+      end
+    else
+      raise 'Unexpected error: --template is neither a file nor directory'
+    end
+  end
+end
+
+class Optparser
+
+  class TemplaterOptions
+    attr_accessor :template, :output, :values_config,
+                  :values_config_file, :values, :values_from_yaml,
+                  :values_from_flags, :values_from_config
+
+    def initialize
+      self.values_config_file = './templater_config.rb'
+
+      # Values available in the ERB template to be merged
+      self.values = {}
+      self.values_from_yaml = {}
+      self.values_from_flags = {}
+      self.values_from_config = {}
+    end
+
+    def define_options(parser)
+      parser.on('-tFILEPATH', '--template FILEPATH', 'The template file or directory FILEPATH') do |f|
+        self.template = f
+      end
+
+      parser.on('-vFILENAME', '--values FILENAME', 'Set template variables from the values in a YAML file, FILENAME') do |f|
+        raise "Cannot find --values FILENAME '#{f}'" unless File.file?(f)
+        self.values_from_yaml = YAML::load(File.read(f))
+      end
+
+      parser.on('-sKEY=VALUE', '--set KEY=VALUE', 'Set a template variable with KEY=VALUE') do |kv|
+        raise "Cannot parse --set KEY=VALUE '#{kv}'" unless kv.include? '='
+        k, v = *kv.split("=")
+        self.values_from_flags[k] = v
+      end
+
+      parser.on('-cCONFIG', '--values-config CONFIG', 'Set template variables from the values for a configuration, CONFIG') do |config|
+        self.values_config = config
+      end
+
+      parser.on('-oFILEPATH', '--output FILEPATH', 'Set the output file or directory FILEPATH. Default output is to stdout.') do |f|
+        self.output = f
+      end
+    end
+
+    def require_options
+      raise 'Must provide --template' unless template.present?
+      raise "Cannot find --template FILEPATH '#{template}'" unless File.file?(template) || File.directory?(template)
+      raise "Expected --template FILEPATH '#{template}' to end with .yaml.erb" unless !File.file?(template) || template.end_with?(".yaml.erb")
+      raise '--output FILEPATH must be a directory if --template FILEPATH is a directory' if output.present? && File.directory?(template) && ! File.directory?(output)
+      raise "Expected --output FILEPATH to be a directory or a new file location" unless output.blank? || !File.file?(output) || File.directory?(output)
+    end
+
+    def merge_values
+      # merge values from yaml
+      self.values = self.values.merge(self.values_from_yaml)
+
+      # merge values from flags
+      self.values = self.values.merge(self.values_from_flags)
+
+      warn 'Warning: No values provided from --values, --set' unless ! self.values.empty?
+    end
+
+  end
+
+  def parse(args)
+    @options = TemplaterOptions.new
+    OptionParser.new do |parser|
+      @options.define_options(parser)
+      parser.parse!(args)
+      @options.require_options
+    end
+    @options
+  end
+end
+
+def options
+  $options ||= begin
+    parser = Optparser.new
+    ops = parser.parse(ARGV)
+    ops.merge_values
+    ops
+  end
+end
+
+def add_values_config(values_config, &values_from_config)
+  $options.values_from_config[values_config.to_s] = values_from_config
+end
+
+templater = Templater.new
+templater.template(options.template, options.values, options.output)

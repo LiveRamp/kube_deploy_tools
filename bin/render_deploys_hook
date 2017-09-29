@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+# Default rendering hook. Uses built in `templater` to render out all files
+# underneath kubernetes/ directory, recursively.
+
+require 'yaml'
+
+config = ARGV[0]
+output_root = ARGV[1]
+
+# Locate templater.
+TEMPLATER = File.join(File.dirname(__FILE__), 'templater')
+TEMPLATING_SUFFIX = '.erb'
+
+prefix = 'kubernetes/'
+Dir["#{prefix}**/*.y*ml*"].each do |yml|
+  # PREFIX/b/c/foo.yml.in -> foo.yml
+  output_base = File.basename(yml, TEMPLATING_SUFFIX)
+
+  # PREFIX/b/c/foo.yml.in -> b/c
+  subdir = File.dirname(yml[prefix.size..-1])
+
+  # PREFIX/b/c/foo.yml.in -> output/b/c/foo.yml
+  output_dir = File.join(output_root, subdir)
+  output_file = File.join(output_dir, output_base)
+
+  FileUtils.mkdir_p output_dir
+
+  if yml.end_with? TEMPLATING_SUFFIX
+    # File needs to be templated with templater.
+    cmd = [TEMPLATER, '--values', config, '--template', yml]
+    inp = IO.popen(cmd)
+    out = File.open(output_file, 'w')
+
+    FileUtils.copy_stream(inp, out)
+    out.close
+    inp.close
+
+    raise "Error running #{cmd}: exit status #{$?}" unless $? == 0
+  else
+    # File is not templatable, and is copied verbatim.
+    FileUtils.copy(yml, output_file)
+  end
+
+  # Bonus: YAML validate the output.
+  begin
+    YAML.load(File.read(output_file))
+  rescue => e
+    raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"
+  end
+end

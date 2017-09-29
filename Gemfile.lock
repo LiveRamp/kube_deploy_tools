@@ -1,0 +1,34 @@
+PATH
+  remote: .
+  specs:
+    kube_deploy_tools (1.0.0)
+
+GEM
+  remote: https://gemserver.***REMOVED***/
+  specs:
+    diff-lcs (1.3)
+    rake (12.0.0)
+    rspec (3.5.0)
+      rspec-core (~> 3.5.0)
+      rspec-expectations (~> 3.5.0)
+      rspec-mocks (~> 3.5.0)
+    rspec-core (3.5.4)
+      rspec-support (~> 3.5.0)
+    rspec-expectations (3.5.0)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.5.0)
+    rspec-mocks (3.5.0)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.5.0)
+    rspec-support (3.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  kube_deploy_tools!
+  rake
+  rspec (>= 2.0.0)
+
+BUNDLED WITH
+   1.14.6
