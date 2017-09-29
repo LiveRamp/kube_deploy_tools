@@ -1,17 +1,16 @@
 #!/usr/bin/env ruby
 #
 # Run from the root of a repository. |deploy.json| is expected to exist there.
-# Generates all deploys based on permutations defined in deploy.json combined
+# Generates all deploys based on permutations defined in deploy.yml combined
 # with cluster configuration from kube_deploy_tools.
 
 require 'erb'
-require 'json'
 require 'yaml'
 
 require 'cluster_config'
 
 DEFAULT_HOOK_SCRIPT_NAME = 'render_deploys_hook'
-MANIFEST_FILE = 'deploy.json'
+MANIFEST_FILE = 'deploy.yml'
 
 class RenderDeploys
   def initialize(manifest, output_dir)
@@ -26,7 +25,7 @@ class RenderDeploys
     FileUtils.rm_rf @output_dir
     FileUtils.mkdir_p @output_dir
 
-    @manifest = JSON.parse(File.read(manifest)).fetch('deploy')
+    @manifest = YAML.load(File.read(manifest)).fetch('deploy')
   end
 
   def render
@@ -111,5 +110,6 @@ class RenderDeploys
   end
 end
 
-app = RenderDeploys.new('deploy.json', File.expand_path('pkg'))
+# TODO(joshk): Make each of these customizable
+app = RenderDeploys.new(MANIFEST_FILE, File.expand_path('pkg'))
 app.render
