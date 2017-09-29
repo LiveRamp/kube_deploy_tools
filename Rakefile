@@ -6,7 +6,7 @@ include LiveRamp::Gem_publish
 LiveRamp.load_publish_tasks
 
 LiveRamp::Gem_publish.gem_versionfile = './version.rb'
-LiveRamp::Gem_publish.gem_to_publish= Gem::Specification.load("rapleaf_types.gemspec")
+LiveRamp::Gem_publish.gem_to_publish= Gem::Specification.load("kube_deploy_tools.gemspec")
 
 task :default => [:autopublish]
 
