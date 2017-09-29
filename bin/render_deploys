@@ -19,6 +19,9 @@ class RenderDeploys
       raise "Can't read deploy manifest: #{manifest}"
     end
 
+    @project = ENV['JOB_ID'] || File.basename(`git config remote.origin.url`.chomp, '.git')
+    @build_number = ENV['BUILD_ID'] || DateTime.now.strftime('%Y%m%d%H%M%S')
+
     @output_dir = output_dir
     FileUtils.rm_rf @output_dir
     FileUtils.mkdir_p @output_dir
@@ -75,6 +78,12 @@ class RenderDeploys
 
         # TODO(joshk): Run in parallel.
         call_hook(rendered.path, flavor_dir)
+
+        # Pack up contents of each flavor_dir to a correctly named artifact tarball.
+        tarball = "manifests_#{@project}_#{@build_number}_#{target}_#{env}_#{flavor}.tar.gz"
+        tarball_full_path = File.join(@output_dir, tarball)
+        check_call(['tar', '-C', flavor_dir, '-czf', tarball_full_path, '.'])
+        puts "generated manifest archive: #{tarball_full_path}"
       end
     end
   end
@@ -82,9 +91,7 @@ class RenderDeploys
   def call_hook(config, output)
     # Retrieve hook definition.
     hook = @manifest['hook_script'] || File.join(File.dirname(__FILE__), DEFAULT_HOOK_SCRIPT_NAME)
-    cmd = [hook, config, output]
-    ok = system(*cmd)
-    raise "Failed to run #{cmd}: exit status #{$?}" unless ok
+    check_call([hook, config, output])
   end
 
   def render_erb_flags(flags)
@@ -96,6 +103,11 @@ class RenderDeploys
     end
 
     result
+  end
+
+  def check_call(cmd)
+    ok = system(*cmd)
+    raise "Failed to run #{cmd}: exit status #{$?}" unless ok
   end
 end
 
