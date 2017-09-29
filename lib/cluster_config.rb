@@ -23,7 +23,7 @@ CLUSTERS = {
   },
   'us-east-1' => {
     'prod' => {
-      'kube_context' => '#{username}@prod.us-east-1.k8s.***REMOVED***',
+      'kube_context' => '<%= username %>@prod.us-east-1.k8s.***REMOVED***',
       'flags' => {
         'cloud' => 'aws',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
@@ -31,7 +31,7 @@ CLUSTERS = {
       }
     },
     'staging' => {
-      'kube_context' => '#{username}@staging.us-east-1.k8s.***REMOVED***',
+      'kube_context' => '<%= username %>@staging.us-east-1.k8s.***REMOVED***',
       'flags' => {
         'cloud' => 'aws',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
@@ -41,7 +41,7 @@ CLUSTERS = {
   },
   'colo-service' => {
     'prod' => {
-      'kube_context' => '#{username}@prod.service',
+      'kube_context' => '<%= username %>@prod.service',
       'flags' => {
         'cloud' => 'colo',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
@@ -49,7 +49,7 @@ CLUSTERS = {
       }
     },
     'staging' => {
-      'kube_context' => '#{username}@staging.service',
+      'kube_context' => '<%= username %>@staging.service',
       'flags' => {
         'cloud' => 'colo',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
