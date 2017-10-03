@@ -40,7 +40,7 @@ end
 
 class Templater
   def template_out(template, values, outputFile = nil)
-    output = render_erb_with_hash File.read(template), values
+    output = render_erb_with_hash template, values
     if !outputFile
       $stdout.puts output
     else
@@ -50,7 +50,7 @@ class Templater
 
   def render_erb_with_hash(template, values)
     begin
-      renderer = ERB.new(template)
+      renderer = ERB.new(File.read(template))
       config = OpenStruct.new(values)
       renderer.result(binding)
     rescue Exception => e
