@@ -51,6 +51,4 @@ def main(argv)
   render_deploys(config, output_root)
 end
 
-if __FILE__ == $0
-  main(ARGV)
-end
+main(ARGV)
