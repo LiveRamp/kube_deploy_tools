@@ -50,14 +50,14 @@ class RenderDeploys
     }
 
     clusters.each do |c|
-      cluster = c.fetch('cluster')
+      target = c.fetch('target')
       env = c.fetch('environment')
 
-      # Get metadata for this cluster/environment pair.
-      cluster = CLUSTERS.fetch(cluster).fetch(env)
+      # Get metadata for this target/environment pair.
+      cluster = CLUSTERS.fetch(target).fetch(env)
       cluster_flags = root_flags.clone
 
-      cluster_flags.update('cluster': cluster, 'environment': env)
+      cluster_flags.update('target': target, 'environment': env)
       cluster_flags.merge!(render_erb_flags(cluster['flags']))
       cluster_flags.merge!(render_erb_flags(c['extra_flags'])) if c['extra_flags']
 
@@ -72,14 +72,14 @@ class RenderDeploys
 
         # Call individual templating hook with the rendered configuration
         # and a prefix to place all the files.
-        flavor_dir = File.join(@output_dir, cluster, env, flavor)
+        flavor_dir = File.join(@output_dir, target, env, flavor)
         FileUtils.mkdir_p flavor_dir
 
         # TODO(joshk): Run in parallel.
         call_hook(rendered.path, flavor_dir)
 
         # Pack up contents of each flavor_dir to a correctly named artifact tarball.
-        tarball = "manifests_#{@project}_#{@build_number}_#{cluster}_#{env}_#{flavor}.tar.gz"
+        tarball = "manifests_#{@project}_#{@build_number}_#{target}_#{env}_#{flavor}.tar.gz"
         tarball_full_path = File.join(@output_dir, tarball)
         check_call(['tar', '-C', flavor_dir, '-czf', tarball_full_path, '.'])
         puts "generated manifest archive: #{tarball_full_path}"
