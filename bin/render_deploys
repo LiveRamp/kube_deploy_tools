@@ -132,5 +132,5 @@ class RenderDeploys
 end
 
 # TODO(joshk): Make each of these customizable
-app = RenderDeploys.new(MANIFEST_FILE, File.expand_path('pkg'))
+app = RenderDeploys.new(MANIFEST_FILE, File.expand_path('pkg/kubernetes'))
 app.render
