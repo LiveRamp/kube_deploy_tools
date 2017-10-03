@@ -24,7 +24,6 @@
 # * a YAML file e.g. --values production.yaml
 
 require 'erb'
-require 'ostruct'
 require 'yaml'
 require 'optparse'
 
@@ -48,38 +47,22 @@ class Templater
     end
   end
 
-  def render_erb_with_hash(template, values)
+  def render_erb_with_hash(template, config)
     begin
       renderer = ERB.new(File.read(template))
-      config = OpenStruct.new(values)
       renderer.result(binding)
     rescue Exception => e
-      raise "Error rendering template #{template} with #{values}: #{e}"
+      raise "Error rendering template #{template} with #{config}: #{e}"
     end
   end
 
   def template(template, values, maybeOutput)
-    if File.file?(template)
-      if maybeOutput.present? && File.directory?(maybeOutput)
-        output = File.join(maybeOutput, File.basename(template, ".erb"))
-      end
-      template_out(template, values, output)
-    elsif File.directory?(template)
-      # Get all .yaml.erb or .yaml files one level deep
-      files = Dir[File.join(template, '*{.yaml.erb,.yaml}')]
-      files.each do |file|
-        next if File.directory?(file)
-        if maybeOutput.present? && File.directory?(maybeOutput)
-          output = File.join(maybeOutput, File.basename(file, ".erb"))
-        end
-        template_out(file, values, output)
-        if maybeOutput.blank? && ! file.equal?(files.last)
-          puts "---"
-        end
-      end
-    else
-      raise 'Unexpected error: --template is neither a file nor directory'
+    raise 'Unexpected error: --template is neither a file nor directory' unless File.file?(template)
+
+    if maybeOutput.present? && File.directory?(maybeOutput)
+      output = File.join(maybeOutput, File.basename(template, ".erb"))
     end
+    template_out(template, values, output)
   end
 end
 
@@ -93,8 +76,12 @@ class Optparser
     def initialize
       self.values_config_file = './templater_config.rb'
 
-      # Values available in the ERB template to be merged
-      self.values = {}
+      # Values available in the ERB template to be merged.
+      # Avoid errors by forcing explicit checks for keys. With this, config[]
+      # indirection requires the key to exist.
+      self.values = Hash.new do |h, key|
+        raise KeyError.new("Key '#{key}' missing from configuration structure.")
+      end
       self.values_from_yaml = {}
       self.values_from_flags = {}
       self.values_from_config = {}
