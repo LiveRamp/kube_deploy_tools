@@ -5,6 +5,7 @@
 # with cluster configuration from kube_deploy_tools.
 
 require 'erb'
+require 'tempfile'
 require 'yaml'
 
 require 'cluster_config'
