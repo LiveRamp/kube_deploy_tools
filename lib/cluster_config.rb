@@ -5,6 +5,8 @@ CLUSTERS = {
       'flags' => {
         'cloud' => 'local',
         'image_tag' => 'latest',
+        'kubernetes_major_version' => '1',
+        'kubernetes_minor_version' => '7',
         'tag' => '<%= DateTime.now.strftime "%j.%H.%M.%S" %>',
         'image_registry' => 'local-registry',
         'pull_policy' => 'Never'
@@ -17,6 +19,8 @@ CLUSTERS = {
       'flags' => {
         'cloud' => 'gcp',
         'image_registry' => 'gcr.io/pippio-production',
+        'kubernetes_major_version' => '1',
+        'kubernetes_minor_version' => '6',
         'pull_policy' => 'Always',
       }
     }
@@ -27,6 +31,8 @@ CLUSTERS = {
       'flags' => {
         'cloud' => 'aws',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
+        'kubernetes_major_version' => '1',
+        'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
       }
     },
@@ -35,6 +41,8 @@ CLUSTERS = {
       'flags' => {
         'cloud' => 'aws',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
+        'kubernetes_major_version' => '1',
+        'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
       }
     }
@@ -45,6 +53,8 @@ CLUSTERS = {
       'flags' => {
         'cloud' => 'colo',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
+        'kubernetes_major_version' => '1',
+        'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
       }
     },
@@ -53,6 +63,8 @@ CLUSTERS = {
       'flags' => {
         'cloud' => 'colo',
         'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
+        'kubernetes_major_version' => '1',
+        'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
       }
     }
