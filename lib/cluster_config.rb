@@ -52,7 +52,7 @@ CLUSTERS = {
       'kube_context' => '<%= username %>@prod.service',
       'flags' => {
         'cloud' => 'colo',
-        'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
+        'image_registry' => '***REMOVED***',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
@@ -62,7 +62,7 @@ CLUSTERS = {
       'kube_context' => '<%= username %>@staging.service',
       'flags' => {
         'cloud' => 'colo',
-        'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
+        'image_registry' => '***REMOVED***',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
