@@ -26,45 +26,7 @@
 require 'erb'
 require 'yaml'
 require 'optparse'
-
-class Object
-  def present?
-    self && to_s.strip != ''
-  end
-
-  def blank?
-    !present?
-  end
-end
-
-class Templater
-  def template_out(template, values, outputFile = nil)
-    output = render_erb_with_hash template, values
-    if !outputFile
-      $stdout.puts output
-    else
-      File.open(outputFile, "w") { |f| f << output }
-    end
-  end
-
-  def render_erb_with_hash(template, config)
-    begin
-      renderer = ERB.new(File.read(template))
-      renderer.result(binding)
-    rescue Exception => e
-      raise "Error rendering template #{template} with #{config}: #{e}"
-    end
-  end
-
-  def template(template, values, maybeOutput)
-    raise 'Unexpected error: --template is neither a file nor directory' unless File.file?(template)
-
-    if maybeOutput.present? && File.directory?(maybeOutput)
-      output = File.join(maybeOutput, File.basename(template, ".erb"))
-    end
-    template_out(template, values, output)
-  end
-end
+require 'templater'
 
 class Optparser
 
@@ -79,9 +41,7 @@ class Optparser
       # Values available in the ERB template to be merged.
       # Avoid errors by forcing explicit checks for keys. With this, config[]
       # indirection requires the key to exist.
-      self.values = Hash.new do |h, key|
-        raise KeyError.new("Key '#{key}' missing from configuration structure.")
-      end
+      self.values = {}
       self.values_from_yaml = {}
       self.values_from_flags = {}
       self.values_from_config = {}
@@ -150,10 +110,6 @@ def options
     ops.merge_values
     ops
   end
-end
-
-def add_values_config(values_config, &values_from_config)
-  $options.values_from_config[values_config.to_s] = values_from_config
 end
 
 templater = Templater.new

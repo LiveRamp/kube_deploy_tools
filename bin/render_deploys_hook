@@ -4,10 +4,15 @@
 
 require 'json'
 require 'yaml'
+require 'templater'
 
 TEMPLATING_SUFFIX = '.erb'
 
-def render_deploys(config, output_root)
+def render_deploys(config_file, output_root)
+  # Parse config into a struct.
+  config = YAML.load(File.read(config_file))
+  t = Templater.new
+
   prefix = 'kubernetes/'
   Dir["#{prefix}**/*.y*ml*"].each do |yml|
     # PREFIX/b/c/foo.yml.in -> foo.yml
@@ -24,7 +29,7 @@ def render_deploys(config, output_root)
 
     if yml.end_with? TEMPLATING_SUFFIX
       # File needs to be templated with templater.
-      render(config, yml, output_file)
+      t.template_out(yml, config, output_file)
     else
       # File is not templatable, and is copied verbatim.
       FileUtils.copy(yml, output_file)
@@ -37,12 +42,6 @@ def render_deploys(config, output_root)
       raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"
     end
   end
-end
-
-def render(config, template, output_file)
-  cmd = "bundle exec templater --values #{config} --template #{template} > #{output_file}"
-  ok = system(cmd)
-  raise "Error running #{cmd}: exit status #{$?}" unless $? == 0
 end
 
 def main(argv)
