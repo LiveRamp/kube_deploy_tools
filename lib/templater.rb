@@ -12,13 +12,10 @@ class Object
 end
 
 class Templater
-  def template_out(template, values, outputFile = nil)
+  def template_out(template, values)
     output = render_erb_with_hash template, values
-    if !outputFile
-      $stdout.puts output
-    else
-      File.open(outputFile, "w") { |f| f << output }
-    end
+
+    output
   end
 
   def render_erb_with_hash(template, values)
@@ -31,13 +28,23 @@ class Templater
     end
   end
 
-  def template(template, values, maybeOutput)
+  def template(template, values, maybeOutputFilepath)
     raise 'Unexpected error: --template is neither a file nor directory' unless File.file?(template)
 
-    if maybeOutput.present? && File.directory?(maybeOutput)
-      output = File.join(maybeOutput, File.basename(template, ".erb"))
+    if maybeOutputFilepath.present? && File.directory?(maybeOutputFilepath)
+      maybeOutputFilepath = File.join(maybeOutputFilepath, File.basename(template, ".erb"))
     end
-    template_out(template, values, output)
+
+    output = template_out(template, values)
+
+    if !maybeOutputFilepath
+      $stdout.puts output
+    elsif output.present?
+      # Save file if output is not blank. This will suppress output file
+      # generation when using ERB early returns at the top of an ERB template:
+      # <% return if ... %>
+      File.open(maybeOutputFilepath, "w") { |f| f << output }
+    end
   end
 end
 
