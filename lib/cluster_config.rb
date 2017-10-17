@@ -1,15 +1,30 @@
+require 'etc'
+require 'time'
+
+# Default method to derive a tag name based on the current environment.
+def tag_from_local_env
+  timestamp = DateTime.now.strftime('%j.%H.%M.%S')
+  "#{ENV['GIT_BRANCH'] || 'LOCAL'}-#{ENV['GIT_COMMIT'] || timestamp}"
+end
+
+DEFAULT_REGISTRY = '***REMOVED***'
+
+DEFAULT_FLAGS = {
+  'image_tag' => tag_from_local_env,
+  'tag' => tag_from_local_env,
+  'image_registry' => DEFAULT_REGISTRY,
+  'username' => Etc.getlogin,
+}.freeze
+
 CLUSTERS = {
   'local' => {
     'staging' => {
       'kube_context' => 'minikube',
       'flags' => {
         'cloud' => 'local',
-        'image_tag' => 'latest',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
-        'tag' => '<%= DateTime.now.strftime "%j.%H.%M.%S" %>',
-        'image_registry' => 'local-registry',
-        'pull_policy' => 'Never'
+        'pull_policy' => 'IfNotPresent'
       }
     },
   },
@@ -30,7 +45,6 @@ CLUSTERS = {
       'kube_context' => '<%= username %>@prod.us-east-1.k8s.***REMOVED***',
       'flags' => {
         'cloud' => 'aws',
-        'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
@@ -40,7 +54,6 @@ CLUSTERS = {
       'kube_context' => '<%= username %>@staging.us-east-1.k8s.***REMOVED***',
       'flags' => {
         'cloud' => 'aws',
-        'image_registry' => '***REMOVED***.dkr.ecr.us-east-1.amazonaws.com',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
@@ -52,7 +65,6 @@ CLUSTERS = {
       'kube_context' => '<%= username %>@prod.service',
       'flags' => {
         'cloud' => 'colo',
-        'image_registry' => '***REMOVED***',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
@@ -62,11 +74,10 @@ CLUSTERS = {
       'kube_context' => '<%= username %>@staging.service',
       'flags' => {
         'cloud' => 'colo',
-        'image_registry' => '***REMOVED***',
         'kubernetes_major_version' => '1',
         'kubernetes_minor_version' => '7',
         'pull_policy' => 'Always',
       }
     }
   }
-}
+}.freeze

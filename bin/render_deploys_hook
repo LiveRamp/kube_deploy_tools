@@ -8,18 +8,17 @@ require 'templater'
 
 TEMPLATING_SUFFIX = '.erb'
 
-def render_deploys(config_file, output_root)
+def render_deploys(config_file, input_dir, output_root)
   # Parse config into a struct.
   config = YAML.load(File.read(config_file))
   t = Templater.new
 
-  prefix = 'kubernetes/'
-  Dir["#{prefix}**/*.y*ml*"].each do |yml|
+  Dir["#{input_dir}/**/*.y*ml*"].each do |yml|
     # PREFIX/b/c/foo.yml.in -> foo.yml
     output_base = File.basename(yml, TEMPLATING_SUFFIX)
 
     # PREFIX/b/c/foo.yml.in -> b/c
-    subdir = File.dirname(yml[prefix.size..-1])
+    subdir = File.dirname(yml[input_dir.size..-1])
 
     # PREFIX/b/c/foo.yml.in -> output/b/c/foo.yml
     output_dir = File.join(output_root, subdir)
@@ -46,8 +45,9 @@ end
 
 def main(argv)
   config = argv[0]
-  output_root = argv[1]
-  render_deploys(config, output_root)
+  input_dir = argv[1]
+  output_root = argv[2]
+  render_deploys(config, input_dir, output_root)
 end
 
 main(ARGV)

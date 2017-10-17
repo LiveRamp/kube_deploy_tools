@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.0)
+    kube_deploy_tools (1.0.13)
 
 GEM
   remote: https://gemserver.***REMOVED***/
@@ -31,4 +31,4 @@ DEPENDENCIES
   rspec (>= 2.0.0)
 
 BUNDLED WITH
-   1.14.6
+   1.15.4

@@ -39,16 +39,7 @@ class RenderDeploys
       raise 'Must support at least one flavor (try "_default": {})'
     end
 
-    # Build environmental flags.
-    tag = tag_from_local_env
-    root_flags = {
-      'image_tag' => tag,
-      'tag' => tag,
-      'image_registry' => DEFAULT_REGISTRY,
-      'username' => Etc.getlogin
-    }
     hooks = @manifest['hooks'] || [DEFAULT_HOOK_SCRIPT_LABEL]
-
     pids = {}
     clusters.each do |c|
       target = c.fetch('target')
@@ -56,7 +47,7 @@ class RenderDeploys
 
       # Get metadata for this target/environment pair.
       cluster = CLUSTERS.fetch(target).fetch(env)
-      cluster_flags = root_flags.clone
+      cluster_flags = DEFAULT_FLAGS.dup
 
       cluster_flags.update('target' => target, 'environment' => env)
       cluster_flags.merge!(render_erb_flags(cluster['flags']))
