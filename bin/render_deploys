@@ -4,134 +4,53 @@
 # Generates all deploys based on permutations defined in deploy.yml combined
 # with cluster configuration from kube_deploy_tools.
 
-require 'erb'
-require 'tempfile'
-require 'yaml'
+require 'optparse'
 
-require 'cluster_config'
+require 'render_deploys'
 
-DEFAULT_HOOK_SCRIPT = 'render_deploys_hook'
-DEFAULT_HOOK_SCRIPT_LABEL = 'default'
-MANIFEST_FILE = 'deploy.yml'
+class Optparser
 
-class RenderDeploys
-  def initialize(manifest, output_dir)
-    unless File.file?(manifest)
-      raise "Can't read deploy manifest: #{manifest}"
+  class RenderDeploysOptions
+    attr_accessor :manifest_file, :input_path, :output_path
+
+    def initialize
+      self.manifest_file = 'deploy.yml'
+      self.input_path = File.expand_path('kubernetes/')
+			self.output_path = File.expand_path('pkg/kubernetes/')
     end
 
-    @project = ENV['JOB_ID'] || File.basename(`git config remote.origin.url`.chomp, '.git')
-    @build_number = ENV['BUILD_ID'] || DateTime.now.strftime('%Y%m%d%H%M%S')
+    def define_options(parser)
+      parser.on('-mMANIFEST', '--manifest MANIFEST', 'The configuration MANIFEST to render deploys with.') do |f|
+        self.manifest = f
+      end
 
-    @output_dir = output_dir
-    FileUtils.rm_rf @output_dir
-    FileUtils.mkdir_p @output_dir
+      parser.on('-iPATH', '--input-path PATH', 'Path where Kubernetes manifests and manifest templates (.erb) are located.') do |p|
+        self.input_path = p
+      end
 
-    @manifest = YAML.load(File.read(manifest)).fetch('deploy')
-  end
-
-  def render
-    clusters = @manifest.fetch('clusters')
-    flavors = @manifest.fetch('flavors')
-
-    # Sanity check.
-    unless clusters.size > 0
-      raise 'Must support deployment to at least one cluster'
-    end
-
-    unless flavors.size > 0
-      raise 'Must support at least one flavor (try "_default": {})'
-    end
-
-    # Build environmental flags.
-    git_sha1 = `git rev-parse --short=7 HEAD`.chomp
-    root_flags = {
-      'image_tag' => git_sha1,
-      'tag' => git_sha1,
-      'username' => Etc.getlogin
-    }
-    hooks = @manifest['hooks'] || [DEFAULT_HOOK_SCRIPT_LABEL]
-
-    pids = {}
-    clusters.each do |c|
-      target = c.fetch('target')
-      env = c.fetch('environment')
-
-      # Get metadata for this target/environment pair.
-      cluster = CLUSTERS.fetch(target).fetch(env)
-      cluster_flags = root_flags.clone
-
-      cluster_flags.update('target' => target, 'environment' => env)
-      cluster_flags.merge!(render_erb_flags(cluster['flags']))
-      cluster_flags.merge!(render_erb_flags(c['extra_flags'])) if c['extra_flags']
-
-      # Allow deploy.yml to gate certain flavors to certain targets.
-      cluster_flavors = flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
-      cluster_flavors.each do |flavor, flavor_flags|
-        full_flags = cluster_flags.clone
-        full_flags.merge!(render_erb_flags(flavor_flags)) if flavor_flags
-
-        # Call individual templating hook with the rendered configuration
-        # and a prefix to place all the files. Run many hooks in the
-        # background.
-        flavor_dir = File.join(@output_dir, target, env, flavor)
-        FileUtils.mkdir_p flavor_dir
-
-        puts "*** rendering configuration: #{target}_#{env}_#{flavor}"
-        pid = fork do
-          # Save rendered release configuration to a temp file.
-          rendered = Tempfile.new('deploy_config')
-          rendered << YAML.dump(full_flags)
-          rendered.flush
-
-          # Run every hook sequentially. 'default' hook is special.
-          hooks.each do |hook|
-            if hook == DEFAULT_HOOK_SCRIPT_LABEL
-              check_call(['bundle', 'exec', DEFAULT_HOOK_SCRIPT, rendered.path, flavor_dir])
-            else
-              check_call([hook, rendered.path, flavor_dir])
-            end
-          end
-
-          # Pack up contents of each flavor_dir to a correctly named artifact tarball.
-          tarball = "manifests_#{@project}_#{@build_number}_#{target}_#{env}_#{flavor}.tar.gz"
-          tarball_full_path = File.join(@output_dir, tarball)
-          check_call(['tar', '-C', flavor_dir, '-czf', tarball_full_path, '.'])
-          puts "*** generated manifest archive: #{tarball_full_path}"
-        end
-
-        pids[pid] = "#{target}_#{env}_#{flavor}"
+      parser.on('-oPATH', '--output-path PATH', 'Path where rendered manifests should be written.') do |p|
+        self.output_path = p
       end
     end
 
-    failure = false
-    Process.waitall.each do |pid, status|
-      if status.exitstatus != 0
-        puts "!!! rendering #{pids[pid]} failed: exit status #{status.exitstatus}"
-        failure = true
-      end
-    end
-
-    raise 'rendering deploy configurations failed' if failure
   end
 
-  def render_erb_flags(flags)
-    result = Hash.new
-
-    flags.each do |key, template|
-      renderer = ERB.new(template)
-      result[key] = renderer.result
+  def parse(args)
+    @options = RenderDeploysOptions.new
+    OptionParser.new do |parser|
+      @options.define_options(parser)
+      parser.parse(args)
     end
-
-    result
-  end
-
-  def check_call(cmd)
-    ok = system(*cmd)
-    raise "Failed to run #{cmd}: exit status #{$?}" unless ok
+    @options
   end
 end
 
-# TODO(joshk): Make each of these customizable
-app = RenderDeploys.new(MANIFEST_FILE, File.expand_path('pkg/kubernetes'))
+def options
+  $options ||= begin
+    parser = Optparser.new
+    parser.parse(ARGV)
+  end
+end
+
+app = RenderDeploys.new(options.manifest_file, options.input_path, options.output_path)
 app.render
