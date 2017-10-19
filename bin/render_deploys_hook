@@ -28,7 +28,7 @@ def render_deploys(config_file, input_dir, output_root)
 
     if yml.end_with? TEMPLATING_SUFFIX
       # File needs to be templated with templater.
-      t.template_out(yml, config, output_file)
+      t.template(yml, config, output_file)
     else
       # File is not templatable, and is copied verbatim.
       FileUtils.copy(yml, output_file)
@@ -36,7 +36,9 @@ def render_deploys(config_file, input_dir, output_root)
 
     # Bonus: YAML validate the output.
     begin
-      YAML.load(File.read(output_file))
+      if File.file?(output_file)
+        YAML.load(File.read(output_file))
+      end
     rescue => e
       raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"
     end
