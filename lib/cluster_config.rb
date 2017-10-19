@@ -4,7 +4,11 @@ require 'time'
 # Default method to derive a tag name based on the current environment.
 def tag_from_local_env
   timestamp = DateTime.now.strftime('%j.%H.%M.%S')
-  "#{ENV['GIT_BRANCH'] || 'LOCAL'}-#{ENV['GIT_COMMIT'] || timestamp}"
+  branch = ENV['GIT_BRANCH'] || 'LOCAL'
+  if branch.start_with?('origin/')
+    branch = branch['origin/'.size..-1]
+  end
+  "#{branch}-#{ENV['GIT_COMMIT'] || timestamp}"
 end
 
 DEFAULT_REGISTRY = '***REMOVED***'
