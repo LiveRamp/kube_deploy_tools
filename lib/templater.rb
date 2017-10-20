@@ -12,7 +12,7 @@ class Object
 end
 
 class Templater
-  def template_out(template, values)
+  def template(template, values)
     output = render_erb_with_hash template, values
 
     output
@@ -28,15 +28,13 @@ class Templater
     end
   end
 
-  def template(template, values, maybeOutputFilepath)
-    raise 'Unexpected error: --template is neither a file nor directory' unless File.file?(template)
+  def template_to_file(template, values, maybeOutputFilepath = nil)
+    raise "Expected template to be an existing file, received '#{template}''" unless File.file?(template)
+    raise "Expected output filepath to be a new filepath, received '#{maybeOutputFilepath}'" if maybeOutputFilepath.present? && (File.file?(maybeOutputFilepath) || File.directory?(maybeOutputFilepath))
 
-    if maybeOutputFilepath.present? && File.directory?(maybeOutputFilepath)
-      maybeOutputFilepath = File.join(maybeOutputFilepath, File.basename(template, ".erb"))
-    end
+    output = template(template, values)
 
-    output = template_out(template, values)
-
+    # If an output filepath is not given, print to stdout
     if !maybeOutputFilepath
       $stdout.puts output
     elsif output.present?

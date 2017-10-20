@@ -28,7 +28,7 @@ def render_deploys(config_file, input_dir, output_root)
 
     if yml.end_with? TEMPLATING_SUFFIX
       # File needs to be templated with templater.
-      t.template(yml, config, output_file)
+      t.template_to_file(yml, config, output_file)
     else
       # File is not templatable, and is copied verbatim.
       FileUtils.copy(yml, output_file)
