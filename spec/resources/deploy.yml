@@ -1,0 +1,17 @@
+# This deploy.yml is a testing fixture
+deploy:
+  clusters:
+    - target: local
+      environment: staging
+    - target: colo-service
+      environment: prod
+    - target: colo-service
+      environment: staging
+    - target: gcp
+      environment: prod
+    - target: us-east-1
+      environment: prod
+    - target: us-east-1
+      environment: staging
+  flavors:
+    default: {}

@@ -1,0 +1,29 @@
+require 'logger'
+
+module KubeDeployTools
+  class FormattedLogger < Logger
+    def self.build(context: nil, stream: $stderr)
+      l = new(stream)
+      l.level = level_from_env
+
+      l.formatter = proc do |severity, datetime, _progname, msg|
+        middle = context ? "[#{context}]" : ""
+        line = "[#{severity}][#{datetime}]#{middle}\t#{msg}\n"
+
+        line
+      end
+      l
+    end
+
+    def self.level_from_env
+      return ::Logger::DEBUG if ENV["DEBUG"]
+
+      if ENV["LEVEL"]
+        ::Logger.const_get(ENV["LEVEL"].upcase)
+      else
+        ::Logger::INFO
+      end
+    end
+    private_class_method :level_from_env
+  end
+end
