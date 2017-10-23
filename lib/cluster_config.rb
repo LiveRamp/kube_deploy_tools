@@ -19,6 +19,8 @@ def tag_from_local_env
   if branch.start_with?('origin/')
     branch = branch['origin/'.size..-1]
   end
+  branch = branch.gsub('/', '_')
+
   "#{branch}-#{ENV['GIT_COMMIT'] || codestamp}"
 end
 
