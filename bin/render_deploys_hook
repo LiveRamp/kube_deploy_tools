@@ -24,13 +24,12 @@ def render_deploys(config_file, input_dir, output_root)
     output_dir = File.join(output_root, subdir)
     output_file = File.join(output_dir, output_base)
 
-    FileUtils.mkdir_p output_dir
-
     if yml.end_with? TEMPLATING_SUFFIX
       # File needs to be templated with templater.
       t.template_to_file(yml, config, output_file)
     else
       # File is not templatable, and is copied verbatim.
+      FileUtils.mkdir_p output_dir
       FileUtils.copy(yml, output_file)
     end
 

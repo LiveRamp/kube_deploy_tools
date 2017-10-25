@@ -41,6 +41,7 @@ class Templater
       # Save file if output is not blank. This will suppress output file
       # generation when using ERB early returns at the top of an ERB template:
       # <% return if ... %>
+      FileUtils.mkdir_p(File.dirname(maybeOutputFilepath))
       File.open(maybeOutputFilepath, "w") { |f| f << output }
     end
   end
