@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+# Utility for templating Kubernetes manifests with ERB.
+#
+# Example usage:
+#
+# push_container \
+# --registry aws \
+# --local-prefix local-registry/ \
+# --tag my-custom-tag \
+# image1 image2 image3
+#
+# Will tag local-registry/image1:latest, local-registry/image2:latest etc. as
+# ***REMOVED***/image1:my-custom-tag.
+# Default values for every option are probably what you want to use most of the time.
+
+require 'erb'
+require 'yaml'
+require 'optparse'
+
+require 'push_container'
+
+def options
+  $options ||= begin
+    parser = Optparser.new
+    parser.parse(ARGV)
+  end
+end
+
+def images
+  # Make sure options have been parsed
+  options
+
+  # The rest of ARGV is now the list of images to retag
+  ARGV
+end
+
+PushContainer.publish(options.local_prefix, options.registry, images, options.tag)
