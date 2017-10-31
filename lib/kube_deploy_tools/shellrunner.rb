@@ -12,6 +12,7 @@ module KubeDeployTools
       if !status.success?
         raise "!!! Command failed: #{Shellwords.join(cmd)}"
       end
+      out
     end
 
     def run_call(*cmd)
