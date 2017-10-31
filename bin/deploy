@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+# Utility for applying Kubernetes manifests.
+
+require 'kube_deploy_tools/cluster_config'
+require 'kube_deploy_tools/deploy_artifact'
+require 'kube_deploy_tools/formatted_logger'
+require 'kube_deploy_tools/kubectl'
+require 'kube_deploy_tools/shellrunner'
+require 'kube_deploy_tools/deploy'
+require 'kube_deploy_tools/deploy/options'
+
+def options
+  parser = KubeDeployTools::Deploy::Optparser.new
+  ops = parser.parse(ARGV)
+  ops
+end
+
+context = options.context || KubeDeployTools.kube_context(target: options.target, environment: options.environment)
+logger = KubeDeployTools::FormattedLogger.build(context: context)
+shellrunner = KubeDeployTools::Shellrunner.new(logger: logger)
+kubectl = KubeDeployTools::Kubectl.new(
+  shellrunner: shellrunner,
+  context: context,
+  kubeconfig: options.kubeconfig,
+)
+
+if options.from_files
+  deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
+    input_path: options.from_files,
+    logger: logger,
+    shellrunner: shellrunner,
+  ).path
+else
+  deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
+    input_path: KubeDeployTools.get_remote_deploy_artifact_url(
+      project: options.project,
+      build_number: options.build_number,
+      target: options.target,
+      environment: options.environment,
+      flavor: options.flavor,
+    ),
+    logger: logger,
+    shellrunner: shellrunner,
+  ).path
+end
+
+deploy = KubeDeployTools::Deploy.new(
+  input_path: deploy_artifact_path,
+  logger: logger,
+  kubectl: kubectl,
+)
+deploy.run(
+  dry_run: options.dry_run,
+)

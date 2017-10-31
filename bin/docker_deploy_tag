@@ -17,7 +17,7 @@ require 'erb'
 require 'yaml'
 require 'optparse'
 
-require 'cluster_config'
+require 'kube_deploy_tools'
 require 'docker_deploy_tag'
 
 class Optparser
@@ -27,8 +27,8 @@ class Optparser
 
     def initialize
       self.local_prefix = 'local-registry/'
-      self.remote_prefix = "#{DEFAULT_REGISTRY}/"
-      self.tag = tag_from_local_env
+      self.remote_prefix = "#{KubeDeployTools::DEFAULT_REGISTRY}/"
+      self.tag = KubeDeployTools::tag_from_local_env
     end
 
     def define_options(parser)
@@ -72,4 +72,8 @@ def images
   ARGV
 end
 
-DockerDeployTag.tag_images(options.local_prefix, options.remote_prefix, images, options.tag)
+logger = KubeDeployTools::FormattedLogger.build
+shellrunner = KubeDeployTools::Shellrunner.new(logger: logger)
+
+ddt = KubeDeployTools::DockerDeployTag.new(shellrunner: shellrunner)
+ddt.tag_images(options.local_prefix, options.remote_prefix, images, options.tag)

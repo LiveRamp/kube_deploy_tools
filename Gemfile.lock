@@ -28,7 +28,7 @@ PLATFORMS
 DEPENDENCIES
   kube_deploy_tools!
   rake
-  rspec (>= 2.0.0)
+  rspec
 
 BUNDLED WITH
    1.15.4

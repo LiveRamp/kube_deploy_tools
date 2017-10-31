@@ -1,0 +1,11 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: invalid-nginx
+spec:
+this
+is
+invalid
+yaml
+

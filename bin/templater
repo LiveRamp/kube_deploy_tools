@@ -16,17 +16,16 @@
 # * 1 or more key-value pairs e.g. --set git_tag=123456 --set environment=local
 # * a YAML file e.g. --values production.yaml
 
-require 'templater'
-require 'templater/options'
+require 'kube_deploy_tools/templater'
+require 'kube_deploy_tools/templater/options'
 
 def options
-  $options ||= begin
-    parser = Optparser.new
-    ops = parser.parse(ARGV)
-    ops.merge_values
-    ops
-  end
+  parser = KubeDeployTools::Templater::Optparser.new
+  ops = parser.parse(ARGV)
+  ops.merge_values
+  ops
 end
 
-templater = Templater.new
-templater.template(options.template, options.values, options.output)
+templater = KubeDeployTools::Templater.new
+templater.template_to_file(options.template, options.values, options.output)
+

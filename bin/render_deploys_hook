@@ -4,14 +4,14 @@
 
 require 'json'
 require 'yaml'
-require 'templater'
+require 'kube_deploy_tools/templater'
 
 TEMPLATING_SUFFIX = '.erb'
 
 def render_deploys(config_file, input_dir, output_root)
   # Parse config into a struct.
   config = YAML.load(File.read(config_file))
-  t = Templater.new
+  t = KubeDeployTools::Templater.new
 
   Dir["#{input_dir}/**/*.y*ml*"].each do |yml|
     # PREFIX/b/c/foo.yml.in -> foo.yml
