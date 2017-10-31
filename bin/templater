@@ -8,7 +8,7 @@
 # --set environment=staging \
 # --set tag=$(git rev-parse --short=7 HEAD) \
 # --values staging.yaml \
-# > pkg/kubernetes/ds-datadog.yaml
+# > build/kubernetes/ds-datadog.yaml
 #
 # Values can be passed to templater to expose variables available in
 # the ERB templates, such as a git tag or the environment name.

@@ -21,7 +21,7 @@ module KubeDeployTools
       shellrunner:,
       logger:,
       input_path:,
-      output_dir_path: 'pkg/kubernetes/')
+      output_dir_path: 'build/kubernetes/')
       @shellrunner = shellrunner
       @logger = logger
 
