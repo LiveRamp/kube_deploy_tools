@@ -1,34 +1,62 @@
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.23)
+    kube_deploy_tools (1.0.24)
 
 GEM
   remote: https://gemserver.***REMOVED***/
   specs:
+    builder (3.2.3)
     diff-lcs (1.3)
+    faraday (0.11.0)
+      multipart-post (>= 1.2, < 3)
+    geminabox (0.13.5)
+      builder
+      faraday
+      httpclient (>= 2.2.7)
+      nesty
+      sinatra (>= 1.2.7)
+    httpclient (2.8.3)
+    json (2.1.0)
+    liveramp_jenkins_tools (2.0.0)
+      geminabox
+      json
+      rake
+    liveramp_updater (1.0.13)
+    multipart-post (2.0.0)
+    nesty (1.0.2)
+    rack (1.6.5)
+    rack-protection (1.5.3)
+      rack
     rake (12.0.0)
-    rspec (3.5.0)
-      rspec-core (~> 3.5.0)
-      rspec-expectations (~> 3.5.0)
-      rspec-mocks (~> 3.5.0)
-    rspec-core (3.5.4)
-      rspec-support (~> 3.5.0)
-    rspec-expectations (3.5.0)
+    rspec (3.7.0)
+      rspec-core (~> 3.7.0)
+      rspec-expectations (~> 3.7.0)
+      rspec-mocks (~> 3.7.0)
+    rspec-core (3.7.0)
+      rspec-support (~> 3.7.0)
+    rspec-expectations (3.7.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.5.0)
-    rspec-mocks (3.5.0)
+      rspec-support (~> 3.7.0)
+    rspec-mocks (3.7.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.5.0)
-    rspec-support (3.5.0)
+      rspec-support (~> 3.7.0)
+    rspec-support (3.7.0)
+    sinatra (1.4.8)
+      rack (~> 1.5)
+      rack-protection (~> 1.4)
+      tilt (>= 1.3, < 3)
+    tilt (2.0.8)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   kube_deploy_tools!
-  rake
-  rspec
+  liveramp_jenkins_tools (~> 2.0)
+  liveramp_updater
+  rake (~> 12.0)
+  rspec (~> 3.0)
 
 BUNDLED WITH
    1.15.4
