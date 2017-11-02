@@ -37,6 +37,8 @@ module KubeDeployTools
     end
 
     def path
+      FileUtils.mkdir_p(@output_dir_path)
+
       if is_remote_deploy_artifact?(@input_path)
         @input_path = download_remote_deploy_artifact(@input_path, @output_dir_path)
       end
