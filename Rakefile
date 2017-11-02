@@ -2,10 +2,8 @@ require 'rake'
 require 'rubygems'
 require 'rspec/core/rake_task'
 require 'liveramp_jenkins_tools'
-require 'liveramp_updater'
 
 include LiveRamp::Gem_publish
-include LiverampUpdater
 LiveRamp.load_publish_tasks
 
 task :default do
