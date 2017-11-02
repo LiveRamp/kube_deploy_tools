@@ -7,7 +7,6 @@ group :development do
   gem 'rake', '~> 12.0', :source => 'https://rubygems.***REMOVED***'
   gem 'rspec', '~> 3.0', :source => 'https://rubygems.***REMOVED***'
   gem 'liveramp_jenkins_tools', '~> 2.0'
-  gem 'liveramp_updater'
 end
 
 gemspec

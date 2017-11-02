@@ -24,7 +24,6 @@ GEM
       geminabox
       json
       rake
-    liveramp_updater (1.0.13)
     multipart-post (2.0.0)
     mustermann (1.0.1)
     nesty (1.0.2)
@@ -59,7 +58,6 @@ PLATFORMS
 DEPENDENCIES
   kube_deploy_tools!
   liveramp_jenkins_tools (~> 2.0)
-  liveramp_updater
   rake (~> 12.0)!
   rspec (~> 3.0)!
 
