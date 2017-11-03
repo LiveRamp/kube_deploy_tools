@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.28)
+    kube_deploy_tools (1.0.29)
 
 GEM
   remote: https://gemserver.***REMOVED***/
