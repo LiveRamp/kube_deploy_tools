@@ -26,8 +26,22 @@ module KubeDeployTools
     "#{branch}-#{ENV['GIT_COMMIT'] || codestamp}"
   end
 
+  REGISTRIES = {
+    'aws' => {
+      'driver' => 'aws',
+      'prefix' => '***REMOVED***',
+    },
+    'local' => {
+      'driver' => 'noop',
+      'prefix' => 'local-registry',
+    },
+    'gcp' => {
+      'driver' => 'gcp',
+      'prefix' => 'gcr.io/pippio-production',
+    }
+  }.freeze
 
-  DEFAULT_REGISTRY = '***REMOVED***'
+  DEFAULT_REGISTRY = REGISTRIES['aws']['prefix']
 
   DEFAULT_FLAGS = {
     'image_tag' => self.tag_from_local_env,
