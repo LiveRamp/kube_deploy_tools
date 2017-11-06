@@ -3,6 +3,11 @@ PATH
   specs:
     kube_deploy_tools (1.0.29)
 
+PATH
+  remote: /home/jmodes/src/liveramp_updater
+  specs:
+    liveramp_updater (1.0.13)
+
 GEM
   remote: https://gemserver.***REMOVED***/
   remote: https://rubygems.***REMOVED***/
@@ -58,6 +63,7 @@ PLATFORMS
 DEPENDENCIES
   kube_deploy_tools!
   liveramp_jenkins_tools (~> 2.0)
+  liveramp_updater!
   rake (~> 12.0)!
   rspec (~> 3.0)!
 
