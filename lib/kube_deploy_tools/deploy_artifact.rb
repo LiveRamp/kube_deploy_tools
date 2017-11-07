@@ -1,5 +1,6 @@
 require 'uri'
 require 'kube_deploy_tools/object'
+require 'fileutils'
 
 EXT_TAR_GZ = ".tar.gz"
 ARTIFACT_REPO="http://***REMOVED***/artifactory/kubernetes-snapshot-local/"
