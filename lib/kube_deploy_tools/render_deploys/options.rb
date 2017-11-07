@@ -13,7 +13,7 @@ module KubeDeployTools
 
       def define_options(parser)
         parser.on('-mMANIFEST', '--manifest MANIFEST', 'The configuration MANIFEST to render deploys with.') do |f|
-          self.manifest = f
+          self.manifest_file = f
         end
 
         parser.on('-iPATH', '--input-path PATH', 'Path where Kubernetes manifests and manifest templates (.erb) are located.') do |p|
