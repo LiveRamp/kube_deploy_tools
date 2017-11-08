@@ -5,11 +5,7 @@ LiveRamp Kubernetes Build/Release Tools
 
 The binaries below can be invoked with:
 ```bash
-# as a gem
 bundle exec render_deploys
-
-# directly
-ruby -Ilib bin/render_deploys
 ```
 
 ## templater
