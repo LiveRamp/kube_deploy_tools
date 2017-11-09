@@ -1,16 +1,29 @@
 require 'logger'
+require 'colorized_string'
+require 'kube_deploy_tools/deferred_summary_logging'
 
 module KubeDeployTools
   class FormattedLogger < Logger
+    include DeferredSummaryLogging
+
     def self.build(context: nil, stream: $stderr)
       l = new(stream)
       l.level = level_from_env
 
       l.formatter = proc do |severity, datetime, _progname, msg|
         middle = context ? "[#{context}]" : ""
-        line = "[#{severity}][#{datetime}]#{middle}\t#{msg}\n"
+        colorized_line = ColorizedString.new("[#{severity}][#{datetime}]#{middle}\t#{msg}\n")
 
-        line
+        case severity
+        when "FATAL"
+          ColorizedString.new("[#{severity}][#{datetime}]#{middle}\t").red + "#{msg}\n"
+        when "ERROR"
+          colorized_line.red
+        when "WARN"
+          colorized_line.yellow
+        else
+          colorized_line
+        end
       end
       l
     end
