@@ -1,3 +1,4 @@
+require 'rspec/expectations'
 require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
 require 'kube_deploy_tools/formatted_logger'
@@ -11,8 +12,13 @@ describe KubeDeployTools::Deploy do
 
   # Mock kubectl
   let(:status) { double(:status, success?: true) }
-  let(:stdoutput) { 'kubectl apply mock output' }
+  let(:stdoutput) { 'kubectl bogus output' }
   let(:kubectl) { instance_double("kubectl", :run => [stdoutput, nil, status]) }
+
+  # Mock out `kubectl ... -o json` calls in KubeDeployTools::Deployment < KubernetesResource
+  before(:example) do
+    allow_any_instance_of(KubeDeployTools::Deployment).to receive(:sync)
+  end
 
   it "fails to read invalid YAML files" do
     deploy = KubeDeployTools::Deploy.new(
@@ -32,7 +38,7 @@ describe KubeDeployTools::Deploy do
       kubectl: kubectl,
     )
     resources = deploy.read_resources
-    expect(resources.find { |resource| resource.content["kind"] == "Deployment" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
   end
 
   it "predeploys resources" do
@@ -42,15 +48,15 @@ describe KubeDeployTools::Deploy do
       kubectl: kubectl,
     )
     resources = deploy.read_resources
-    expect(resources.find { |resource| resource.content["kind"] == "Deployment" }).to_not be_nil
-    expect(resources.find { |resource| resource.content["kind"] == "Service" }).to_not be_nil
-    expect(resources.find { |resource| resource.content["kind"] == "Namespace" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Service" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Namespace" }).to_not be_nil
 
     # Namespaces are deployed before Services
-    expect(kubectl).to receive(:run).with('apply', '-f', include('ns'), any_args).ordered
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Namespace'), any_args).ordered
     # Services are deployed before Deployments
-    expect(kubectl).to receive(:run).with('apply', '-f', include('service'), any_args).ordered
-    expect(kubectl).to receive(:run).with('apply', '-f', include('dep'), any_args).ordered
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered
     deploy.run
   end
 

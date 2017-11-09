@@ -15,8 +15,12 @@ module KubeDeployTools
       out
     end
 
-    def run_call(*cmd)
-      @logger.info(Shellwords.join(cmd))
+    def run_call(*cmd, print_cmd: true)
+      if print_cmd
+        @logger.info(Shellwords.join(cmd))
+      else
+        @logger.debug(Shellwords.join(cmd))
+      end
       # Save the entire stdout and stderr output of the subprocess
       # to return at the end
       out = ''
