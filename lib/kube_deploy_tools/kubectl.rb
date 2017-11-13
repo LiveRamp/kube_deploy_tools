@@ -15,10 +15,11 @@ module KubeDeployTools
       raise ArgumentError, "context is required" if context.empty?
     end
 
-    def run(*args, print_cmd: true)
+    def run(*args, print_cmd: true, timeout: nil)
       args = args.unshift("kubectl")
       args.push("--context=#{@context}")
       args.push("--kubeconfig=#{@kubeconfig}") if @kubeconfig.present?
+      args.push("--request-timeout=#{timeout}") if timeout.present?
 
       @shellrunner.run_call(*args, print_cmd: print_cmd)
     end
