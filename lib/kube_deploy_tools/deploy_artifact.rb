@@ -64,7 +64,7 @@ module KubeDeployTools
       uri = URI.parse(input_path)
       filename = File.basename(uri.path)
       output_path = File.join(output_dir_path, filename)
-      out, err, status = @shellrunner.run_call('curl', '-o', output_path, input_path, '--fail')
+      out, err, status = @shellrunner.run_call('curl', '-o', output_path, input_path, '--silent', '--fail')
       if !status.success?
         raise "Failed to download remote deploy artifact #{uri}"
       end
