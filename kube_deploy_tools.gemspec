@@ -13,8 +13,10 @@ Gem::Specification.new do |gem|
   gem.email    = 'ops@***REMOVED***'
   gem.homepage = 'http://git.***REMOVED***/OpsRepos/kube_deploy_tools'
 
-  gem.add_development_dependency('rake')
-  gem.add_development_dependency('rspec', [">= 2.0.0"])
+  gem.add_dependency 'colorize', '~> 0.8'
+  gem.add_development_dependency 'rake', '~> 12.0'
+  gem.add_development_dependency 'rspec', '~> 3.0'
+  gem.add_development_dependency 'liveramp_jenkins_tools', '~> 2.0'
 
   # ensure the gem is built out of versioned files
   gem.files = Dir['Rakefile', '{bin,lib}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z`.split("\0")
