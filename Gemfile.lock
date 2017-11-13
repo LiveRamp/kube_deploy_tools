@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.31)
+    kube_deploy_tools (1.0.32)
       colorize (~> 0.8)
 
 GEM

@@ -4,6 +4,8 @@ require 'kube_deploy_tools/object'
 
 module KubeDeployTools
   class Deployment < KubernetesResource
+    TIMEOUT = '60s'
+
     attr_accessor :found,
       :local_replicas,
       :remote_replicas,
@@ -12,7 +14,7 @@ module KubeDeployTools
     def sync
       @local_replicas = @definition["spec"]["replicas"]
 
-      raw_json, _err, st = @kubectl.run("get", "-f", filepath, "--output=json", print_cmd: false)
+      raw_json, _err, st = @kubectl.run("get", "-f", filepath, "--output=json", print_cmd: false, timeout: TIMEOUT)
       @found = st.success?
 
       if st.success?
@@ -20,7 +22,7 @@ module KubeDeployTools
         @remote_replicas = deployment_data["spec"]["replicas"]
       end
 
-      raw_json, _err, st = @kubectl.run("apply", "view-last-applied", "-f", filepath, "--output=json", print_cmd: false)
+      raw_json, _err, st = @kubectl.run("apply", "view-last-applied", "-f", filepath, "--output=json", print_cmd: false, timeout: TIMEOUT)
       if st.success?
         deployment_data = JSON.parse(raw_json)
         @recorded_replicas = deployment_data["spec"]["replicas"]
