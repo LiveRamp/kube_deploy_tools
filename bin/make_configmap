@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'kube_deploy_tools/make_configmap'
+require 'kube_deploy_tools/make_configmap/options'
+require 'yaml'
+
+def options
+  opts = KubeDeployTools::Options.new
+  ops = opts.options
+  ops
+end
+
+ARGV << '--help' if ARGV.empty?
+make_configmap = KubeDeployTools::ConfigMap.new(options[:name], options[:namespace], options[:from_file])
+puts YAML::dump(make_configmap.target_hash)
