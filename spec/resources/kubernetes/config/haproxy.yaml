@@ -4,5 +4,6 @@ kind: ConfigMap
 metadata:
   name: test
   namespace: default
+  labels: 
 data:
   haproxy.cfg.erb: foo
