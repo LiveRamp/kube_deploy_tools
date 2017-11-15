@@ -11,5 +11,5 @@ def options
 end
 
 ARGV << '--help' if ARGV.empty?
-make_configmap = KubeDeployTools::ConfigMap.new(options[:name], options[:namespace], options[:from_file])
+make_configmap = KubeDeployTools::ConfigMap.new(options[:name], options[:namespace], options[:from_file], options[:labels])
 puts YAML::dump(make_configmap.target_hash)

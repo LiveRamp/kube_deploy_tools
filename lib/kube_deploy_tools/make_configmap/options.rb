@@ -5,7 +5,7 @@ module KubeDeployTools
   class Options
     def options
       $options ||= begin
-        res = {from_file: []}
+        res = {from_file: [], labels: {}}
         OptionParser.new do |opts|
           opts.banner = "Usage: #{opts.program_name}.rb [options]. Outputs YAML to STDOUT"
 
@@ -18,7 +18,13 @@ module KubeDeployTools
             res[:namespace] = v
           end
 
-          opts.on("--from-file [FILE]", "File for map (can be provided multiple times)") do |v|
+          opts.on("--label [NAME=VALUE]", "ConfigMap metadata label") do |v|
+            res[:labels].store(*v.split('=', 2))
+          end
+
+          opts.on("--from-file [KEYFILE]", "Key file can be specified using its file path, in which case file basename will be used as
+    configmap key, or optionally with a key and file path, in which case the given key will be used.  Specifying a directory
+    will iterate each named file in the directory whose basename is a valid configmap key.") do |v|
             res[:from_file] << v
           end
         end.parse!
