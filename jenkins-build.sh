@@ -6,8 +6,14 @@ bundle install --with development
 # Run default task i.e. rspec
 bundle exec rake
 
-bundle exec rake update_gemfile_dot_lock_no_halt
+# Strip 'origin/' prefix from current branch name.
+GIT_BRANCH=${GIT_BRANCH#origin/}
+case "$GIT_BRANCH" in
+master)
+    bundle exec rake update_gemfile_dot_lock_no_halt
 
-bundle exec rake autopublish
+    bundle exec rake autopublish
 
-echo "Final commit hash: $GIT_COMMIT"
+    echo "Final commit hash: $GIT_COMMIT"
+  ;;
+esac
