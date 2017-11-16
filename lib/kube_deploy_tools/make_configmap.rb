@@ -6,7 +6,7 @@ require 'fileutils'
 module KubeDeployTools
 
   class ConfigMap
-    def initialize(name, namespace, from_file, labels = nil)
+    def initialize(name, from_file, namespace = 'default', labels = nil)
       @name = name
       @namespace = namespace
       @labels = labels
