@@ -8,7 +8,7 @@ GIT
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.34)
+    kube_deploy_tools (1.0.35)
       colorize (~> 0.8)
 
 GEM
