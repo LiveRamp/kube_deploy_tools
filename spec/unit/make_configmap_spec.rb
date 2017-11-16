@@ -10,7 +10,7 @@ CONFIGMAP_FILEPATH="spec/resources/kubernetes/config/#{CONFIGMAP_FILENAME_TEMPLA
 describe KubeDeployTools::ConfigMap do
   it "writes to output a string " do
     Dir.mktmpdir do |tmp_dir|
-      make_configmap = KubeDeployTools::ConfigMap.new('test', 'default', [CONFIGMAP_FILEPATH])
+      make_configmap = KubeDeployTools::ConfigMap.new('test', [CONFIGMAP_FILEPATH], 'default')
       output = YAML::dump(make_configmap.target_hash)
       expect(File.read(CONFIGMAP_CONTENT)).to eq(output)
     end
