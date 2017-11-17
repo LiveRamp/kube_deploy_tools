@@ -14,7 +14,7 @@ module KubeDeployTools
       @shellrunner = shellrunner
 
       if (driver_class = Driver::MAPPINGS[@registry['driver']])
-        @registry_driver = driver_class.new(shellrunner: shellrunner)
+        @registry_driver = driver_class.new(registry: @registry, shellrunner: shellrunner)
       else
         raise "No driver exists for registry type #{@registry['driver']}"
       end

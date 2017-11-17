@@ -42,10 +42,10 @@ describe KubeDeployTools::PublishContainer do
         end
         expect(shellrunner).to receive(:check_call).with('docker', 'login', any_args).once
 
-        expect(shellrunner).to receive(:run_call).with('aws', 'ecr', 'describe-repositories', '--repository-names', 'project1') do
+        expect(shellrunner).to receive(:run_call).with('aws', 'ecr', 'describe-repositories', '--repository-names', 'project1', '--region', 'us-west-2') do
           [stdoutput, nil, double(:status, success?: false)]
         end
-        expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'create-repository', '--repository-name', 'project1').once
+        expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'create-repository', '--repository-name', 'project1', '--region', 'us-west-2').once
         expect(shellrunner).to receive(:run_call).with('aws', 'ecr', 'describe-repositories', any_args).exactly(images.length - 1).times
 
         expect(shellrunner).to receive(:check_call).with('docker', 'push', any_args).exactly(images.length).times
