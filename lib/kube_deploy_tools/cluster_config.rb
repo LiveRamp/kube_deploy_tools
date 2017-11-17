@@ -30,6 +30,7 @@ module KubeDeployTools
     'aws' => {
       'driver' => 'aws',
       'prefix' => '***REMOVED***',
+      'region' => 'us-west-2',
     },
     'local' => {
       'driver' => 'noop',
