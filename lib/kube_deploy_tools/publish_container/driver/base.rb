@@ -5,7 +5,8 @@ module KubeDeployTools
   class PublishContainer
     module Driver
       class Base
-        def initialize(shellrunner:)
+        def initialize(registry:, shellrunner:)
+          @registry = registry
           @shellrunner = shellrunner
         end
 
