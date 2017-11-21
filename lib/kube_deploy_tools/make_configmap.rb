@@ -13,7 +13,7 @@ module KubeDeployTools
       @from_file = from_file
     end
 
-    def base 
+    def base
       {
         'apiVersion' => 'v1',
         'kind' => 'ConfigMap',
@@ -26,19 +26,20 @@ module KubeDeployTools
       res = base
       res['metadata']['name'] = @name
       res['metadata']['namespace'] = @namespace
-      res['metadata']['labels'] = @labels
-      @from_file.each do |maybeFile|
-        if maybeFile.include? '='
+      res['metadata']['labels'] = @labels if @labels
+      @from_file.each do |from_file|
+        if from_file.include? '='
           # e.g. --from-file=config.yml=/path/to/configs/production.yml
-          configmap_key, filepath = maybeFile.split("=", 2)
+          configmap_key, filepath = from_file.split("=", 2)
           res['data'][configmap_key] = File.read(filepath)
-        elsif File.file?(maybeFile)
-          configmap_key = File.basename(maybeFile)
-          filepath = maybeFile
+        elsif File.file?(from_file)
+          # e.g. --from-file=/path/to/configs/production.yml
+          configmap_key = File.basename(from_file)
+          filepath = from_file
           res['data'][configmap_key] = File.read(filepath)
-        elsif File.directory?(maybeFile)
+        elsif File.directory?(from_file)
           # e.g. --from-file=/path/to/configs/
-          Dir[File.join(maybeFile, '*')].each do |filepath|
+          Dir[File.join(from_file, '*')].each do |filepath|
             # NOTE(jmodes): Multiple levels of directories are not supported.
             next if File.directory?(filepath)
             configmap_key = File.basename(filepath)
