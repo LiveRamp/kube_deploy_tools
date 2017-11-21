@@ -10,7 +10,7 @@ bundle exec rake
 GIT_BRANCH=${GIT_BRANCH#origin/}
 case "$GIT_BRANCH" in
 master)
-    bundle exec rake update_gemfile_dot_lock_no_halt
+    bundle exec rake update_gemfile_dot_lock
 
     bundle exec rake autopublish
 
