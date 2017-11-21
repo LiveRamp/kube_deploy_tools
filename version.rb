@@ -1,3 +1,3 @@
 module KubeDeployTools
- VERSION = "1.0.39"
+ VERSION = "1.0.40"
 end
