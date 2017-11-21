@@ -26,8 +26,8 @@ module KubeDeployTools
       @logger.debug(out.shellescape)
 
       if !status.success?
-        @logger.warn("The following command failed: #{Shellwords.join(cmd)}")
-        @logger.warn(err)
+        @logger.warn("The following command failed: #{Shellwords.join(cmd)}") if print_cmd
+        @logger.warn(err) if print_cmd
       end
 
       [out.chomp, err.chomp, status]
