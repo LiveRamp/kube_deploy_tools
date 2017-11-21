@@ -41,6 +41,7 @@ module KubeDeployTools
           Dir[File.join(maybeFile, '*')].each do |filepath|
             # NOTE(jmodes): Multiple levels of directories are not supported.
             next if File.directory?(filepath)
+            configmap_key = File.basename(filepath)
             res['data'][configmap_key] = File.read(filepath)
           end
         end
