@@ -1,0 +1,23 @@
+# This is an example deploy.yml
+deploy:
+  # Please only include the Kubernetes clusters your project will deploy to.
+  # All supported clusters, targets, and environments are below.
+  clusters:
+    - target: local
+      environment: staging
+    - target: colo-service
+      environment: prod
+    - target: colo-service
+      environment: staging
+    - target: gcp
+      environment: prod
+    - target: us-east-1
+      environment: prod
+    - target: us-east-1
+      environment: staging
+  flavors:
+    default: {}
+  # Exclude the hooks section if you're not using a custom hook in your project
+  hooks:
+    - default
+    - scripts/render_deploys_hook

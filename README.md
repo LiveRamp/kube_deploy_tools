@@ -1,31 +1,43 @@
 # kube_deploy_tools
-LiveRamp Kubernetes Build/Release Tools
 
-# bin
+LiveRamp Kubernetes build and release tools for:
+- tagging and publishing Docker images to our image registry;
+- rendering Kubernetes manifests with ERB;
+- publishing Kubernetes manifests in a deploy artifact to Artifactory;
+- applying Kubernetes manifests to a cluster.
 
-The binaries below can be invoked with:
+# Setup
+
+To enable kube_deploy_tools in your project, see
+[documentation/setup.md](documentation/setup.md).
+
+# Usage
+
+To use kube_deploy_tools in your project, see
+[documentation/README.md](documentation).
+
+# Contribute
+
 ```bash
-bundle exec render_deploys
+# Install ruby w/ Homebrew
+brew install ruby
+
+# Or install ruby w/ rbenv
+brew install rbenv ruby-build
+rbenv install 2.3.0
+rbenv global 2.3.0
+
+# Install gem
+gem install bundler
 ```
 
-## templater
-Allows smooshing a template ERB file with a context defined in YAML.
+```bash
+bundle install --with development
 
-## render_deploys
-Goes through the deploy.yml of a project and generates templating contexts for
-tools like templater, for every cluster / flavor permutation in that file.
-Calls `render_deploys_hook` (or a user specified hook) with this templating
-context and a directory to output any rendered files to. Tars up each output
-directory with the full parameters of the cluster / flavor / project / build
-information for uploading to Artifactory.
+# Run tests
+bundle exec rake test
 
-## render_deploys_hook
-Takes in a templating context and a target directory. Scans the kubernetes/ dir
-recursively for .yaml and .yaml.erb files. Renders everything with a templating
-context into the target directory, preserving directory hierarchy underneath
-kubernetes/.
-
-## deploy
-Deploys published release artifacts from Jenkins by `kubectl apply`ing the
-entire artifact.
+# Exec a binary in bin/
+bundle exec render_deploys
+```
 
