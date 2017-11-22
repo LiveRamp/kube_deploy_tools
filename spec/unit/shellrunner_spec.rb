@@ -40,7 +40,7 @@ describe KubeDeployTools::Shellrunner do
       shellrunner.run_call(*cmd)
 
       # Don't log anything
-      expect(logger).to receive(:warn).at_most(0).times
+      expect(logger).not_to receive(:warn)
       shellrunner.run_call(*cmd, print_cmd: false)
     end
   end
