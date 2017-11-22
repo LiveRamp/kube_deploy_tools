@@ -25,9 +25,9 @@ module KubeDeployTools
       out, err, status = Open3.capture3(*cmd)
       @logger.debug(out.shellescape)
 
-      if !status.success?
-        @logger.warn("The following command failed: #{Shellwords.join(cmd)}") if print_cmd
-        @logger.warn(err) if print_cmd
+      if !status.success? && print_cmd
+        @logger.warn("The following command failed: #{Shellwords.join(cmd)}")
+        @logger.warn(err)
       end
 
       [out.chomp, err.chomp, status]
