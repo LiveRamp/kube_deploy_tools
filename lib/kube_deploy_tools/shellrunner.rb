@@ -21,35 +21,11 @@ module KubeDeployTools
       else
         @logger.debug(Shellwords.join(cmd))
       end
-      # Save the entire stdout and stderr output of the subprocess
-      # to return at the end
-      out = ''
-      err = ''
 
-      # Stream stdout and stderr output of the subprocess
-      # Makes logs appear in realtime for long running processes
-      status = Open3.popen3(*cmd) do |stdin, stdout, stderr, thread|
-        # read each stream from a new thread
-        { :out => stdout, :err => stderr }.each do |key, stream|
-          Thread.new do
-            until (line = stream.gets).nil? do
-              if key == :out
-                @logger.debug line.strip
-                out << line
-              else
-                @logger.warn line.strip
-                err << line
-              end
-            end
-          end
-        end
+      out, err, status = Open3.capture3(*cmd)
+      @logger.debug(out.shellescape)
 
-        thread.join
-        thread.value
-      end
-
-
-      if !status.success?
+      if !status.success? && print_cmd
         @logger.warn("The following command failed: #{Shellwords.join(cmd)}")
         @logger.warn(err)
       end

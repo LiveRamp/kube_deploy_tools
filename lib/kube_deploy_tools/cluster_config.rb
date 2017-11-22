@@ -30,6 +30,7 @@ module KubeDeployTools
     'aws' => {
       'driver' => 'aws',
       'prefix' => '***REMOVED***',
+      'region' => 'us-west-2',
     },
     'local' => {
       'driver' => 'noop',
@@ -96,7 +97,7 @@ module KubeDeployTools
     },
     'eu-west-1' => {
       'prod' => {
-        'kube_context' => '<%= username %>@prod.eu-west-1.k8s.***REMOVED***',
+        'kube_context' => '<%= username %>@prod.eu-west-1.k8s.eu.***REMOVED***',
         'flags' => {
           'cloud' => 'aws',
           'kubernetes_major_version' => '1',
@@ -105,7 +106,7 @@ module KubeDeployTools
         }
       },
       'staging' => {
-        'kube_context' => '<%= username %>@staging.eu-west-1.k8s.***REMOVED***',
+        'kube_context' => '<%= username %>@staging.eu-west-1.k8s.eu.***REMOVED***',
         'flags' => {
           'cloud' => 'aws',
           'kubernetes_major_version' => '1',
