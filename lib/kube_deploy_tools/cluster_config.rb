@@ -6,7 +6,7 @@ require 'erb'
 module KubeDeployTools
   # Default method to derive a tag name based on the current environment.
   def self.tag_from_local_env
-    codestamp = `git rev-parse --short=7 HEAD`.rstrip
+    codestamp = `git rev-parse HEAD`.rstrip
     # If tree is dirty, take a hash sum of the output of git status -s as well as
     # git diff to try to encapsulate the state of the environment. Uniqueness is
     # all that matters here.
@@ -21,9 +21,18 @@ module KubeDeployTools
     if branch.start_with?('origin/')
       branch = branch['origin/'.size..-1]
     end
-    branch = branch.gsub('/', '_')
 
-    "#{branch}-#{ENV['GIT_COMMIT'] || codestamp}"
+    # From the Docker docs:
+    # "A tag name must be valid ASCII and may contain lowercase and uppercase
+    # letters, digits, underscores, periods and dashes. A tag name may not
+    # start with a period or a dash and may contain a maximum of 128
+    # characters."
+    branch = branch.gsub(/[^A-Za-z0-9_\.\-\.]/, '_')
+    if branch[0] == '.' || branch[0] == '-'
+      # We could do something more clever here. Not worth it right now.
+      raise "First char of branch name must be alphanumeric: #{branch}"
+    end
+    "#{branch}-#{ENV['GIT_COMMIT'] || codestamp}"[0...128]
   end
 
   REGISTRIES = {
