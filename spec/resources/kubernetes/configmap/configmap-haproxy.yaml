@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-haproxy-config
+  namespace: default
+data:
+  haproxy.cfg: |+
+    global
+        daemon
+        maxconn 4096
+
+    defaults
+        mode http
+
+    frontend http
+        default_backend my-website
+
+    backend my-website
+        server web01 127.0.0.1:8080
+

@@ -17,16 +17,16 @@ module KubeDeployTools
     private
 
     def get_docker_login
-      @shellrunner.check_call('aws', 'ecr', 'get-login', '--no-include-email', '--region', 'us-west-2').split
+      @shellrunner.check_call('aws', 'ecr', 'get-login', '--no-include-email', '--region', @registry['region']).split
     end
 
     def repository_exists?(repository)
-      _, _, status = @shellrunner.run_call('aws', 'ecr', 'describe-repositories', '--repository-names', repository)
+      _, _, status = @shellrunner.run_call('aws', 'ecr', 'describe-repositories', '--repository-names', repository, '--region', @registry['region'])
       status.success?
     end
 
     def create_repository(repository)
-      @shellrunner.check_call('aws', 'ecr', 'create-repository', '--repository-name', repository)
+      @shellrunner.check_call('aws', 'ecr', 'create-repository', '--repository-name', repository, '--region', @registry['region'])
     end
   end
 end
