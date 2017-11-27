@@ -57,6 +57,7 @@ module KubeDeployTools
         'kube_context' => 'minikube',
         'flags' => {
           'cloud' => 'local',
+          'image_registry' => 'local-registry',
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
           'pull_policy' => 'IfNotPresent'
