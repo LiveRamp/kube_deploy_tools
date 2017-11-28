@@ -1,4 +1,5 @@
 require 'optparse'
+require 'kube_deploy_tools/cluster_config.rb'
 
 module KubeDeployTools
   class PublishContainer::Optparser
@@ -7,7 +8,11 @@ module KubeDeployTools
       attr_accessor :local_prefix, :registry, :images, :tag
 
       def initialize
-        self.local_prefix = 'local-registry/'
+        self.local_prefix = KubeDeployTools::CLUSTERS
+          .fetch('local')
+          .fetch('staging')
+          .fetch('flags')
+          .fetch('image_registry')
         self.registry = 'aws'
         self.tag = KubeDeployTools::tag_from_local_env
       end
