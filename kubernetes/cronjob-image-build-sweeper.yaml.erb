@@ -24,8 +24,13 @@ spec:
                   secretKeyRef:
                     name: artifactory
                     key: username
-              - name: ARTIFACTORY_PASSWORD  
+              - name: ARTIFACTORY_PASSWORD
                 valueFrom:
                   secretKeyRef:
                     name: artifactory
                     key: password
+              - name: ARTIFACTORY_HOST
+                valueFrom:
+                  secretKeyRef:
+                    name: artifactory
+                    key: host

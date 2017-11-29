@@ -10,6 +10,7 @@ require 'yaml'
 
 ARTIFACTORY_USERNAME = ENV.fetch('ARTIFACTORY_USERNAME')
 ARTIFACTORY_PASSWORD = ENV.fetch('ARTIFACTORY_PASSWORD')
+ARTIFACTORY_HOST = ENV.fetch('ARTIFACTORY_HOST')
 
 Logging = Logger.new(STDOUT)
 
@@ -21,33 +22,21 @@ end
 def read_config_file(config_file)
   configs = YAML.load_file(config_file)
   for config in configs
-    retention = config['retention']
-
-    if retention.index("d") != nil
-      retention = retention[0...retention.index("d")].to_i
-    elsif retention.index("M") != nil
-      # Converting the string to days of retention and averaging
-      # 30 days in a month
-      retention = retention[0...retention.index("m")].to_i * 30
-    else
-      raise "Invalid retention value, unexpected input #{retention}"
-    end
-
+    retention = human_duration_in_seconds(config['retention'])
     repo = config['repository']
-    bases = {'artifactory' => config['artifactory_host']}
     prefixes = config['prefix']
-    remove(repo, retention, bases, prefixes)
+    remove(repo, retention, prefixes)
   end
 end
 
 # Find the containers that are past their expiry time
 # on artifactory
-def search_artifactory(retention, repo_name, artifactory_host)
+def search_artifactory(retention, repo_name)
   time_now = Time.now
-  to = (time_now - (60 * 60 * 24 * retention)).to_i * 1000
+  to = (time_now - retention).to_i * 1000
   from = 0
 
-  http_path = "#{artifactory_host}/api/search/creation"
+  http_path = "#{ARTIFACTORY_HOST}/api/search/creation"
   uri = URI.parse(http_path)
   uri.query = "to=#{to}&from=#{from}&repos=#{repo_name}"
   http = Net::HTTP.new(uri.host, uri.port)
@@ -86,12 +75,12 @@ def search_artifactory(retention, repo_name, artifactory_host)
 end
 
 # Remove the expired binaries from Artifactory
-def remove_from_artifactory(builds, artifactory_base, prefixes)
+def remove_from_artifactory(builds, prefixes)
   builds.each do |job, files|
     if not prefixes.include?(job['job']); next end
 
     files['files'].each do |file|
-      remove_path = "#{artifactory_base}/api/storage/"\
+      remove_path = "#{ARTIFACTORY_HOST}/api/storage/"\
         "#{job['repository']}/#{job['job']}/#{job['build']}/#{file}"
       uri = URI.parse(remove_path)
       http = Net::HTTP.new(uri.host, uri.port)
@@ -129,14 +118,29 @@ def remove_from_ecr(repository)
   # `aws ecr batch-delete-image --repository-name #{repository} --image-ids imageDigest=<sha256>`
 end
 
-def remove(repository, retention, bases, prefixes)
-  artifactory_builds = search_artifactory(retention, repository, bases['artifactory'])
-  remove_from_artifactory(artifactory_builds, bases['artifactory'], prefixes)
+def remove(repository, retention, prefixes)
+  artifactory_builds = search_artifactory(retention, repository)
+  remove_from_artifactory(artifactory_builds, prefixes)
   #TODO: Add in remove gcr and ecr since missing image ids based on 
   # https://jira.***REMOVED***/browse/DEV-246
   # image_ids = []
   # remove_from_gcr(image_ids)
   # remove_from_ecr(repository)
+end
+
+# Function to convert the config times of format "<>M" or "<>d"
+# to seconds
+def human_duration_in_seconds(time)
+  if time.index("d") != nil
+    time = time[0...time.index("d")].to_i
+  elsif time.index("M") != nil
+    # Converting the string to days of retention and averaging
+    # 30 days in a month
+    time = time[0...time.index("M")].to_i * 30
+  else
+    raise "Invalid retention value, unexpected input #{time}"
+  end
+  return time * 60 * 60 * 24
 end
 
 main(ARGV)
