@@ -1,0 +1,146 @@
+#!/usr/bin/env ruby
+# Script that cleans out old containers and artifactory objects
+
+require 'date'
+require 'logger'
+require 'json'
+require 'net/http'
+require 'uri'
+require 'yaml'
+
+ARTIFACTORY_USERNAME = ENV.fetch('ARTIFACTORY_USERNAME')
+ARTIFACTORY_PASSWORD = ENV.fetch('ARTIFACTORY_PASSWORD')
+ARTIFACTORY_HOST = ENV.fetch('ARTIFACTORY_HOST')
+
+Logging = Logger.new(STDOUT)
+
+def main(argv)
+  # Read args for info on what to change/customize
+  read_config_file(argv[0])
+end
+
+def read_config_file(config_file)
+  configs = YAML.load_file(config_file)
+  for config in configs
+    retention = human_duration_in_seconds(config['retention'])
+    repo = config['repository']
+    prefixes = config['prefix']
+    remove(repo, retention, prefixes)
+  end
+end
+
+# Find the containers that are past their expiry time
+# on artifactory
+def search_artifactory(retention, repo_name)
+  time_now = Time.now
+  to = (time_now - retention).to_i * 1000
+  from = 0
+
+  http_path = "#{ARTIFACTORY_HOST}/api/search/creation"
+  uri = URI.parse(http_path)
+  uri.query = "to=#{to}&from=#{from}&repos=#{repo_name}"
+  http = Net::HTTP.new(uri.host, uri.port)
+  request = Net::HTTP::Get.new(uri)
+  request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
+  response = http.request(request)
+  response_body = JSON.parse(response.body)
+
+  #{{"job"=>prefix, "build"=>build, "repository"=>repository}=>{ files=>[], "created"=>created}}
+  images_to_remove = {}
+  if response.code != '200'
+    Logging.error("Error in fetching #{repo_name} search
+      results #{response.code}: #{response.body}")
+  else
+    for res in response_body['results']
+      uri_result = res['uri']
+      uri_split = uri_result.split('/')
+
+      # The uri has the structure of: 
+      # {host}/api/storage/{repo_name}/{prefix}/{build}/{file}
+      prefix_index = uri_split.find_index(repo_name) + 1
+      prefix = uri_split[prefix_index]
+      build = uri_split[prefix_index + 1]
+      file = uri_split[prefix_index + 2]
+
+      key = {'job' => prefix, 'build' => build, 'repository' => repo_name}
+      if images_to_remove.has_key?(key)
+        images_to_remove[key]['files'].push(file)
+      else
+        created = DateTime.strptime(res['created'][0 .. 10], '%Y-%m-%d')
+        images_to_remove[key] = {'files' => [file], 'created' => created}
+      end
+    end
+  end
+  return images_to_remove
+end
+
+# Remove the expired binaries from Artifactory
+def remove_from_artifactory(builds, prefixes)
+  builds.each do |job, files|
+    if not prefixes.include?(job['job']); next end
+
+    files['files'].each do |file|
+      remove_path = "#{ARTIFACTORY_HOST}/api/storage/"\
+        "#{job['repository']}/#{job['job']}/#{job['build']}/#{file}"
+      uri = URI.parse(remove_path)
+      http = Net::HTTP.new(uri.host, uri.port)
+      request = Net::HTTP::Delete.new(uri)
+      request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
+      response = http.request(request)
+
+      if response.code != '200'
+        Logging.error("Unsuccessful at deleting #{path}: #{response}")
+      else
+        puts "Successfully removed build #{path}"
+      end
+    end
+  end
+end
+
+# TODO: Need to link the project-id and image names from GCR to remove images from
+# GCR. This relies on https://jira.***REMOVED***/browse/DEV-246 
+# Link: https://cloud.google.com/container-registry/docs/managing#deleting_images
+# Remove the expired container images from GCR
+def remove_from_gcr(image_ids)
+  image_ids.each do |id|
+    # Need the id path to be [HOSTNAME]/[PROJECT-ID]/[IMAGE]
+    #`gcloud container images delete #{id}`
+  end
+end
+
+# TODO: Need to link the repository and image names from ECR to remove images from
+# ECR. This relies on https://jira.***REMOVED***/browse/DEV-246 
+# Link: https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html
+# Remove the expired containers images from ECR
+def remove_from_ecr(repository)
+  # `aws ecr list-images --repository-name #{repository}`
+  # Get the output of the command for the images that exist
+  # `aws ecr batch-delete-image --repository-name #{repository} --image-ids imageDigest=<sha256>`
+end
+
+def remove(repository, retention, prefixes)
+  artifactory_builds = search_artifactory(retention, repository)
+  remove_from_artifactory(artifactory_builds, prefixes)
+  #TODO: Add in remove gcr and ecr since missing image ids based on 
+  # https://jira.***REMOVED***/browse/DEV-246
+  # image_ids = []
+  # remove_from_gcr(image_ids)
+  # remove_from_ecr(repository)
+end
+
+# Function to convert the config times of format "<>M" or "<>d"
+# to seconds
+def human_duration_in_seconds(time)
+  if time.index("d") != nil
+    time = time[0...time.index("d")].to_i
+  elsif time.index("M") != nil
+    # Converting the string to days of retention and averaging
+    # 30 days in a month
+    time = time[0...time.index("M")].to_i * 30
+  else
+    raise "Invalid retention value, unexpected input #{time}"
+  end
+  return time * 60 * 60 * 24
+end
+
+main(ARGV)
