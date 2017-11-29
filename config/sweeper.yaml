@@ -1,0 +1,9 @@
+- repository: kubernetes-snapshot-local
+  prefix:
+    - arbor_master
+    - arbor_staging
+    - k8s-reaper
+    - kube_infra_master
+    - workspace
+  retention: 3M
+  artifactory_host: 'http://***REMOVED***/artifactory'

@@ -1,0 +1,31 @@
+spec:
+  # Runs to remove old build images from artifactory, 
+  # GCR and ECR
+  schedule: "0 14 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: image-build-sweeper
+          labels:
+            app: image-build-sweeper
+            tag: "<%= config["tag"] %>"
+        spec:
+          restartPolicy: OnFailure
+          # NOTE (efries): prevent a job from retrying forever
+          activeDeadlineSeconds: 86400 # deadline of 24h
+          containers:
+            - name: image-build-sweeper
+              image: <%= config["image_registry"] %>/image-build-sweeper<%= config["image_tag"] %>
+              imagePullPolicy: <%= config["pull_policy"] %>
+              env:
+              - name: ARTIFACTORY_USERNAME
+                valueFrom:
+                  secretKeyRef:
+                    name: artifactory
+                    key: username
+              - name: ARTIFACTORY_PASSWORD  
+                valueFrom:
+                  secretKeyRef:
+                    name: artifactory
+                    key: password
