@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.43)
+    kube_deploy_tools (1.0.dev)
       colorize (~> 0.8)
 
 GEM
@@ -35,4 +35,4 @@ DEPENDENCIES
   rubygems-tasks (~> 0.2)
 
 BUNDLED WITH
-   1.16.0
+   1.14.6

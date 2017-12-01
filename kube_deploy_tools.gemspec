@@ -3,7 +3,7 @@ require File.expand_path('version.rb')
 
 Gem::Specification.new do |gem|
   gem.name    = 'kube_deploy_tools'
-  gem.version = KubeDeployTools::VERSION
+  gem.version = "#{KubeDeployTools::VERSION_XY}.#{ENV.fetch('BUILD_ID', 'dev')}"
   gem.date    = Date.today.to_s
 
   gem.summary = "Kubernetes Deploy Tools"
