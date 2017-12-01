@@ -1,46 +1,15 @@
-GIT
-  remote: git@git.***REMOVED***:RailsRepos/liveramp_updater.git
-  revision: 48b69d452566dd981a5273226d612171299a618a
-  branch: optional-engine
-  specs:
-    liveramp_updater (1.0.14)
-
 PATH
   remote: .
   specs:
-    kube_deploy_tools (1.0.42)
+    kube_deploy_tools (1.0.43)
       colorize (~> 0.8)
 
 GEM
-  remote: https://gemserver.***REMOVED***/
   remote: https://rubygems.***REMOVED***/
   specs:
-    builder (3.2.3)
     colorize (0.8.1)
     diff-lcs (1.3)
-    faraday (0.13.1)
-      multipart-post (>= 1.2, < 3)
-    geminabox (0.13.9)
-      builder
-      faraday
-      httpclient (>= 2.2.7)
-      nesty
-      reentrant_flock
-      sinatra (>= 1.2.7)
-    httpclient (2.8.3)
-    json (2.1.0)
-    liveramp_jenkins_tools (2.0.0)
-      geminabox
-      json
-      rake
-    multipart-post (2.0.0)
-    mustermann (1.0.1)
-    nesty (1.0.2)
-    rack (2.0.3)
-    rack-protection (2.0.0)
-      rack
     rake (12.3.0)
-    reentrant_flock (0.1.0)
     rspec (3.7.0)
       rspec-core (~> 3.7.0)
       rspec-expectations (~> 3.7.0)
@@ -54,23 +23,16 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.7.0)
     rspec-support (3.7.0)
-    sinatra (2.0.0)
-      mustermann (~> 1.0)
-      rack (~> 2.0)
-      rack-protection (= 2.0.0)
-      tilt (~> 2.0)
-    tilt (2.0.8)
+    rubygems-tasks (0.2.4)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  colorize!
   kube_deploy_tools!
-  liveramp_jenkins_tools (~> 2.0)
-  liveramp_updater!
-  rake!
-  rspec!
+  rake (~> 12.0)
+  rspec (~> 3.0)
+  rubygems-tasks (~> 0.2)
 
 BUNDLED WITH
    1.16.0
