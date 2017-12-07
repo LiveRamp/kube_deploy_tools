@@ -17,7 +17,20 @@ module KubeDeployTools
     private
 
     def get_docker_login
-      @shellrunner.check_call('aws', 'ecr', 'get-login', '--no-include-email', '--region', @registry['region']).split
+      args = @shellrunner.check_call('aws', 'ecr', 'get-login', '--region', @registry['region']).split
+
+      # Remove '-e' and subsequent argument
+      # This compensates for --no-include-email not being recognized in the Ubuntu packaged awscli
+      # and not usable unless you upgrade
+      i = args.index('-e')
+      if !i.nil?
+        # delete '-e'
+        args.delete_at(i)
+        # delete whatever value is after (usually 'none')
+        args.delete_at(i)
+      end
+
+      args
     end
 
     def repository_exists?(repository)

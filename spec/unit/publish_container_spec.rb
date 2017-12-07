@@ -37,10 +37,11 @@ describe KubeDeployTools::PublishContainer do
       it 'works' do
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
 
-        expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'get-login', '--no-include-email', '--region', 'us-west-2') do
-          'docker login -u AWS -p paws https://***REMOVED***'
+        expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'get-login', '--region', 'us-west-2') do
+          'docker login -u AWS -p paws -e none https://***REMOVED***'
         end
-        expect(shellrunner).to receive(:check_call).with('docker', 'login', any_args).once
+        # -e none should be stripped if it is there.
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://***REMOVED***').once
 
         expect(shellrunner).to receive(:run_call).with('aws', 'ecr', 'describe-repositories', '--repository-names', 'project1', '--region', 'us-west-2') do
           [stdoutput, nil, double(:status, success?: false)]
