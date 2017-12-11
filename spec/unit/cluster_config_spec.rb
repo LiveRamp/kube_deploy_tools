@@ -11,5 +11,18 @@ describe 'cluster config' do
     )
     expect(kube_context).to eq("#{username}@staging.service")
   end
+
+  it "collects environmental Git information to create an appropriately long tag value" do
+    ENV['GIT_COMMIT'] = '0981b78141b123965e7380d6021f7a9b76426290'
+    ENV['GIT_BRANCH'] = 'my-testing-branch'
+
+    tag = KubeDeployTools.tag_from_local_env
+    expect(tag).to eq('my-testing-branch-0981b78')
+
+    ENV['GIT_BRANCH'] = 'my testing! branch with some weird# characters, and also overflowing'
+    tag = KubeDeployTools.tag_from_local_env
+    expect(tag).to eq('my_testing__branch_with_some_weird__characters__and_als-0981b78')
+    expect(tag.size).to eq(63)
+  end
 end
 

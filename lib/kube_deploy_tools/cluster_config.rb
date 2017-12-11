@@ -6,18 +6,13 @@ require 'erb'
 module KubeDeployTools
   # Default method to derive a tag name based on the current environment.
   def self.tag_from_local_env
-    codestamp = `git rev-parse HEAD`.rstrip
+    codestamp = ENV.fetch('GIT_COMMIT', `git rev-parse HEAD`.rstrip)[0...7]
     # If tree is dirty, take a hash sum of the output of git status -s as well as
     # git diff to try to encapsulate the state of the environment. Uniqueness is
     # all that matters here.
     status = `git status -s`
-    if !status.empty?
-      diff = `git diff`
-      dirty_sum = Digest::MD5.hexdigest(status + diff)
-      codestamp += "-dirty#{dirty_sum}"
-    end
 
-    branch = ENV['GIT_BRANCH'] || 'LOCAL'
+    branch = ENV.fetch('GIT_BRANCH', `git rev-parse --abbrev-ref HEAD`.rstrip)
     if branch.start_with?('origin/')
       branch = branch['origin/'.size..-1]
     end
@@ -32,7 +27,11 @@ module KubeDeployTools
       # We could do something more clever here. Not worth it right now.
       raise "First char of branch name must be alphanumeric: #{branch}"
     end
-    "#{branch}-#{ENV['GIT_COMMIT'] || codestamp}"[0...128]
+
+    # Docker maximum tag length is 128 characters long.
+    # Kubernetes maximum label length is 63 characters long. Go with that.
+    # Branch (up to 55 chars) + 1 char hyphen + 7 char codestamp = 63
+    "#{branch[0...55]}-#{codestamp}"
   end
 
   REGISTRIES = {
