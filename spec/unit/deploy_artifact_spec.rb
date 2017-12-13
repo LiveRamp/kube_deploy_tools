@@ -6,7 +6,9 @@ LOCAL_ARTIFACT='manifests_local_staging_default'
 LOCAL_COMPRESSED_ARTIFACT="#{LOCAL_ARTIFACT}.tar.gz"
 REMOTE_ARTIFACT="http://***REMOVED***/artifactory/kubernetes-snapshot-local/FAKEPROJECT/FAKEJOBNUMBER/#{LOCAL_COMPRESSED_ARTIFACT}"
 TEST_RESOURCES='spec/resources/'
-LEFT_OVER_FILE = 'leftover_from_last_run'
+KUBE_RESOURCE_OLD = 'web.yaml'
+KUBE_RESOURCE_NEW = 'new.yaml'
+
 
 describe KubeDeployTools::DeployArtifact do
   let(:logger) { KubeDeployTools::FormattedLogger.build }
@@ -35,18 +37,18 @@ describe KubeDeployTools::DeployArtifact do
           File.join(TEST_RESOURCES, LOCAL_COMPRESSED_ARTIFACT),
           local_compressed_artifact,
         )
-
-        [0,0,double(:success? => true)]
+        [stdoutput, nil, status]
       }
 
       allow(shellrunner).to receive(:run_call).with('tar', any_args) {
 
         # Simulate uncompressing tarball with making the directory
-        FileUtils.touch("#{local_artifact}/untared_file")
-        [0,0,double(:success? => true)]
+        FileUtils.touch("#{local_artifact}/KUBE_RESOURCE_NEW")
+        [stdoutput, nil, status]
       }
 
-      leftover_file = "#{local_artifact}/#{LEFT_OVER_FILE}"
+      # Simulate leftover files from a previous run so we can test the clean build property
+      leftover_file = "#{local_artifact}/#{KUBE_RESOURCE_OLD}"
       FileUtils.mkdir_p(local_artifact)
       FileUtils.touch(leftover_file)
 
