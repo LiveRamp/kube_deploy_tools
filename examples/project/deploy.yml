@@ -1,10 +1,20 @@
-# This is an example deploy.yml
+# This is an example deploy.yml, which tells kube_deploy_tools what
+# deployment varieties exist for your project and any special parameters
+# to inject into template rendering for each one.
+
 deploy:
+
   # Please only include the Kubernetes clusters your project will deploy to.
   # All supported clusters, targets, and environments are below.
   clusters:
     - target: local
       environment: staging
+      # Creates the behavior that everything you run in your local stack
+      # will be pinned to the latest container that you already have on
+      # your machine. Without this, you explicitly have to publish_container
+      # --registry local.
+      extra_flags:
+        image_tag: latest
     - target: colo-service
       environment: prod
     - target: colo-service
@@ -15,9 +25,23 @@ deploy:
       environment: prod
     - target: us-east-1
       environment: staging
+
+  # The flavors section can be specified globally or at the cluster level. It's
+  # a freeform way to specify how you'd like to separate stages or kinds of
+  # deployments. For example: blue-green or canary-stable methodology.
   flavors:
     default: {}
-  # Exclude the hooks section if you're not using a custom hook in your project
+    # As an example, these flavors will define canary and stable tracks for every
+    # cluster type, making config['release_track'] set in each flavor context for
+    # use in template rendering.
+    #
+    # canary:
+    #   release_track: canary
+    # stable:
+    #   release_track: stable
+
+  # Exclude the hooks section if you're not using a custom hook in your project.
+  # The default will always be used.
   hooks:
     - default
     - scripts/render_deploys_hook
