@@ -38,7 +38,7 @@ module KubeDeployTools
     end
 
     def path
-      FileUtils.mkdir_p(@output_dir_path)
+      ensure_clean_directory(@output_dir_path)
 
       if is_remote_deploy_artifact?(@input_path)
         @input_path = download_remote_deploy_artifact(@input_path, @output_dir_path)
@@ -91,6 +91,12 @@ module KubeDeployTools
     def is_local_deploy_artifact?(input_path)
       File.directory?(input_path)
     end
+
+    def ensure_clean_directory(output_dir_path)
+      FileUtils.rm_rf(output_dir_path)
+      FileUtils.mkdir_p(output_dir_path)
+    end
+
   end
 
 end
