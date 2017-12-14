@@ -89,9 +89,9 @@ def remove_from_artifactory(builds, prefixes)
       response = http.request(request)
 
       if response.code != '200'
-        Logging.error("Unsuccessful at deleting #{path}: #{response}")
+        Logging.error("Unsuccessful at deleting #{remove_path}: #{response}")
       else
-        puts "Successfully removed build #{path}"
+        puts "Successfully removed build #{remove_path}"
       end
     end
   end
