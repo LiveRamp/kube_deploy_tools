@@ -71,7 +71,7 @@ A Jenkins build step is required to render Kubernetes manifests and deploy
 artifacts.
 
 ```bash
-bundle exec render_deploys
+bundle exec kdt render_deploys
 ```
 
 A Jenkins build step is required to publish your project's deploy artifacts to

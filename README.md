@@ -38,6 +38,6 @@ bundle install --with development
 bundle exec rake test
 
 # Exec a binary in bin/
-bundle exec render_deploys
+bundle exec kdt render_deploys
 ```
 

@@ -8,7 +8,7 @@ To render Kubernetes manifest .yaml and .yaml.erb files from the `kubernetes/`
 directory to the `build/kubernetes/` directory:
 
 ```bash
-bundle exec render_deploys
+bundle exec kdt render_deploys
 ```
 
 See [documentation/kube_manifests_with_erb.md](kube_manifests_with_erb.md)
@@ -22,7 +22,7 @@ by your Jenkins build, find the build name in Jenkins and specify the cluster
 target and environment as specified in your deploy.yml:
 
 ```bash
-bundle exec deploy --target us-east-1 --environment staging --build 37
+bundle exec kdt deploy --target us-east-1 --environment staging --build 37
 ```
 
 `deploy` will recursively `kubectl apply -f` Kubernetes manifests in this deploy
@@ -34,11 +34,11 @@ To deploy Kubernetes manifests that you rendered locally in your
 `build/kubernetes/` directory, use the `-f` flag:
 
 ```bash
-bundle exec deploy --target local --environment staging \
+bundle exec kdt deploy --target local --environment staging \
   -f build/kubernetes/local/staging/default/
 
 # Or specify a context
-bundle exec deploy --context minikube -f build/kubernetes/local/staging/default/
+bundle exec kdt deploy --context minikube -f build/kubernetes/local/staging/default/
 ```
 
 ### Deploy a specific file
@@ -46,7 +46,7 @@ bundle exec deploy --context minikube -f build/kubernetes/local/staging/default/
 As above, you can use `-f` to specify a file or more specific directory:
 
 ```bash
-bundle exec deploy --context minikube \
+bundle exec kdt deploy --context minikube \
   -f build/kubernetes/local/staging/default/dep-nginx.yaml
 ```
 

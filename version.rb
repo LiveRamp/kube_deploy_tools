@@ -1,3 +1,3 @@
 module KubeDeployTools
- VERSION_XY = "1.0"
+ VERSION_XY = "1.1"
 end

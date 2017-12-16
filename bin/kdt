@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require 'kube_deploy_tools/kdt'
+
+kdt = KubeDeployTools::Kdt.new(__dir__, ARGV)
+
+if ARGV.empty?
+  kdt.display_bins
+else
+  kdt.execute!
+end
