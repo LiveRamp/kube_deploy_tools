@@ -9,11 +9,18 @@ Gemfile:
 ```ruby
 source 'http://gemserver.***REMOVED***'
 
-gem 'kube_deploy_tools', '~> 1.0'
+group :kdt do
+  gem 'kube_deploy_tools', '~> 1.0'
+end
 ```
 
 ```bash
 bundle install
+```
+
+If you only need to install kdt (typically only applies to deployment servers like rampmaster)
+```bash
+bundle install --with kdt --without default development test
 ```
 
 ## Create deploy.yml
