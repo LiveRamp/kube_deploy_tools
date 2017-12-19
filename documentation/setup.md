@@ -74,6 +74,13 @@ Thus, add the `build/` directory to your .gitignore file.
 
 ## Set up Jenkins build steps
 
+The Jenkins build should run on Docker-enabled Jenkins workers.
+In General > Restrict where this project can be run, set the Label Expression to
+`docker2`.
+
+A Jenkins build step is required to build, tag, and push all of your Docker images.
+See [documentation/deploy.md](deploy.md) for more.
+
 A Jenkins build step is required to render Kubernetes manifests and deploy
 artifacts.
 
