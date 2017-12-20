@@ -4,13 +4,15 @@
 All .yaml and .yaml.erb files in `kubernetes/` are templated out into the
 `build/kubernetes/` directory with `bundle exec kdt render_deploys`.
 
+Kubernetes manifests can be in subdirectories of any depth in the
+`kubernetes/` directory for organization purposes.
+
+## Examples
+
 Examples of `kubernetes/` directories with .yaml and .yaml.erb files are
 [arbortech/workspace](https://git.***REMOVED***/arbortech/workspace),
 [kube-infra](https://git.***REMOVED***/OpsRepos/kube-infra), and
 [k8s-reaper](https://git.***REMOVED***/OpsRepos/k8s-reaper).
-
-Kubernetes manifests can be in subdirectories of any depth in the
-`kubernetes/` directory for organization purposes.
 
 ## ERB variables
 
