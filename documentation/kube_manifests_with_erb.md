@@ -55,3 +55,52 @@ deploy:
 As you can see above with `image_tag`, the default variables above can be
 overriden. See [examples/projects/deploy.yml](../examples/project/deploy.yml).
 
+## A word on container image registry, tag, and pull policy
+
+As described above, the image registry, tag, and pull policy are available as
+context variables. As a best practice, any Docker containers you build
+should be templated out in your workloads like so:
+
+```yaml
+      containers:
+        - image: <%= config["image_registry"] %>/fluentd:<%= config["image_tag"] %>
+          imagePullPolicy: <%= config["pull_policy"] %>
+```
+
+The `image_tag` made available with `bundle exec kdt render_deploys`
+is the same image tag used to tag and push Docker images in
+`bundle exec kdt publish_container`.
+
+Both of these commands are intended to be used together.
+
+The `image_tag` is a unique identifier used to ensure we know what image is
+being used in production. The `image_tag` is built from the commit and the
+caller i.e. either your username or the Jenkins project build name, such
+that it's clear where the image came from.
+
+For local stacks, we recommend using `image_tag: latest` in your
+deploy.yml for convenience only.
+
+Similarly, `image_registry` is used by both `bundle exec kdt render_deploys`
+and `bundle exec kdt publish_container`, so it's important to template this out
+as well.
+
+## Using render_deploys
+
+`bundle exec kdt render_deploys` should be called in your Jenkins build,
+as described in [documentation/deploy.md](deploy.md).
+
+This renders all Kubernetes plain YAMLs and ERB templates, and bundles them into
+deploy artifacts.
+
+You'll in general be using `bundle exec kdt render_deploys` in the following
+circumstances:
+- to test your ERB templates;
+- to release to your local Minikube cluster.
+
+Otherwise for live staging or production releases, you'll rely on the deploy
+artifacts rendered and pushed by Jenkins, unless you're doing a manual release,
+which would require re-tagging and re-pushing Docker images.
+
+See [documentation/deploy.md](deploy.md) for more.
+
