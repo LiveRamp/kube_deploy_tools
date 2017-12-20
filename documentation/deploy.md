@@ -35,7 +35,9 @@ well-known tag in a single deploy artifact
 
 ## Releasing a deploy artifact from Jenkins
 
-To release the deploy artifact from your Jenkins build:
+To release the Kubernetes manifests of a deploy artifact uploaded to Artifactory
+by your Jenkins build, find the build name in Jenkins and specify the cluster
+target and environment as specified in your deploy.yml:
 
 ```bash
 # Ensure that you have the same version of kube_deploy_tools in Gemfile.lock
@@ -60,6 +62,9 @@ bundle exec kdt deploy \
   --build 1234 \
   --dry-run false
 ```
+
+`deploy` will recursively `kubectl apply -f` Kubernetes manifests in this deploy
+artifact.
 
 See `bundle exec kdt deploy --help` for a description of all flags.
 
@@ -94,5 +99,25 @@ An example of the deploy command:
 
 ```bash
 please deploy target=colo-service environment=staging build=61
+```
+
+### Deploy Kubernetes manifests to your local minikube context
+
+To deploy Kubernetes manifests that you rendered locally in your
+`build/kubernetes/` directory, use the `-f` flag:
+
+```bash
+# Build and tag all Docker images with |docker build| and
+# |bundle exec kdt publish_container|.
+# We recommend tagging containers with |latest| so you only have to
+# release the Deployments once, as described below.
+
+bundle exec kdt render_deploys
+
+bundle exec kdt deploy --target local --environment staging \
+  -f build/kubernetes/local/staging/default/
+
+# Or specify a context
+bundle exec kdt deploy --context minikube -f build/kubernetes/local/staging/default/
 ```
 
