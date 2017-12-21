@@ -104,6 +104,26 @@ module KubeDeployTools
         }
       }
     },
+    'us-west-2' => {
+      'prod' => {
+        'kube_context' => '<%= username %>@prod-us-west-2.k8s.***REMOVED***',
+        'flags' => {
+          'cloud' => 'aws',
+          'kubernetes_major_version' => '1',
+          'kubernetes_minor_version' => '8',
+          'pull_policy' => 'Always',
+        }
+      },
+      'staging' => {
+        'kube_context' => '<%= username %>@staging-us-west-2.k8s.***REMOVED***',
+        'flags' => {
+          'cloud' => 'aws',
+          'kubernetes_major_version' => '1',
+          'kubernetes_minor_version' => '7',
+          'pull_policy' => 'Always',
+        }
+      }
+    },
     'eu-west-1' => {
       'prod' => {
         'kube_context' => '<%= username %>@prod.eu-west-1.k8s.eu.***REMOVED***',
