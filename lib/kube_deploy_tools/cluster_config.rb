@@ -50,6 +50,8 @@ module KubeDeployTools
     }
   }.freeze
 
+  PREFIX_TO_REGISTRY = Hash[REGISTRIES.map {|reg, info| [info['prefix'], reg]}]
+
   DEFAULT_REGISTRY = REGISTRIES['aws']['prefix']
 
   DEFAULT_FLAGS = {

@@ -120,6 +120,11 @@ module KubeDeployTools
     "props": "type=tgz;target={3};environment={4};flavor={5}",
     "recursive": false,
     "flat": true
+  },
+  {
+    "pattern": "#{@output_dir}/images.yaml",
+    "target": "kubernetes-snapshot-local/#{@project}/#{@build_number}/images.yaml",
+    "flat": true
   }]
 }
 EOF

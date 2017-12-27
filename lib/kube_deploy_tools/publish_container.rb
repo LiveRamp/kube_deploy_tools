@@ -1,8 +1,11 @@
 require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/shellrunner'
+require 'kube_deploy_tools/built_artifacts_file'
 
 require 'kube_deploy_tools/publish_container/image'
 require 'kube_deploy_tools/publish_container/driver'
+
+BUILT_ARTIFACTS_FILE = 'build/kubernetes/images.yaml'.freeze
 
 module KubeDeployTools
   class PublishContainer
@@ -26,6 +29,7 @@ module KubeDeployTools
       # Does whatever is necessary to authorize against this registry
       @registry_driver.authorize
       push_images(images_to_push)
+      update_built_artifacts(images_to_push, BUILT_ARTIFACTS_FILE)
     end
 
     private
@@ -53,5 +57,24 @@ module KubeDeployTools
       end
     end
 
+    def update_built_artifacts(images_to_push, file_name)
+      artifacts = KubeDeployTools::BuiltArtifactsFile.new(file_name)
+      build_id = ENV.fetch('BUILD_ID', 'LOCAL')
+
+      if !artifacts.build_id.nil? && artifacts.build_id != build_id
+        # Clear the images as this is a fresh build.
+        artifacts.images = Set.new
+      end
+
+      # Add new images to the output list.
+      artifacts.build_id = build_id
+      images_to_push.each do |image|
+        artifacts.images.add image.full_tag
+      end
+
+      # Write the config list.
+      FileUtils.mkdir_p File.dirname file_name
+      artifacts.write file_name
+    end
   end
 end
