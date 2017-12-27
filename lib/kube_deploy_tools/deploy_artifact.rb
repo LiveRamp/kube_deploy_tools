@@ -22,7 +22,7 @@ module KubeDeployTools
       shellrunner:,
       logger:,
       input_path:,
-      output_dir_path: 'build/kubernetes/')
+      output_dir_path: 'build/kubernetes/remote/')
       @shellrunner = shellrunner
       @logger = logger
 
@@ -38,8 +38,9 @@ module KubeDeployTools
     end
 
     def path
+      ensure_clean_directory(@output_dir_path)
+
       if is_remote_deploy_artifact?(@input_path)
-        ensure_clean_directory(@output_dir_path)
         @input_path = download_remote_deploy_artifact(@input_path, @output_dir_path)
       end
 
