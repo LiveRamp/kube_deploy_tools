@@ -38,9 +38,8 @@ module KubeDeployTools
     end
 
     def path
-      ensure_clean_directory(@output_dir_path)
-
       if is_remote_deploy_artifact?(@input_path)
+        ensure_clean_directory(@output_dir_path)
         @input_path = download_remote_deploy_artifact(@input_path, @output_dir_path)
       end
 
