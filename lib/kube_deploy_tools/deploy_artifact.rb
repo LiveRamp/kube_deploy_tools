@@ -22,7 +22,7 @@ module KubeDeployTools
       shellrunner:,
       logger:,
       input_path:,
-      output_dir_path: 'build/kubernetes/remote/')
+      output_dir_path: 'build/kubernetes/')
       @shellrunner = shellrunner
       @logger = logger
 
@@ -38,8 +38,6 @@ module KubeDeployTools
     end
 
     def path
-      ensure_clean_directory(@output_dir_path)
-
       if is_remote_deploy_artifact?(@input_path)
         @input_path = download_remote_deploy_artifact(@input_path, @output_dir_path)
       end
@@ -79,7 +77,7 @@ module KubeDeployTools
     def uncompress_local_deploy_artifact(input_path, output_dir_path)
       dirname = File.basename(input_path).chomp(EXT_TAR_GZ)
       output_path = File.join(output_dir_path, dirname)
-      FileUtils.mkdir_p(output_path)
+      ensure_clean_directory(output_path)
       out, err, status = @shellrunner.run_call('tar', '-xzf', input_path, '-C', output_path)
       if !status.success?
         raise "Failed to uncompress deploy artifact #{input_path}"
