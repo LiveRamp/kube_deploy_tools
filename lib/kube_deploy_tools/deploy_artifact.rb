@@ -1,6 +1,7 @@
-require 'uri'
-require 'kube_deploy_tools/object'
 require 'fileutils'
+require 'uri'
+
+require 'kube_deploy_tools/object'
 
 EXT_TAR_GZ = ".tar.gz"
 ARTIFACT_REPO="http://***REMOVED***/artifactory/kubernetes-snapshot-local/"
@@ -22,7 +23,7 @@ module KubeDeployTools
       shellrunner:,
       logger:,
       input_path:,
-      output_dir_path: 'build/kubernetes/')
+      output_dir_path: nil)
       @shellrunner = shellrunner
       @logger = logger
 
@@ -77,7 +78,7 @@ module KubeDeployTools
     def uncompress_local_deploy_artifact(input_path, output_dir_path)
       dirname = File.basename(input_path).chomp(EXT_TAR_GZ)
       output_path = File.join(output_dir_path, dirname)
-      ensure_clean_directory(output_path)
+      FileUtils.mkdir_p(output_path)
       out, err, status = @shellrunner.run_call('tar', '-xzf', input_path, '-C', output_path)
       if !status.success?
         raise "Failed to uncompress deploy artifact #{input_path}"
@@ -88,11 +89,6 @@ module KubeDeployTools
 
     def is_local_deploy_artifact?(input_path)
       File.directory?(input_path)
-    end
-
-    def ensure_clean_directory(output_dir_path)
-      FileUtils.rm_rf(output_dir_path)
-      FileUtils.mkdir_p(output_dir_path)
     end
 
   end

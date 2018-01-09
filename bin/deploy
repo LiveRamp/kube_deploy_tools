@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # Utility for applying Kubernetes manifests.
 
+require 'tmpdir'
+
 require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
@@ -24,31 +26,35 @@ kubectl = KubeDeployTools::Kubectl.new(
   kubeconfig: options.kubeconfig,
 )
 
-if options.from_files
-  deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
-    input_path: options.from_files,
-    logger: logger,
-    shellrunner: shellrunner,
-  ).path
-else
-  deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
-    input_path: KubeDeployTools.get_remote_deploy_artifact_url(
-      project: options.project,
-      build_number: options.build_number,
-      target: options.target,
-      environment: options.environment,
-      flavor: options.flavor,
-    ),
-    logger: logger,
-    shellrunner: shellrunner,
-  ).path
-end
+Dir.mktmpdir { |tmpdir|
+  if options.from_files
+    deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
+      input_path: options.from_files,
+      logger: logger,
+      shellrunner: shellrunner,
+    ).path
+  else
+    deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
+      input_path: KubeDeployTools.get_remote_deploy_artifact_url(
+        project: options.project,
+        build_number: options.build_number,
+        target: options.target,
+        environment: options.environment,
+        flavor: options.flavor,
+      ),
+      output_dir_path: tmpdir,
+      logger: logger,
+      shellrunner: shellrunner,
+    ).path
+  end
 
-deploy = KubeDeployTools::Deploy.new(
-  input_path: deploy_artifact_path,
-  logger: logger,
-  kubectl: kubectl,
-)
-deploy.run(
-  dry_run: options.dry_run,
-)
+  deploy = KubeDeployTools::Deploy.new(
+    input_path: deploy_artifact_path,
+    logger: logger,
+    kubectl: kubectl,
+  )
+  deploy.run(
+    dry_run: options.dry_run,
+  )
+}
+
