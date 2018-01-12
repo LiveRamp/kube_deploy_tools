@@ -1,3 +1,5 @@
+require 'fileutils'
+
 require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/built_artifacts_file'

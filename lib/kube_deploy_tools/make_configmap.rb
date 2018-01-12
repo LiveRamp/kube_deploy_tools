@@ -1,7 +1,6 @@
 require 'yaml'
 require 'kube_deploy_tools/object'
 require 'optparse'
-require 'fileutils'
 
 module KubeDeployTools
 

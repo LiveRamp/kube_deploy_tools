@@ -1,6 +1,8 @@
+require 'fileutils'
+require 'tmpdir'
+
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
-require 'tmpdir'
 
 LOCAL_ARTIFACT='manifests_local_staging_default'
 LOCAL_COMPRESSED_ARTIFACT="#{LOCAL_ARTIFACT}.tar.gz"

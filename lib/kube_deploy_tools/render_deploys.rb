@@ -1,4 +1,5 @@
 require 'erb'
+require 'fileutils'
 require 'tempfile'
 require 'time'
 require 'yaml'
