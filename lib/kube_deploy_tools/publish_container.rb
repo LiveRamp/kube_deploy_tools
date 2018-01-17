@@ -31,7 +31,16 @@ module KubeDeployTools
       # Does whatever is necessary to authorize against this registry
       @registry_driver.authorize
       push_images(images_to_push)
-      update_built_artifacts(images_to_push, BUILT_ARTIFACTS_FILE)
+
+      # Can't lock the file if it doesn't exist. Create the file as a
+      # placeholder until more content is loaded
+      dirname = File.dirname(BUILT_ARTIFACTS_FILE)
+      FileUtils.mkdir_p(dirname)
+      File.open(BUILT_ARTIFACTS_FILE, File::CREAT|File::RDWR) do |file|
+        flock(file, File::LOCK_EX) do |file|
+          update_built_artifacts(images_to_push, file)
+        end
+      end
     end
 
     private
@@ -59,13 +68,16 @@ module KubeDeployTools
       end
     end
 
-    def update_built_artifacts(images_to_push, file_name)
-      artifacts = KubeDeployTools::BuiltArtifactsFile.new(file_name)
+    def update_built_artifacts(images_to_push, file)
+      artifacts = KubeDeployTools::BuiltArtifactsFile.new(file)
       build_id = ENV.fetch('BUILD_ID', 'LOCAL')
 
       if !artifacts.build_id.nil? && artifacts.build_id != build_id
         # Clear the images as this is a fresh build.
         artifacts.images = Set.new
+        # Truncate the file so it will generate a new file
+        # and remove any old builds
+        file.truncate(0)
       end
 
       # Add new images to the output list.
@@ -75,8 +87,21 @@ module KubeDeployTools
       end
 
       # Write the config list.
-      FileUtils.mkdir_p File.dirname file_name
-      artifacts.write file_name
+      artifacts.write file
+    end
+
+    # Method used to protect reads and writes. From:
+    # https://www.safaribooksonline.com/library/view/ruby-cookbook/0596523696/ch06s13.html
+    def flock(file, mode)
+      success = file.flock(mode)
+      if success
+        begin
+          yield file
+        ensure
+          file.flock(File::LOCK_UN)
+        end
+      end
+      return success
     end
   end
 end

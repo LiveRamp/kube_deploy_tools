@@ -76,20 +76,29 @@ describe KubeDeployTools::PublishContainer do
 
     context 'artifacts file behavior' do
       let(:remote_registry) { 'aws' }
+      file_name = "test_#{SecureRandom.uuid}.yaml"
 
-      file_name = nil
-      Dir.mktmpdir do |tmp_dir|
-        file_name = File.join(tmp_dir, SecureRandom.uuid)
+      after(:context) do
+        FileUtils.rm(file_name)
       end
 
       image_a = KubeDeployTools::PublishContainer::Image.new('aws', 'test', 'a')
       image_b = KubeDeployTools::PublishContainer::Image.new('aws', 'test', 'b')
       images_to_push = [image_a, image_b]
 
+      # Need to create the file object since it is assumed the file exists
+      # otherwise the r+ file permissions will fail to add to the file
+      file_object = File.open(file_name, File::CREAT) {}
+
       it 'creates a new artifacts file when one does not already exist' do
-        expect(File.exists?(file_name)).to be false
-        publisher.send :update_built_artifacts, images_to_push, file_name
+        file_object = File.open(file_name, 'r+')
+        publisher.send :update_built_artifacts, images_to_push, file_object
         expect(File.exists?(file_name)).to be true
+        file_object.close
+
+        config = YAML.load_file(file_name)
+        expect(config['build_id']).to_not be_nil
+        expect(config['images']).to_not be_nil
       end
 
       it 'updates the artifacts file in-place if BUILD_ID is the same as what is in the file' do
@@ -99,7 +108,9 @@ describe KubeDeployTools::PublishContainer do
         expect(old_build_id.nil?).to_not be_nil
 
         image_to_add = [KubeDeployTools::PublishContainer::Image.new('aws', 'test', 'c')]
-        publisher.send :update_built_artifacts, image_to_add, file_name
+        file_object = File.open(file_name, 'r+')
+        publisher.send :update_built_artifacts, image_to_add, file_object
+        file_object.close
         new_config = YAML.load_file(file_name)
 
         expect(new_config['build_id']).to eq(old_build_id)
@@ -112,7 +123,9 @@ describe KubeDeployTools::PublishContainer do
         expect(old_build_id.nil?).to be false
 
         ENV['BUILD_ID'] = 'test_local'
-        publisher.send :update_built_artifacts, [], file_name
+        file_object = File.open(file_name, 'r+')
+        publisher.send :update_built_artifacts, [], file_object
+        file_object.close
 
         new_config = YAML.load_file(file_name)
 

@@ -10,7 +10,6 @@ describe KubeDeployTools::BuiltArtifactsFile do
     expect(built_artifacts_file.images).to eq(Set.new)
     expect(built_artifacts_file.build_id).to be_nil
     expect(File.exists?(file_name)).to be false
-
   end
 
   it 'ensures uniqueness to new values' do 
@@ -26,12 +25,15 @@ describe KubeDeployTools::BuiltArtifactsFile do
     expect(built_artifacts_file.images.size).to eq(3)
     expect(built_artifacts_file.build_id).to eq(build_id)
 
-    built_artifacts_file.images.add 'gcr-my'
-    built_artifacts_file.write(file_name)
-    expect(built_artifacts_file.images.size).to eq(3)
+    File.open(file_name, 'w+') do |file|
+      built_artifacts_file.images.add 'gcr-my'
+      built_artifacts_file.write(file)
+      expect(built_artifacts_file.images.size).to eq(3)
 
-    built_artifacts_file.images.add 'test'
-    built_artifacts_file.write(file_name)
+      built_artifacts_file.images.add 'test'
+      built_artifacts_file.write(file)
+    end
+
     expect(built_artifacts_file.images.size).to eq(4)
 
     # Need to remove the created file
