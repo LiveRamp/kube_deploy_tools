@@ -13,10 +13,20 @@ module KubeDeployTools
   end
 
   def self.get_remote_deploy_artifact_url(project:, build_number:, target:, environment:, flavor:)
+    if build_number == 'latest'
+      build_number = get_latest_build_number(project)
+    end
     URI.join(
       ARTIFACT_REPO,
       "#{project}/#{build_number}/manifests_#{target}_#{environment}_#{flavor}#{EXT_TAR_GZ}",
     ).to_s
+  end
+
+  def self.get_latest_build_number(project)
+    project_url = URI.join(ARTIFACT_REPO, "#{project}/").to_s
+    html = Shellrunner.run_call('curl', project_url).first
+    build_number_finder_pattern = /(?<=>)\w+(?=\/<\/a>)/
+    html.scan(build_number_finder_pattern).last
   end
 
   class DeployArtifact
