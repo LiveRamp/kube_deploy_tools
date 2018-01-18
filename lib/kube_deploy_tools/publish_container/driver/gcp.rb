@@ -11,7 +11,8 @@ module KubeDeployTools
       if dryrun
         @logger.info("Would delete gcp image: image=#{image_id}")
       else
-        @shellrunner.run_call('gcloud', 'container', 'images', 'delete', image_id)
+        # --quiet removes the user-input component
+        @shellrunner.run_call('gcloud', 'container', 'images', 'delete', '--quiet', image_id)
       end
     end
   end
