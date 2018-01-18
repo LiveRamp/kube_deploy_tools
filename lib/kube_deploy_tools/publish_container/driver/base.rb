@@ -1,21 +1,21 @@
 require_relative '../image'
+require 'kube_deploy_tools/shellrunner'
 
 # Abstract Driver class that specific implementations inherit
 module KubeDeployTools
   class PublishContainer
     module Driver
       class Base
-        def initialize(registry:, shellrunner:)
+        def initialize(registry:)
           @registry = registry
-          @shellrunner = shellrunner
         end
 
         def push_image(image)
-          @shellrunner.check_call('docker', 'push', image.full_tag)
+          Shellrunner.check_call('docker', 'push', image.full_tag)
         end
 
         def authorize
-          @shellrunner.check_call(*authorize_command)
+          Shellrunner.check_call(*authorize_command)
         end
 
         def authorize_command

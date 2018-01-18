@@ -3,7 +3,7 @@ require 'colorized_string'
 require 'kube_deploy_tools/deferred_summary_logging'
 
 module KubeDeployTools
-  class FormattedLogger < Logger
+  class FormattedLogger < ::Logger
     include DeferredSummaryLogging
 
     def self.build(context: nil, stream: $stderr)
@@ -38,5 +38,14 @@ module KubeDeployTools
       end
     end
     private_class_method :level_from_env
+  end
+
+  class Logger
+    class << self
+      extend Forwardable
+
+      attr_accessor :logger
+      def_delegators :@logger, *(::Logger.public_instance_methods(false) + DeferredSummaryLogging.public_instance_methods(false))
+    end
   end
 end

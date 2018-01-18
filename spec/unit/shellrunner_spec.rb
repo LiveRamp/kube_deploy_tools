@@ -1,5 +1,4 @@
 require 'kube_deploy_tools/shellrunner'
-require 'kube_deploy_tools/formatted_logger'
 
 describe KubeDeployTools::Shellrunner do
   # Mock logger
@@ -12,8 +11,12 @@ describe KubeDeployTools::Shellrunner do
   let(:captured_output) { [stdoutput, err, status] }
 
   # Test setup
-  let(:shellrunner) { KubeDeployTools::Shellrunner.new(logger: logger) }
+  let(:shellrunner) { KubeDeployTools::Shellrunner.new }
   let(:cmd) { ['bogus', 'command'] }
+
+  before(:example) do
+    KubeDeployTools::Logger.logger = logger
+  end
 
   context "where the command fails" do
 

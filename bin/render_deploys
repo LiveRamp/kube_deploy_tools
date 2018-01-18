@@ -14,13 +14,12 @@ def options
   parser.parse(ARGV)
 end
 
-logger = KubeDeployTools::FormattedLogger.build
-shellrunner = KubeDeployTools::Shellrunner.new(logger: logger)
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 
 app = KubeDeployTools::RenderDeploys.new(
   options.manifest_file,
   options.input_path,
   options.output_path,
-  shellrunner: shellrunner,
 )
 app.render

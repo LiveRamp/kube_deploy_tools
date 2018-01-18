@@ -1,10 +1,18 @@
 require 'shellwords'
 require 'open3'
 
+require 'kube_deploy_tools/formatted_logger'
+
 module KubeDeployTools
   class Shellrunner
-    def initialize(logger:)
-      @logger = logger
+    class << self
+      extend Forwardable
+
+      attr_accessor :shellrunner
+      def_delegators :@shellrunner, :check_call, :run_call
+    end
+
+    def initialize
     end
 
     def check_call(*cmd)
@@ -17,17 +25,17 @@ module KubeDeployTools
 
     def run_call(*cmd, print_cmd: true)
       if print_cmd
-        @logger.info(Shellwords.join(cmd))
+        Logger.info(Shellwords.join(cmd))
       else
-        @logger.debug(Shellwords.join(cmd))
+        Logger.debug(Shellwords.join(cmd))
       end
 
       out, err, status = Open3.capture3(*cmd)
-      @logger.debug(out.shellescape)
+      Logger.debug(out.shellescape)
 
       if !status.success? && print_cmd
-        @logger.warn("The following command failed: #{Shellwords.join(cmd)}")
-        @logger.warn(err)
+        Logger.warn("The following command failed: #{Shellwords.join(cmd)}")
+        Logger.warn(err)
       end
 
       [out.chomp, err.chomp, status]

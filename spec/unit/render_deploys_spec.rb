@@ -9,6 +9,10 @@ BUILD_ID="12345"
 describe KubeDeployTools::RenderDeploys do
   let(:shellrunner) { instance_double("shellrunner", :check_call => nil) }
 
+  before(:example) do
+    KubeDeployTools::Shellrunner.shellrunner = shellrunner
+  end
+
   it "renders deploys for all clusters" do
     Dir.mktmpdir do |tmp_dir|
       # Stub out ENV
@@ -18,8 +22,7 @@ describe KubeDeployTools::RenderDeploys do
       app = KubeDeployTools::RenderDeploys.new(
         MANIFEST_FILE,
         INPUT_DIR,
-        tmp_dir,
-        shellrunner: shellrunner,
+        tmp_dir
       )
 
       # NOTE(jmodes): rspec mocks do not support child processes
@@ -47,8 +50,7 @@ describe KubeDeployTools::RenderDeploys do
       app = KubeDeployTools::RenderDeploys.new(
         MANIFEST_FILE,
         INPUT_DIR,
-        tmp_dir,
-        shellrunner: shellrunner,
+        tmp_dir
       )
 
       app.render

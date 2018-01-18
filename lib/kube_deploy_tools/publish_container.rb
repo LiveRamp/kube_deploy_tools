@@ -11,15 +11,14 @@ BUILT_ARTIFACTS_FILE = 'build/kubernetes/images.yaml'.freeze
 
 module KubeDeployTools
   class PublishContainer
-    def initialize(local_prefix, registry_name, images, tag, shellrunner:)
+    def initialize(local_prefix, registry_name, images, tag)
       @local_prefix = local_prefix
       @registry = REGISTRIES[registry_name]
       @base_image_names = images
       @tag = tag
-      @shellrunner = shellrunner
 
       if (driver_class = Driver::MAPPINGS[@registry['driver']])
-        @registry_driver = driver_class.new(registry: @registry, shellrunner: shellrunner)
+        @registry_driver = driver_class.new(registry: @registry)
       else
         raise "No driver exists for registry type #{@registry['driver']}"
       end
@@ -49,7 +48,7 @@ module KubeDeployTools
       base_image_names.map do |i|
         local = Image.new(@local_prefix, i, 'latest')
         remote = Image.new(@registry['prefix'], i, @tag)
-        @shellrunner.check_call('docker', 'tag', local.full_tag, remote.full_tag)
+        Shellrunner.check_call('docker', 'tag', local.full_tag, remote.full_tag)
         remote
       end
     end

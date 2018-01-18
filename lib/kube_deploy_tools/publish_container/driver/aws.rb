@@ -1,5 +1,6 @@
 require_relative 'base'
 require_relative '../image'
+require 'kube_deploy_tools/shellrunner'
 
 module KubeDeployTools
   class PublishContainer::Driver::Aws < PublishContainer::Driver::Base
@@ -17,7 +18,7 @@ module KubeDeployTools
     private
 
     def get_docker_login
-      args = @shellrunner.check_call('aws', 'ecr', 'get-login', '--region', @registry['region']).split
+      args = Shellrunner.check_call('aws', 'ecr', 'get-login', '--region', @registry['region']).split
 
       # Remove '-e' and subsequent argument
       # This compensates for --no-include-email not being recognized in the Ubuntu packaged awscli
@@ -34,12 +35,12 @@ module KubeDeployTools
     end
 
     def repository_exists?(repository)
-      _, _, status = @shellrunner.run_call('aws', 'ecr', 'describe-repositories', '--repository-names', repository, '--region', @registry['region'])
+      _, _, status = Shellrunner.run_call('aws', 'ecr', 'describe-repositories', '--repository-names', repository, '--region', @registry['region'])
       status.success?
     end
 
     def create_repository(repository)
-      @shellrunner.check_call('aws', 'ecr', 'create-repository', '--repository-name', repository, '--region', @registry['region'])
+      Shellrunner.check_call('aws', 'ecr', 'create-repository', '--repository-name', repository, '--region', @registry['region'])
     end
   end
 end

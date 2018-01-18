@@ -2,7 +2,6 @@ require 'fileutils'
 require 'tmpdir'
 
 require 'kube_deploy_tools/deploy_artifact'
-require 'kube_deploy_tools/formatted_logger'
 
 LOCAL_ARTIFACT='manifests_local_staging_default'
 LOCAL_COMPRESSED_ARTIFACT="#{LOCAL_ARTIFACT}.tar.gz"
@@ -12,7 +11,6 @@ KUBE_RESOURCE_NEW = 'new.yaml'
 
 
 describe KubeDeployTools::DeployArtifact do
-  let(:logger) { KubeDeployTools::FormattedLogger.build }
 
   # Mock shellrunner
   let(:status) { double(:status, success?: true) }
@@ -20,10 +18,10 @@ describe KubeDeployTools::DeployArtifact do
   let(:shellrunner) { instance_double("shellrunner", :run_call => [stdoutput, nil, status]) }
 
   it "downloads and uncompresses a remote, compressed deploy artifact" do
+    KubeDeployTools::Shellrunner.shellrunner = shellrunner
+
     Dir.mktmpdir do |tmp_dir|
       deploy_artifact = KubeDeployTools::DeployArtifact.new(
-        logger: logger,
-        shellrunner: shellrunner,
         input_path: REMOTE_ARTIFACT,
         output_dir_path: tmp_dir,
       )

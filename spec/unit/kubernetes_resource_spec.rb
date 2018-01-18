@@ -1,7 +1,5 @@
-require 'rspec/expectations'
 require 'kube_deploy_tools/kubernetes_resource'
 require 'kube_deploy_tools/kubernetes_resource/deployment'
-require 'kube_deploy_tools/formatted_logger'
 
 KUBERNETES_MANIFESTS_TEST_NGINX="spec/resources/kubernetes/test-nginx"
 KUBERNETES_NAMESPACE_RESOURCE="#{KUBERNETES_MANIFESTS_TEST_NGINX}/ns-test.yaml"
@@ -23,9 +21,12 @@ describe KubeDeployTools::KubernetesResource do
       filepath: filepath,
       definition: definition,
       kubectl: kubectl,
-      logger: logger,
     )
   }
+
+  before(:example) do
+    KubeDeployTools::Logger.logger = logger
+  end
 
   context 'for a valid Kubernetes Namespace resource file' do
     let (:filepath) { KUBERNETES_NAMESPACE_RESOURCE }

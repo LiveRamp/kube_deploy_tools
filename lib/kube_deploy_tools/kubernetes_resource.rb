@@ -7,8 +7,8 @@ module KubeDeployTools
       :name,
       :namespace
 
-    def self.build(filepath: nil, definition:, kubectl:, logger:)
-      opts = { filepath: filepath, definition: definition, kubectl: kubectl, logger: logger }
+    def self.build(filepath: nil, definition:, kubectl:)
+      opts = { filepath: filepath, definition: definition, kubectl: kubectl }
       # Find the corresponding class for the Kubernetes resource, if available
       if ["Deployment"].include?(definition["kind"])
         klass = KubeDeployTools.const_get(definition["kind"])
@@ -22,11 +22,10 @@ module KubeDeployTools
       end
     end
 
-    def initialize(filepath:, definition:, kubectl:, logger:)
+    def initialize(filepath:, definition:, kubectl:)
       @filepath = filepath
       @definition = definition
       @kubectl = kubectl
-      @logger = logger
 
       @namespace = definition.dig('metadata', 'namespace')
       @name = definition.dig('metadata', 'name')

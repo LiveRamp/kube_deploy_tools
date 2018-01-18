@@ -1,5 +1,7 @@
 require 'yaml'
 require 'kube_deploy_tools/errors'
+require 'kube_deploy_tools/formatted_logger'
+require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/kubernetes_resource'
 require 'kube_deploy_tools/kubernetes_resource/deployment'
 require 'kube_deploy_tools/concurrency'
@@ -25,33 +27,31 @@ PREDEPLOY_RESOURCES = [
 module KubeDeployTools
   class Deploy
     def initialize(
-      logger:,
       kubectl:,
 
       input_path:)
-      @logger = logger
       @kubectl = kubectl
 
       @input_path = input_path
     end
 
     def run(dry_run: true)
-      @logger.reset
-      @logger.phase_heading("Initializing deploy")
+      Logger.reset
+      Logger.phase_heading("Initializing deploy")
       if dry_run == true
-        @logger.warn("Running in dry-run mode")
+        Logger.warn("Running in dry-run mode")
       end
       resources = read_resources
 
-      @logger.phase_heading("Checking initial resource statuses")
+      Logger.phase_heading("Checking initial resource statuses")
       KubernetesDeploy::Concurrency.split_across_threads(resources, &:sync)
 
-      @logger.phase_heading("Checking deployment replicas match")
+      Logger.phase_heading("Checking deployment replicas match")
       deployments = resources
         .select { |resource| resource.definition["kind"] == 'Deployment' }
       KubernetesDeploy::Concurrency.split_across_threads(deployments, &:warn_replicas_mismatch)
 
-      @logger.phase_heading("Deploying all resources")
+      Logger.phase_heading("Deploying all resources")
       # Deploy predeploy resources first, in order.
       # Then deploy the remaining resources in any order.
       deploy_resources = resources
@@ -68,7 +68,7 @@ module KubeDeployTools
 
       success = true
     ensure
-      @logger.print_summary(success)
+      Logger.print_summary(success)
       status = success ? "success" : "failed"
       success
     end
@@ -85,7 +85,6 @@ module KubeDeployTools
             filepath: filepath,
             definition: resource_definition,
             kubectl: @kubectl,
-            logger: @logger,
           )
 
           resources << resource
@@ -107,7 +106,7 @@ module KubeDeployTools
         ---
       INFO
       debug_msg += file_content
-      @logger.debug(debug_msg)
+      Logger.debug(debug_msg)
       raise FatalDeploymentError, "Template '#{filepath}' cannot be parsed"
     end
 
@@ -118,7 +117,7 @@ module KubeDeployTools
         if !status.success?
           raise FatalDeploymentError, "Failed to apply resource '#{resource.filepath}'"
         else
-          @logger.info(out)
+          Logger.info(out)
         end
       end
     end

@@ -1,16 +1,13 @@
 require 'kube_deploy_tools/object'
+require 'kube_deploy_tools/shellrunner'
 
 module KubeDeployTools
   class Kubectl
     def initialize(
-      # Dependencies
-      shellrunner:,
-
       context:,
       kubeconfig:)
       @context = context
       @kubeconfig = kubeconfig
-      @shellrunner = shellrunner
 
       raise ArgumentError, "context is required" if context.empty?
     end
@@ -21,7 +18,7 @@ module KubeDeployTools
       args.push("--kubeconfig=#{@kubeconfig}") if @kubeconfig.present?
       args.push("--request-timeout=#{timeout}") if timeout.present?
 
-      @shellrunner.run_call(*args, print_cmd: print_cmd)
+      Shellrunner.run_call(*args, print_cmd: print_cmd)
     end
 
   end

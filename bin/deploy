@@ -18,10 +18,9 @@ def options
 end
 
 context = options.context || KubeDeployTools.kube_context(target: options.target, environment: options.environment)
-logger = KubeDeployTools::FormattedLogger.build(context: context)
-shellrunner = KubeDeployTools::Shellrunner.new(logger: logger)
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build(context: context)
+KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 kubectl = KubeDeployTools::Kubectl.new(
-  shellrunner: shellrunner,
   context: context,
   kubeconfig: options.kubeconfig,
 )
@@ -30,8 +29,6 @@ Dir.mktmpdir { |tmpdir|
   if options.from_files
     deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
       input_path: options.from_files,
-      logger: logger,
-      shellrunner: shellrunner,
     ).path
   else
     deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
@@ -43,14 +40,11 @@ Dir.mktmpdir { |tmpdir|
         flavor: options.flavor,
       ),
       output_dir_path: tmpdir,
-      logger: logger,
-      shellrunner: shellrunner,
     ).path
   end
 
   deploy = KubeDeployTools::Deploy.new(
     input_path: deploy_artifact_path,
-    logger: logger,
     kubectl: kubectl,
   )
   deploy.run(

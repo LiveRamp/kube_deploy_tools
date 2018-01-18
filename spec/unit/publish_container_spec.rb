@@ -12,14 +12,17 @@ describe KubeDeployTools::PublishContainer do
   let(:stdoutput) { 'fake stdoutput' }
   let(:shellrunner) { instance_double("shellrunner", :run_call => [stdoutput, nil, status]) }
 
+  before(:example) do
+    KubeDeployTools::Shellrunner.shellrunner = shellrunner
+  end
+
   describe 'publish' do
     let(:publisher) do
       KubeDeployTools::PublishContainer.new(
         'my-registry',
         remote_registry,
         images,
-        'releaseTag',
-        shellrunner: shellrunner
+        'releaseTag'
       )
     end
     let(:images) { ['project1'] }

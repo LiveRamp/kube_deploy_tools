@@ -1,7 +1,5 @@
-require 'rspec/expectations'
 require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
-require 'kube_deploy_tools/formatted_logger'
 
 KUBERNETES_MANIFESTS_INVALID_NGINX="spec/resources/kubernetes/invalid-nginx/"
 KUBERNETES_MANIFESTS_TEST_NGINX="spec/resources/kubernetes/test-nginx/"
@@ -18,12 +16,12 @@ describe KubeDeployTools::Deploy do
   # Mock out `kubectl ... -o json` calls in KubeDeployTools::Deployment < KubernetesResource
   before(:example) do
     allow_any_instance_of(KubeDeployTools::Deployment).to receive(:sync)
+    KubeDeployTools::Logger.logger = logger
   end
 
   it "fails to read invalid YAML files" do
     deploy = KubeDeployTools::Deploy.new(
       input_path: KUBERNETES_MANIFESTS_INVALID_NGINX,
-      logger: logger,
       kubectl: kubectl,
     )
     expect do
@@ -34,7 +32,6 @@ describe KubeDeployTools::Deploy do
   it "reads valid YAML files" do
     deploy = KubeDeployTools::Deploy.new(
       input_path: KUBERNETES_MANIFESTS_TEST_NGINX,
-      logger: logger,
       kubectl: kubectl,
     )
     resources = deploy.read_resources
@@ -44,7 +41,6 @@ describe KubeDeployTools::Deploy do
   it "predeploys resources" do
     deploy = KubeDeployTools::Deploy.new(
       input_path: KUBERNETES_MANIFESTS_TEST_NGINX,
-      logger: logger,
       kubectl: kubectl,
     )
     resources = deploy.read_resources

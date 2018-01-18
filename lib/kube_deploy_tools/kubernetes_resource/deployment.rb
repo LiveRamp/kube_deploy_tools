@@ -1,5 +1,6 @@
 require 'json'
 
+require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/object'
 
 module KubeDeployTools
@@ -33,11 +34,11 @@ module KubeDeployTools
       if @found
         if @local_replicas.present? && @local_replicas.to_i != @remote_replicas.to_i
           warning = "Deployment replica count mismatch! Will scale deployment/#{@name} from #{@remote_replicas} to #{@local_replicas}"
-          @logger.warn(warning)
+          Logger.warn(warning)
         elsif @local_replicas.nil? && !@recorded_replicas.nil?
           # Check if we're converting to a replicaless Deployment
           warning = "Deployment replica count mismatch! Will scale deployment/#{@name} from #{@remote_replicas} to 1. Run `kubectl apply set-last-applied -f #{@filepath}` first."
-          @logger.warn(warning)
+          Logger.warn(warning)
         end
       end
     end

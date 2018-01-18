@@ -6,14 +6,14 @@ require 'yaml'
 
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/cluster_config'
+require 'kube_deploy_tools/shellrunner'
 
 DEFAULT_HOOK_SCRIPT = 'render_deploys_hook'
 DEFAULT_HOOK_SCRIPT_LABEL = 'default'
 
 module KubeDeployTools
   class RenderDeploys
-    def initialize(manifest, input_dir, output_dir, shellrunner:)
-      @shellrunner = shellrunner
+    def initialize(manifest, input_dir, output_dir)
 
       unless File.file?(manifest)
         raise "Can't read deploy manifest: #{manifest}"
@@ -79,16 +79,16 @@ module KubeDeployTools
             # Run every hook sequentially. 'default' hook is special.
             hooks.each do |hook|
               if hook == DEFAULT_HOOK_SCRIPT_LABEL
-                @shellrunner.check_call('bundle', 'exec', DEFAULT_HOOK_SCRIPT, rendered.path, @input_dir, flavor_dir)
+                Shellrunner.check_call('bundle', 'exec', DEFAULT_HOOK_SCRIPT, rendered.path, @input_dir, flavor_dir)
               else
-                @shellrunner.check_call(hook, rendered.path, @input_dir, flavor_dir)
+                Shellrunner.check_call(hook, rendered.path, @input_dir, flavor_dir)
               end
             end
 
             # Pack up contents of each flavor_dir to a correctly named artifact tarball.
             tarball = KubeDeployTools.build_deploy_artifact_name(project: @project, build_number: @build_number, target: target, environment: env, flavor: flavor)
             tarball_full_path = File.join(@output_dir, tarball)
-            @shellrunner.check_call('tar', '-C', flavor_dir, '-czf', tarball_full_path, '.')
+            Shellrunner.check_call('tar', '-C', flavor_dir, '-czf', tarball_full_path, '.')
             puts "*** generated manifest archive: #{tarball_full_path}"
           end
 
