@@ -42,5 +42,16 @@ module KubeDeployTools
     def create_repository(repository)
       Shellrunner.check_call('aws', 'ecr', 'create-repository', '--repository-name', repository, '--region', @registry['region'])
     end
+
+    def delete_image(repository, image, dryrun: false)
+     if dryrun
+       @logger.info("Would delete aws repository=#{repository} region=#{@registry['region']} imageTag=#{image}")
+     else
+       @shellrunner.run_call('aws', 'ecr', 'batch-delete-image',
+         '--repository-name', repository,
+         '--region', @registry['region'],
+         '--image-ids', 'imageTag=', image)
+     end
+    end
   end
 end
