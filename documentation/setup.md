@@ -7,7 +7,7 @@ Install the `kube_deploy_tools` gem in your project.
 
 Gemfile:
 ```ruby
-source 'http://gemserver.***REMOVED***'
+source 'https://gemserver.***REMOVED***'
 
 group :kdt do
   gem 'kube_deploy_tools', '~> 1.0'
