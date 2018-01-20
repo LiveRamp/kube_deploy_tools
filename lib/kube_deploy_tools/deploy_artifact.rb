@@ -24,9 +24,12 @@ module KubeDeployTools
 
   def self.get_latest_build_number(project)
     project_url = URI.join(ARTIFACT_REPO, "#{project}/").to_s
-    html = Shellrunner.run_call('curl', project_url).first
-    build_number_finder_pattern = /(?<=>)\w+(?=\/<\/a>)/
-    html.scan(build_number_finder_pattern).last
+    project_builds_html = Shellrunner.run_call('curl', project_url).first
+    # store build entries string from html into an array
+    build_links_pattern = /(?<=">).+(?=\s{4})/
+    build_entries = project_builds_html.scan(build_links_pattern) # example of element: 10/</a>    13-Nov-2017 13:51
+    build_number_pattern = /^\d+/
+    build_entries.max_by { |e| Time.parse(e) }.match(build_number_pattern)
   end
 
   class DeployArtifact

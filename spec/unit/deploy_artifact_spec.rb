@@ -22,12 +22,12 @@ describe KubeDeployTools::DeployArtifact do
 
   context 'when build is latest' do
     fake_html = '<a href="13/">13/</a>    08-Dec-2017 13:10    -
+                <a href="19/">19/</a>    19-Dec-2017 12:37    -
                 <a href="14/">14/</a>    08-Dec-2017 13:11    -
                 <a href="15/">15/</a>    11-Dec-2017 14:21    -
-                <a href="18/">18/</a>    14-Dec-2017 14:57    -
-                <a href="19/">19/</a>    19-Dec-2017 12:37    -'
+                <a href="18/">18/</a>    14-Dec-2017 14:57    -'
 
-    it "retrieves latest build number" do
+    it "retrieves latest build number according to time" do
       latest_build_number = '19'
 
       # stub out `curl`
