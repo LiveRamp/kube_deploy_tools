@@ -41,10 +41,8 @@ module KubeDeployTools
     # on artifactory
     def search_artifactory(retention, repo_name)
       time_now = Time.now
-      #to = (time_now - retention).to_i * 1000
-      #from = 0
-      from = 1502653751000
-      to = 1512653751000
+      to = (time_now - retention).to_i * 1000
+      from = 0
     
       http_path = "#{ARTIFACTORY_HOST}/api/search/creation"
       uri = URI.parse(http_path)
@@ -54,12 +52,13 @@ module KubeDeployTools
       request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
       response = http.request(request)
       response_body = JSON.parse(response.body)
-    
+
       #{{"job"=>prefix, "build"=>build, "repository"=>repository}=>{ files=>[], "created"=>created}}
       images_to_remove = {}
       built_artifacts_files = []
       if response.code != '200'
         KubeDeployTools::Logger.error("Error in fetching #{repo_name} search results #{response.code}: #{response.body}")
+        return images_to_remove, built_artifacts_files
       else
         response_body['results'].each do |res|
           uri_result = res['uri']
@@ -86,6 +85,7 @@ module KubeDeployTools
           end
         end
       end
+
       return images_to_remove, built_artifacts_files
     end
     
@@ -97,7 +97,9 @@ module KubeDeployTools
       # pointing to the specific images.yaml files
       
       built_artifacts_files.each do |image_uri|
-        image_yaml = YAML.load_file(open(image_uri).read)
+        # The download file is not at ARTIFACTORY_HOST/api/storage/<BUILD_INFO>
+        # so need to remove the 'api/storage' since at ARTIFACTORY_HOST/<BUILD_INFO>
+        image_yaml = YAML.load(open(image_uri.sub('api/storage/', '')).read)
         
         # Sort into prefixes
         image_yaml['images'].each do |img|
@@ -138,7 +140,6 @@ module KubeDeployTools
           remove_path = "#{ARTIFACTORY_HOST}/api/storage/#{build_path}#{file}"
           if @dryrun
             Logger.info("DRYRUN: Removing #{remove_path}")
-            puts "DRYRUN: Removing #{remove_path}"
           else
             return
             uri = URI.parse(remove_path)
@@ -162,7 +163,7 @@ module KubeDeployTools
     def remove_from_gcp(image_ids)
       image_ids.each do |id|
         # Need the id path to be [HOSTNAME]/[PROJECT-ID]/[IMAGE]<:[TAG]|@[DIGEST]>
-        PublishContainer::Driver::Gcp.new(registry: 'gcp').delete_image(id, dryrun: @dryrun)
+        PublishContainer::Driver::Gcp.new(registry: REGISTRIES['gcp']).delete_image(id, @dryrun)
       end
     end
     
@@ -171,12 +172,11 @@ module KubeDeployTools
     def remove_from_ecr(image_ids)
       image_ids.each do |img|
         # Need the image tag and repository, not full path of the image
-        val = img.slice "#{REGISTRIES['aws']['prefix']}/"
-        repo_image = val.rpartition(':')
+        img.slice "#{REGISTRIES['aws']['prefix']}/"
+        repo_image = img.rpartition(':')
         repository = repo_image.first
         image = repo_image.last
-
-        aws_driver = PublishContainer::Driver::Aws.new(registry: 'aws').delete_image(repository, image, dryrun: @dryrun)
+        aws_driver = PublishContainer::Driver::Aws.new(registry: REGISTRIES['aws']).delete_image(repository, image, @dryrun)
       end
     end
     

@@ -15,9 +15,9 @@ module KubeDeployTools
       login_cmd
     end
 
-    def delete_image(repository, image, dryrun: false)
+    def delete_image(repository, image, dryrun)
      if dryrun
-       Logger.info("Would delete aws repository=#{repository} region=#{@registry['region']} imageTag=#{image}")
+       Logger.info("DRYRUN: delete aws repository=#{repository} region=#{@registry['region']} imageTag=#{image}")
      else
        Shellrunner.run_call('aws', 'ecr', 'batch-delete-image',
          '--repository-name', repository,

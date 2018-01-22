@@ -22,7 +22,7 @@ OptionParser.new do |opts|
   end
 end.parse!
 
-config_file_path = options['file'] || ARGV[0]
-dryrun = options['dryrun'] || false
+config_file_path = options[:file] || ARGV[0]
+dryrun = options[:dryrun] || false
 
 KubeDeployTools::Sweeper.new(config_file_path, dryrun).remove_images
