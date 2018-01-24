@@ -70,7 +70,13 @@ module KubeDeployTools
           'image_registry' => 'local-registry',
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
-          'pull_policy' => 'IfNotPresent'
+          'pull_policy' => 'IfNotPresent',
+          'feature_heapster' => true,
+          'feature_kube_state_metrics' => true,
+          'feature_kubernetes_cron_tpr' => true,
+          'feature_prometheus_k8s' => true,
+          'feature_prometheus_operator' => true,
+          'feature_voyager' => true,
         }
       },
     },
@@ -83,6 +89,11 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '6',
           'pull_policy' => 'Always',
+          'feature_kube_state_metrics' => true,
+          'feature_kubernetes_cron_tpr' => true,
+          'feature_node_exporter_ds' => true,
+          'feature_prometheus_k8s' => true,
+          'feature_prometheus_operator' => true,
         }
       }
     },
@@ -94,6 +105,14 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
+          'feature_heapster' => true,
+          'feature_kube_state_metrics' => true,
+          'feature_kubernetes_cron_tpr' => true,
+          'feature_node_exporter_ds' => true,
+          'feature_prometheus_k8s' => true,
+          'feature_prometheus_operator' => true,
+          'feature_voyager' => true,
         }
       },
       'staging' => {
@@ -103,6 +122,7 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
         }
       }
     },
@@ -114,6 +134,8 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
+          'feature_active_directory' => true,
+          'feature_datadog' => true,
         }
       },
       'staging' => {
@@ -121,8 +143,9 @@ module KubeDeployTools
         'flags' => {
           'cloud' => 'aws',
           'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
+          'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
         }
       }
     },
@@ -134,6 +157,7 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
         }
       },
       'staging' => {
@@ -143,6 +167,7 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
         }
       }
     },
@@ -154,6 +179,10 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
+          'feature_heapster' => true,
+          'feature_kube_state_metrics' => true,
+          'feature_nginx_ingress_controller' => true,
         }
       },
       'staging' => {
@@ -163,6 +192,10 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '7',
           'pull_policy' => 'Always',
+          'feature_datadog' => true,
+          'feature_heapster' => true,
+          'feature_kube_state_metrics' => true,
+          'feature_nginx_ingress_controller' => true,
         }
       }
     }

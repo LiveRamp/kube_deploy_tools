@@ -135,8 +135,10 @@ EOF
       result = Hash.new
 
       flags.each do |key, template|
-        renderer = ERB.new(template)
-        result[key] = renderer.result
+        if template.is_a?(String)
+          renderer = ERB.new(template)
+          result[key] = renderer.result
+        end
       end
 
       result
