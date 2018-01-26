@@ -46,6 +46,7 @@ Dir.mktmpdir { |tmpdir|
   deploy = KubeDeployTools::Deploy.new(
     input_path: deploy_artifact_path,
     kubectl: kubectl,
+    glob_files: options.glob_files,
   )
   deploy.run(
     dry_run: options.dry_run,

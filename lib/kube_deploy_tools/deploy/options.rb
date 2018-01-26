@@ -6,20 +6,20 @@ module KubeDeployTools
     class Options
       attr_accessor :kubeconfig,
         :context,
-
         :from_files,
-
         :project,
         :target,
         :environment,
         :flavor,
         :build_number,
-        :dry_run
+        :dry_run,
+        :glob_files
 
       def initialize
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
         self.flavor = 'default'
         self.dry_run = true
+        self.glob_files = []
       end
 
       def define_options(parser)
@@ -57,6 +57,14 @@ module KubeDeployTools
 
         parser.on('--dry-run DRY_RUN', "If true, will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: #{dry_run}.") do |p|
           self.dry_run = p
+        end
+
+        parser.on('--include INCLUDE', "Include glob pattern. Example: --inlude=**/* will include every file. Default is ''.") do |p|
+          self.glob_files.push(Hash["include_files" => p])
+        end
+
+        parser.on('--exclude EXCLUDE', "Exclude glob pattern. Example: --exclude=**/gazette/* will exclude every file in gazette folder. Default is ''.") do |p|
+          self.glob_files.push(Hash["exclude_files" => p])
         end
 
         parser.on('-')

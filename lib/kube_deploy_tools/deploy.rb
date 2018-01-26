@@ -1,3 +1,4 @@
+require 'set'
 require 'yaml'
 require 'kube_deploy_tools/errors'
 require 'kube_deploy_tools/formatted_logger'
@@ -28,11 +29,12 @@ module KubeDeployTools
   class Deploy
     def initialize(
       kubectl:,
-
-      input_path:)
+      input_path:,
+      glob_files: [Hash['include_files'=> '**/*']]
+      )
       @kubectl = kubectl
-
       @input_path = input_path
+      @glob_files = glob_files
     end
 
     def run(dry_run: true)
@@ -41,7 +43,7 @@ module KubeDeployTools
       if dry_run == true
         Logger.warn("Running in dry-run mode")
       end
-      resources = read_resources
+      resources = read_resources(select_resources(@glob_files))
 
       Logger.phase_heading("Checking initial resource statuses")
       KubernetesDeploy::Concurrency.split_across_threads(resources, &:sync)
@@ -73,25 +75,39 @@ module KubeDeployTools
       success
     end
 
-    def read_resources
+    def read_resources(filtered_files = Dir[ File.join(@input_path, '**', '*') ])
       resources = []
-
-      # Recursively read
-      Dir[ File.join(@input_path, '**', '*') ].each do |filepath|
+      filtered_files.each do |filepath|
         next unless filepath.end_with?(".yml", ".yaml")
-
         read_resource_definition(filepath) do |resource_definition|
           resource = KubeDeployTools::KubernetesResource.build(
             filepath: filepath,
             definition: resource_definition,
             kubectl: @kubectl,
           )
-
           resources << resource
         end
       end
-
       resources
+    end
+
+    # Load corresponding resource files filtered by include and exlude tags
+    def select_resources(glob_files)
+      all_files = Dir[File.join(@input_path, '**', '*')].to_set
+      filtered_files = if glob_files.any? { |e| e.has_key?("include_files")}
+        Set.new
+      else
+        Set.new(all_files)
+      end
+
+      glob_files.each do |gf|
+        if gf.has_key?("include_files")
+          filtered_files.merge( all_files.select{ |f| File.fnmatch?(gf["include_files"], f, File::FNM_PATHNAME) } )
+        else
+          filtered_files.reject!{ |f| File.fnmatch?(gf["exclude_files"], f, File::FNM_PATHNAME) }
+        end
+      end
+      filtered_files
     end
 
     def read_resource_definition(filepath)
@@ -123,4 +139,3 @@ module KubeDeployTools
     end
   end
 end
-
