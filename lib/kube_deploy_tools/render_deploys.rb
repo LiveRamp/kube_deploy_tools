@@ -138,6 +138,8 @@ EOF
         if template.is_a?(String)
           renderer = ERB.new(template)
           result[key] = renderer.result
+        else
+          result[key] = template
         end
       end
 
