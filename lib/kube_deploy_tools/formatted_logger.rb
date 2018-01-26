@@ -1,5 +1,8 @@
+require 'forwardable'
 require 'logger'
+
 require 'colorized_string'
+
 require 'kube_deploy_tools/deferred_summary_logging'
 
 module KubeDeployTools
