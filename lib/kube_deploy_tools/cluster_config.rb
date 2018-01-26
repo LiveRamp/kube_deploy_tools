@@ -129,7 +129,7 @@ module KubeDeployTools
     },
     'us-west-2' => {
       'prod' => {
-        'kube_context' => '<%= username %>@prod-us-west-2.k8s.***REMOVED***',
+        'kube_context' => '<%= username %>@us-west-2-prod.k8s.***REMOVED***',
         'flags' => {
           'cloud' => 'aws',
           'kubernetes_major_version' => '1',
@@ -140,7 +140,7 @@ module KubeDeployTools
         }
       },
       'staging' => {
-        'kube_context' => '<%= username %>@staging-us-west-2.k8s.***REMOVED***',
+        'kube_context' => '<%= username %>@us-west-2-staging.k8s.***REMOVED***',
         'flags' => {
           'cloud' => 'aws',
           'kubernetes_major_version' => '1',
