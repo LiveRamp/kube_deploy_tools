@@ -122,6 +122,7 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
+          'feature_active_directory' => true,
           'feature_datadog' => true,
         }
       }
@@ -145,6 +146,7 @@ module KubeDeployTools
           'kubernetes_major_version' => '1',
           'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
+          'feature_active_directory' => true,
           'feature_datadog' => true,
         }
       }
