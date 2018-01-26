@@ -107,6 +107,7 @@ module KubeDeployTools
           filtered_files.reject!{ |f| File.fnmatch?(gf["exclude_files"], f, File::FNM_PATHNAME) }
         end
       end
+      Logger.debug("\nYour filter generates following paths: \n#{filtered_files.to_a.join("\n")}")
       filtered_files
     end
 
