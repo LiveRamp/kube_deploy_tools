@@ -1,5 +1,6 @@
-require 'shellwords'
+require 'forwardable'
 require 'open3'
+require 'shellwords'
 
 require 'kube_deploy_tools/formatted_logger'
 
