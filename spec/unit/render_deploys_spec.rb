@@ -34,9 +34,36 @@ describe KubeDeployTools::RenderDeploys do
 
       app.render
 
-      expect(shellrunner).to have_received(:check_call).with('bundle', 'exec', any_args).exactly(MANIFEST_FILE_NUM_CLUSTERS).times
-      expect(shellrunner).to have_received(:check_call).with('tar', any_args).exactly(MANIFEST_FILE_NUM_CLUSTERS).times
+      expectation = <<-YAML
 
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: test-nginx
+  labels:
+    tag: REMOVED
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - name: web
+          containerPort: 80
+
+YAML
+
+      flavors = %w(local/staging gcp/prod us-east-1/prod us-east-1/staging colo-service/prod colo-service/staging)
+      flavors.each do |flavor|
+        rendered = File.join(tmp_dir, flavor, 'default', 'dep-nginx.yaml')
+        expect(File.file?(rendered)).to be(true)
+        rendered_no_tag = File.read(rendered).gsub(/tag: .*/, 'tag: REMOVED')
+        expect(rendered_no_tag).to eq(expectation)
+      end
+      expect(shellrunner).to have_received(:check_call).with('tar', any_args).exactly(MANIFEST_FILE_NUM_CLUSTERS).times
       expect(File.file?(File.join(tmp_dir, 'artifactory.json'))).to be(true)
     end
   end

@@ -4,6 +4,7 @@ require 'tempfile'
 require 'time'
 require 'yaml'
 
+require 'kube_deploy_tools/render_deploys_hook'
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/shellrunner'
@@ -79,7 +80,8 @@ module KubeDeployTools
             # Run every hook sequentially. 'default' hook is special.
             hooks.each do |hook|
               if hook == DEFAULT_HOOK_SCRIPT_LABEL
-                Shellrunner.check_call('bundle', 'exec', DEFAULT_HOOK_SCRIPT, rendered.path, @input_dir, flavor_dir)
+                # TODO(joshk): render_deploys method should take a hash for testability
+                KubeDeployTools::RenderDeploysHook.render_deploys(rendered.path, @input_dir, flavor_dir)
               else
                 Shellrunner.check_call(hook, rendered.path, @input_dir, flavor_dir)
               end
