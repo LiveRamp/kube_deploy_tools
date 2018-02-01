@@ -21,7 +21,7 @@ This translates to:
 
 - running `docker build . -t local-registry/<container>` for all containers in
 your project
-- running `bundle exec kdt publish_container <container> --target=aws` for all
+- running `bundle exec kdt publish_container <container> --registry aws` for all
 containers in your project
 - running `bundle exec kdt render_deploys`
 - uploading the deploy artifacts to Artifactory, as described in
