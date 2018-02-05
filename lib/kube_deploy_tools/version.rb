@@ -3,7 +3,7 @@ module KubeDeployTools
   def self.version_xyz
     version_xyz = VERSION_XY
     version_xyz += '.'
-    if ENV['GIT_BRANCH'] == 'master'
+    if ENV.fetch('GIT_BRANCH').end_with?('/master')
       # Jenkins master builds
       version_xyz += ENV.fetch('BUILD_ID')
     elsif ENV.has_key?('GIT_BRANCH')
