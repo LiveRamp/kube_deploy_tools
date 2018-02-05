@@ -24,7 +24,6 @@ module KubeDeployTools
           self.output_path = p
         end
       end
-
     end
 
     def parse(args)

@@ -1,3 +1,5 @@
+require 'kube_deploy_tools/version'
+
 module KubeDeployTools
   class Kdt
     attr_reader :path, :args
@@ -30,10 +32,13 @@ module KubeDeployTools
     end
 
     def display_bins
-        bins_names.each do |bin|
-            spaces_count = 25 - bin.size
-            puts "-> #{bin}#{' ' * spaces_count}| #{DESCRIPTIONS[bin]}"
-        end
+      # Print full runtime version
+      puts Gem.loaded_specs["kube_deploy_tools"].version
+
+      bins_names.each do |bin|
+          spaces_count = 25 - bin.size
+          puts "-> #{bin}#{' ' * spaces_count}| #{DESCRIPTIONS[bin]}"
+      end
     end
 
     def execute!

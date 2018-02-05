@@ -1,9 +1,9 @@
 require 'date'
-require File.expand_path('version.rb')
+require File.expand_path(File.join('lib', 'kube_deploy_tools', 'version.rb'))
 
 Gem::Specification.new do |gem|
   gem.name    = 'kube_deploy_tools'
-  gem.version = "#{KubeDeployTools::VERSION_XY}.#{ENV.fetch('BUILD_ID', 'dev')}"
+  gem.version = "#{KubeDeployTools::version_xyz}"
   gem.date    = Date.today.to_s
 
   gem.summary = "Kubernetes Deploy Tools"
@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rubygems-tasks', '~> 0.2'
 
   # ensure the gem is built out of versioned files
-  gem.files = Dir['Rakefile', '{bin,lib}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z`.split("\0")
+  gem.files = Dir['{bin,lib}/**/*', 'README*', 'LICENSE*']
   gem.executables = gem.files.grep(%r{^bin/}) { |f| File.basename(f) }
   gem.require_paths = ['lib']
 end

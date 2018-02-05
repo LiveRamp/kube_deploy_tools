@@ -5,14 +5,11 @@ require 'erb'
 
 module KubeDeployTools
   # Default method to derive a tag name based on the current environment.
+  # An image is tagged for the current branch, git sha, and Jenkins build id.
   def self.tag_from_local_env
-    codestamp = ENV.fetch('GIT_COMMIT', `git rev-parse HEAD`.rstrip)[0...7]
-    # If tree is dirty, take a hash sum of the output of git status -s as well as
-    # git diff to try to encapsulate the state of the environment. Uniqueness is
-    # all that matters here.
-    status = `git status -s`
+    codestamp = (ENV['GIT_COMMIT'] || `git rev-parse HEAD`.rstrip)[0...7]
 
-    branch = ENV.fetch('GIT_BRANCH', `git rev-parse --abbrev-ref HEAD`.rstrip)
+    branch = ENV['GIT_BRANCH'] || `git rev-parse --abbrev-ref HEAD`.rstrip
     if branch.start_with?('origin/')
       branch = branch['origin/'.size..-1]
     end
@@ -28,10 +25,15 @@ module KubeDeployTools
       raise "First char of branch name must be alphanumeric: #{branch}"
     end
 
+    # Include the Jenkins build ID, in the case that there are
+    # multiple builds at the same git branch and git commit,
+    # but with different dependencies.
+    build = ENV.fetch('BUILD_ID', 'dev')[0...5]
+
     # Docker maximum tag length is 128 characters long.
     # Kubernetes maximum label length is 63 characters long. Go with that.
-    # Branch (up to 55 chars) + 1 char hyphen + 7 char codestamp = 63
-    "#{branch[0...55]}-#{codestamp}"
+    # 63 >= max 49 char branch + 1 char hyphen + 7 char codestamp + max 5 char build id
+    "#{branch[0...49]}-#{codestamp}-#{build}"
   end
 
   REGISTRIES = {

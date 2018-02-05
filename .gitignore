@@ -3,3 +3,4 @@
 vendor/
 pkg/
 Gemfile.lock
+/build

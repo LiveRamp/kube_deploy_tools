@@ -15,14 +15,16 @@ describe 'cluster config' do
   it "collects environmental Git information to create an appropriately long tag value" do
     ENV['GIT_COMMIT'] = '0981b78141b123965e7380d6021f7a9b76426290'
     ENV['GIT_BRANCH'] = 'my-testing-branch'
+    ENV.delete('BUILD_ID')
 
     tag = KubeDeployTools.tag_from_local_env
-    expect(tag).to eq('my-testing-branch-0981b78')
+    expect(tag).to eq('my-testing-branch-0981b78-dev')
 
     ENV['GIT_BRANCH'] = 'my testing! branch with some weird# characters, and also overflowing'
+    ENV['BUILD_ID'] = '12345'
     tag = KubeDeployTools.tag_from_local_env
-    expect(tag).to eq('my_testing__branch_with_some_weird__characters__and_als-0981b78')
-    expect(tag.size).to eq(63)
+    expect(tag).to eq('my_testing__branch_with_some_weird__characters__a-0981b78-12345')
+    expect(tag.size).to be <= 63
   end
 end
 
