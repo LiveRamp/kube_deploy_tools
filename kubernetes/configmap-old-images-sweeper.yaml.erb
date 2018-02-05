@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: ops
+  name: old-images-sweeper
+  labels:
+    app: old-images-sweeper
+data:
+  sweeper.yaml: |
+    - repository: kubernetes-snapshot-local
+      prefix:
+        - arbor_admin
+        - arbor_bin_artifacts_test
+        - arbor_master
+        - arbor_staging
+        - k8s-reaper
+        - kube_infra_master
+        - menu
+        - opt_outs
+        - planetarium
+        - platforms_kubernetes
+        - sidek8
+        - strike
+      retention: 3M
+    - repository: kubernetes-snapshot-local
+      prefix:
+        - k8s-reaper_prs
+        - kube_infra_prs
+        - opt_outs_prs
+      retention: 14d

@@ -1,0 +1,10 @@
+deploy:
+  clusters:
+    - target: local
+      environment: staging
+    - target: colo-service
+      environment: prod
+    - target: colo-service
+      environment: staging
+  flavors:
+    default: {}

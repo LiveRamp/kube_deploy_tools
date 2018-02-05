@@ -13,6 +13,12 @@ DEFAULT_HOOK_SCRIPT = 'render_deploys_hook'
 DEFAULT_HOOK_SCRIPT_LABEL = 'default'
 
 module KubeDeployTools
+  DEFAULT_FLAGS = {
+    'image_tag' => tag_from_local_env,
+    'tag' => tag_from_local_env,
+    'image_registry' => DEFAULT_REGISTRY,
+    'username' => Etc.getlogin,
+  }.freeze
   class RenderDeploys
     def initialize(manifest, input_dir, output_dir)
 

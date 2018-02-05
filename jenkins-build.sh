@@ -24,8 +24,7 @@ esac
 # Publish versioned image
 bundle exec rake container_publish
 
-# TODO(jmodes): cleanup after Erin's change w/ |bundle exec render_deploys|
-if [ ! -e build/kubernetes/artifactory.json ]; then
-  mkdir -p build/kubernetes
-  echo '{ "files": [ { "pattern": "fake", "target": "fake" } ] }' > build/kubernetes/artifactory.json
-fi
+# Build a docker container for images-sweeper
+bundle exec rake container:kube_deploy_tools
+bundle exec rake container_push:kube_deploy_tools
+bundle exec kdt render_deploys

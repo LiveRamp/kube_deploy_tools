@@ -28,6 +28,10 @@ module KubeDeployTools
     end
 
     def remove_images
+      if not File.exists? @config_file
+        KubeDeployTools::Logger.error("This config file does not exist: #{@config_file}")
+      end
+
       configs = YAML.load_file(@config_file)
       configs.each do |config|
         retention = human_duration_in_seconds(config['retention'])

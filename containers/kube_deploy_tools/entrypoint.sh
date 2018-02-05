@@ -24,4 +24,4 @@ else
   su user -c "gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}"
 fi
 
-exec su user -c "$@"
+exec su-exec user "$@"
