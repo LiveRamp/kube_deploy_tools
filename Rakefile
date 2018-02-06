@@ -6,11 +6,7 @@ require 'rspec/core/rake_task'
 
 require 'kube_deploy_tools/version'
 
-task :default => [:clean, :test, :build]
-
-task :clean do
-  FileUtils.rm_rf('pkg')
-end
+task :default => [:test, :build]
 
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = Dir.glob('spec/**/*_spec.rb')
@@ -25,6 +21,7 @@ containers_path = 'containers'
 
 # Build Docker images
 namespace :container do
+  next if !Dir.exists?(containers_path)
   Dir["#{containers_path}/**/Dockerfile"].each do |dockerfile|
     next if dockerfile == '.' || dockerfile == '..'
 
@@ -38,10 +35,9 @@ namespace :container do
   end
 end
 
-task :"container:kube_deploy_tools" => [:clean, :build]
-
 # Push Docker images to image registry
 namespace :container_push do
+  next if !Dir.exists?(containers_path)
   Dir.foreach(containers_path) do |container|
     next if container == '.' || container == '..'
 

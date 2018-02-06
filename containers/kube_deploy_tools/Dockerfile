@@ -1,3 +1,13 @@
+FROM ruby:2.3-alpine as build
+
+WORKDIR /opt/kube_deploy_tools
+COPY Gemfile Rakefile kube_deploy_tools.gemspec README* LICENSE* /opt/kube_deploy_tools/
+COPY bin /opt/kube_deploy_tools/bin
+COPY lib /opt/kube_deploy_tools/lib
+
+RUN bundle install && \
+  bundle exec rake build
+
 FROM ruby:2.3-alpine
 
 RUN apk add --no-cache \
@@ -22,10 +32,6 @@ RUN curl -fSL -o docker.tgz "https://${DOCKER_BUCKET}/linux/static/${DOCKER_CHAN
   dockerd -v && \
   docker -v
 
-# Create docker group to share docker daemon socket
-RUN addgroup -g 1001 docker && \
-  addgroup root docker
-
 # Install awscli
 RUN apk add --no-cache \
   --virtual .deps \
@@ -48,7 +54,7 @@ RUN mkdir -p "${GOOGLE_SDK_LOCATION}" && \
   gcloud --version
 
 # Install kube_deploy_tools
-COPY pkg /opt/kube_deploy_tools
+COPY --from=build /opt/kube_deploy_tools/pkg /opt/kube_deploy_tools
 RUN gem install /opt/kube_deploy_tools/*.gem
 
 WORKDIR /app
