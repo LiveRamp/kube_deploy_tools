@@ -47,7 +47,7 @@ bundle exec kdt deploy \
   --target <target in deploy.yml> \
   --environment <environment in deploy.yml> \
   --project <project name of build in Jenkins> \
-  --build <number of build in Jenkins> \
+  --build <number of build in Jenkins or 'latest' to get latest build> \
   --dry-run false
 ```
 
@@ -66,6 +66,22 @@ bundle exec kdt deploy \
 `deploy` will recursively `kubectl apply -f` Kubernetes manifests in this deploy
 artifact.
 
+### include or exclude flags
+KDT also supports include or exclude flags to selectively deploy files. For example, to deploy all files in cluster-autoscaler directory, and all files in datadog directory but svc-dogstatsd.yaml.erb in [OpsRepos/kube-infra](https://git.***REMOVED***/OpsRepos/kube-infra) to the AWS staging cluster:
+```bash
+
+DEBUG=TRUE bundle exec kdt deploy \
+  --target us-east-1 \
+  --environment staging \
+  --project kube_infra_master \
+  --build 1234 \
+  --dry-run false \
+  --include '**/cluster-autoscaler/*' \
+  --include '**/datadog/*' \
+  --exclude '**/datadog/svc-dogstatsd.yaml.erb'
+```
+`DEBUG=TRUE` will show list of filtered directories after text "Your filter generates following paths:"
+See [here](http://www.rubydoc.info/stdlib/core/File.fnmatch) for instructions on metacharacters
 See `bundle exec kdt deploy --help` for a description of all flags.
 
 ## Releasing manually
@@ -98,7 +114,7 @@ load(File.expand_path("../lib/cap/kube_deploy.rb", File.dirname(__FILE__)))
 An example of the deploy command:
 
 ```bash
-please deploy target=colo-service environment=staging build=61
+please deploy target=colo-service environment=staging build=61 include=**/dir1/* include=**/dir2/* exclude=**/dir2/file1
 ```
 
 ### Deploy Kubernetes manifests to your local minikube context
