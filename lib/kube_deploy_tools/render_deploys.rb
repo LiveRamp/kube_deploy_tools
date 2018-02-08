@@ -127,13 +127,13 @@ module KubeDeployTools
     "pattern": "#{@output_dir}/manifests:(*):(*):(*):(*):(*).tar.gz",
     "target": "kubernetes-snapshot-local/{1}/{2}/manifests_{3}_{4}_{5}.tar.gz",
     "props": "type=tgz;target={3};environment={4};flavor={5}",
-    "recursive": false,
-    "flat": true
+    "recursive": "false",
+    "flat": "true"
   },
   {
     "pattern": "#{@output_dir}/images.yaml",
     "target": "kubernetes-snapshot-local/#{@project}/#{@build_number}/images.yaml",
-    "flat": true
+    "flat": "true"
   }]
 }
 EOF
