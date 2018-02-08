@@ -22,7 +22,7 @@ module KubeDeployTools
        Shellrunner.run_call('aws', 'ecr', 'batch-delete-image',
          '--repository-name', repository,
          '--region', @registry['region'],
-         '--image-ids', 'imageTag=', image)
+         '--image-ids', "imageTag=#{image}")
      end
     end
 

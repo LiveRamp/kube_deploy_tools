@@ -139,21 +139,35 @@ module KubeDeployTools
         if files['files'].grep(/images.yaml/).empty?
           search_all_the_files(files['files'], build_path)
         end
-    
+
+        # This is to remove the folder which the files were in once all the files
+        # are deleted
+        files['files'].push(' ')
+
         files['files'].each do |file|
-          remove_path = "#{ARTIFACTORY_HOST}/api/storage/#{build_path}#{file}"
+          remove_path = "#{ARTIFACTORY_HOST}/#{build_path}#{file}"
+
           if @dryrun
             Logger.info("DRYRUN: Removing #{remove_path}")
           else
-            return
-            uri = URI.parse(remove_path)
+            uri = nil
+            # This is to cover the case for the root folder
+            # that is not automatically deleted when there are no contents 
+            # in the folder. Due to the remove_path including a dash at the end
+            # URI sees it as an invalid URI
+            begin
+              uri = URI.parse(remove_path)
+            rescue InvalidURIError
+              uri = URI.parse(remove_path.chomp('/'))
+            end
+
             http = Net::HTTP.new(uri.host, uri.port)
             request = Net::HTTP::Delete.new(uri)
             request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
             response = http.request(request)
-    
-            if response.code != '200'
-              Logger.error("Unsuccessful at deleting #{remove_path}: #{response}")
+
+            if response.code.to_s != '200' || response.code.to_s != '204'
+              Logger.error("Unsuccessful at deleting #{remove_path}: #{response.code}, #{response.message}")
             else
               Logger.info("Successfully removed build #{remove_path}")
             end
@@ -176,8 +190,8 @@ module KubeDeployTools
     def remove_from_ecr(image_ids)
       image_ids.each do |img|
         # Need the image tag and repository, not full path of the image
-        img.slice "#{REGISTRIES['aws']['prefix']}/"
-        repo_image = img.rpartition(':')
+        val = img.partition "#{REGISTRIES['aws']['prefix']}/"
+        repo_image = val.last.rpartition(':')
         repository = repo_image.first
         image = repo_image.last
         aws_driver = PublishContainer::Driver::Aws.new(registry: REGISTRIES['aws']).delete_image(repository, image, @dryrun)
