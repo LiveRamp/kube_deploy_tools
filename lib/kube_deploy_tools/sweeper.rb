@@ -43,7 +43,7 @@ module KubeDeployTools
     
     # Find the containers that are past their expiry time
     # on artifactory
-    def search_artifactory(retention, repo_name)
+    def search_artifactory(retention, repo_name, prefixes)
       time_now = Time.now
       to = (time_now - retention).to_i * 1000
       from = 0
@@ -75,11 +75,15 @@ module KubeDeployTools
           build = uri_split[prefix_index + 1]
           file = uri_split[prefix_index + 2]
     
+          if not prefixes.include?(prefix)
+            next
+          end
+
           # Pull out the images.yaml files for reading
           if file.eql? IMAGES_FILE
             built_artifacts_files.push(uri_result)
           end
-    
+
           key = {'job' => prefix, 'build' => build, 'repository' => repo_name}
           if images_to_remove.has_key?(key)
             images_to_remove[key]['files'].push(file)
@@ -94,7 +98,7 @@ module KubeDeployTools
     end
     
     # Method to fetch and read images.yaml
-    def fetch_built_artifacts_files(built_artifacts_files)
+    def fetch_built_artifacts_files(built_artifacts_files, prefixes)
       prefix_images = Hash[REGISTRIES.map {|name, values| [name, []]}]
     
       # built_artifacts_files is a list of artifactory urls
@@ -126,13 +130,9 @@ module KubeDeployTools
     end
     
     # Remove the expired binaries from Artifactory
-    def remove_from_artifactory(builds, prefixes)
+    def remove_from_artifactory(builds)
       builds.each do |job, files|
-        if not prefixes.include?(job['job'])
-          next
-        end
-    
-        build_path = "#{job['repository']}/#{job['job']}/#{job['build']}/"
+        build_path = "#{job['repository']}/#{job['job']}/#{job['build']}"
     
         # Check if the job has an images.yaml file
         # TODO (efries) Remove this section once all artifacts have images.yaml
@@ -145,28 +145,19 @@ module KubeDeployTools
         files['files'].push(' ')
 
         files['files'].each do |file|
-          remove_path = "#{ARTIFACTORY_HOST}/#{build_path}#{file}"
+          file_path = file.strip.empty? ? '' : "/#{file}"
+          remove_path = "#{ARTIFACTORY_HOST}/#{build_path}#{file_path}"
 
           if @dryrun
             Logger.info("DRYRUN: Removing #{remove_path}")
           else
-            uri = nil
-            # This is to cover the case for the root folder
-            # that is not automatically deleted when there are no contents 
-            # in the folder. Due to the remove_path including a dash at the end
-            # URI sees it as an invalid URI
-            begin
-              uri = URI.parse(remove_path)
-            rescue InvalidURIError
-              uri = URI.parse(remove_path.chomp('/'))
-            end
-
+            uri = URI.parse(remove_path)
             http = Net::HTTP.new(uri.host, uri.port)
             request = Net::HTTP::Delete.new(uri)
             request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
             response = http.request(request)
 
-            if response.code.to_s != '200' || response.code.to_s != '204'
+            if response.code != '200' && response.code != '204'
               Logger.error("Unsuccessful at deleting #{remove_path}: #{response.code}, #{response.message}")
             else
               Logger.info("Successfully removed build #{remove_path}")
@@ -199,12 +190,12 @@ module KubeDeployTools
     end
     
     def remove(repository, retention, prefixes)
-      artifactory_builds, built_artifacts_files = search_artifactory(retention, repository)
+      artifactory_builds, built_artifacts_files = search_artifactory(retention, repository, prefixes)
       # Need to fetch the other images before removing the files from artifactory
       images = fetch_built_artifacts_files(built_artifacts_files)
       remove_from_gcp(images.fetch('gcp', []))
       remove_from_ecr(images.fetch('aws', []))
-      remove_from_artifactory(artifactory_builds, prefixes)
+      remove_from_artifactory(artifactory_builds)
     end
     
     # Function to convert the config times of format "<>M" or "<>d"
