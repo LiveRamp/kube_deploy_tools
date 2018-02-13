@@ -111,10 +111,10 @@ set :repo_url, 'git@git.***REMOVED***:RailsRepos/arbor_admin.git'
 load(File.expand_path("../lib/cap/kube_deploy.rb", File.dirname(__FILE__)))
 ```
 
-An example of the deploy command:
+An example of the deploy command(notice on pentagon you need to use 'dry_run' instead of 'dry-run' because bash does not allow '-' in variables):
 
 ```bash
-please deploy target=colo-service environment=staging build=61 include=**/dir1/* include=**/dir2/* exclude=**/dir2/file1
+please deploy target=colo-service environment=staging build=61 include=**/dir1/* include=**/dir2/* exclude=**/dir2/file1 dry_run=false
 ```
 
 ### Deploy Kubernetes manifests to your local minikube context
