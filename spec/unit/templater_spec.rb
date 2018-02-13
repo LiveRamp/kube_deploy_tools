@@ -59,4 +59,14 @@ describe KubeDeployTools::Templater do
     end
   end
 
+  describe KubeDeployTools::StrictHash do
+    subject(:strict_hash) { KubeDeployTools::StrictHash.new(foo: 'bar') }
+
+    it { expect( strict_hash[:foo] ).to eq 'bar' }
+    it { expect{ strict_hash[:bar] }.to raise_error(/key not found/) }
+    it { expect( strict_hash.fetch(:bar, 'foo') ).to eq 'foo' }
+    it { expect( strict_hash.get_or_nil(:foo)   ).to eq 'bar' }
+    it { expect( strict_hash.get_or_nil(:bar)   ).to eq nil }
+  end
+
 end

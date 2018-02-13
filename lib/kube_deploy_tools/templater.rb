@@ -54,6 +54,10 @@ module KubeDeployTools
     def fetch(*args)
       @h.fetch(*args)
     end
+
+    def get_or_nil(k)
+      @h[k]
+    end
   end
 end
 
