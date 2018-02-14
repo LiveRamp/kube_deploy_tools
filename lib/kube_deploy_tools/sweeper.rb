@@ -98,7 +98,7 @@ module KubeDeployTools
     end
     
     # Method to fetch and read images.yaml
-    def fetch_built_artifacts_files(built_artifacts_files, prefixes)
+    def fetch_built_artifacts_files(built_artifacts_files)
       prefix_images = Hash[REGISTRIES.map {|name, values| [name, []]}]
     
       # built_artifacts_files is a list of artifactory urls
