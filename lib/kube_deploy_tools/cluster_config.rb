@@ -91,6 +91,15 @@ module KubeDeployTools
           'pull_policy' => 'Always',
         }
       },
+      'prod_tectonic' => {
+        'kube_context' => '<%= username %>@us-east-1-prod.k8s.***REMOVED***',
+        'flags' => {
+          'cloud' => 'aws',
+          'kubernetes_major_version' => '1',
+          'kubernetes_minor_version' => '8',
+          'pull_policy' => 'Always',
+        }
+      },
       'staging' => {
         'kube_context' => '<%= username %>@us-east-1-staging.k8s.***REMOVED***',
         'flags' => {
