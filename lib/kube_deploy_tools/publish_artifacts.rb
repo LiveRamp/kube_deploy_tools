@@ -82,7 +82,7 @@ module KubeDeployTools
     def upload_artifact(file_path:, artifactory_repo_key:)
       artifactory_url = URI.join(
         Artifactory.endpoint,
-        KubeDeployTools::ARTIFACTORY_REPO,
+        "/#{KubeDeployTools::ARTIFACTORY_REPO}/",
         artifactory_repo_key
       ).to_s
       Logger.info("Uploading #{file_path} to #{artifactory_url}")
