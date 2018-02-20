@@ -7,8 +7,8 @@ module KubeDeployTools
 
       def initialize
         self.manifest_file = 'deploy.yml'
-        self.input_path = File.expand_path('kubernetes/')
-        self.output_path = File.expand_path('build/kubernetes/')
+        self.input_path = File.join('kubernetes/')
+        self.output_path = File.join('build', 'kubernetes')
       end
 
       def define_options(parser)

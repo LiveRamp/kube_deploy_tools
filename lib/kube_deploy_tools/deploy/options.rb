@@ -1,4 +1,7 @@
+require 'artifactory'
 require 'optparse'
+
+require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/object'
 
 module KubeDeployTools
@@ -20,6 +23,8 @@ module KubeDeployTools
         self.flavor = 'default'
         self.dry_run = true
         self.glob_files = []
+
+        Artifactory.endpoint = KubeDeployTools::ARTIFACTORY_ENDPOINT
       end
 
       def define_options(parser)
@@ -65,6 +70,14 @@ module KubeDeployTools
 
         parser.on('--exclude EXCLUDE', "Exclude glob pattern. Example: --exclude=**/gazette/* will exclude every file in gazette folder. Default is ''.") do |p|
           self.glob_files.push(Hash["exclude_files" => p])
+        end
+
+        # Artifactory configuration is configurable by environment variables
+        # by default:
+        # export ARTIFACTORY_ENDPOINT=http://my.storage.server/artifactory
+        # See https://github.com/chef/artifactory-client#create-a-connection.
+        parser.on('--url URL', 'Artifactory URL') do |p|
+          Artifactory.endpoint = p
         end
 
         parser.on('-')

@@ -1,3 +1,4 @@
+require 'artifactory'
 require 'fileutils'
 require 'uri'
 
@@ -5,11 +6,20 @@ require 'kube_deploy_tools/object'
 require 'kube_deploy_tools/shellrunner'
 
 EXT_TAR_GZ = ".tar.gz"
-ARTIFACT_REPO="http://***REMOVED***/artifactory/kubernetes-snapshot-local/"
 
 module KubeDeployTools
+  PROJECT = ENV['JOB_NAME'] || File.basename(`git config remote.origin.url`.chomp, '.git')
+  BUILD_NUMBER = ENV.fetch('BUILD_ID', 'dev')
+
+  ARTIFACTORY_ENDPOINT = "http://***REMOVED***/artifactory"
+  ARTIFACTORY_REPO = "kubernetes-snapshot-local"
+
   def self.build_deploy_artifact_name(project:, build_number:, target:, environment:, flavor:)
     "manifests:#{project}:#{build_number}:#{target}:#{environment}:#{flavor}#{EXT_TAR_GZ}"
+  end
+
+  def self.get_remote_deploy_artifact_key(project:, build_number:, target:, environment:, flavor:)
+    "#{project}/#{build_number}/manifests_#{target}_#{environment}_#{flavor}#{EXT_TAR_GZ}"
   end
 
   def self.get_remote_deploy_artifact_url(project:, build_number:, target:, environment:, flavor:)
@@ -17,13 +27,14 @@ module KubeDeployTools
       build_number = get_latest_build_number(project)
     end
     URI.join(
-      ARTIFACT_REPO,
-      "#{project}/#{build_number}/manifests_#{target}_#{environment}_#{flavor}#{EXT_TAR_GZ}",
+      Artifactory.endpoint,
+      ARTIFACTORY_REPO,
+      get_remote_deploy_artifact_key(project: project, build_number: build_number, target: target, environment: environment, flavor: flavor),
     ).to_s
   end
 
   def self.get_latest_build_number(project)
-    project_url = URI.join(ARTIFACT_REPO, "#{project}/").to_s
+    project_url = URI.join(Artifactory.endpoint, ARTIFACTORY_REPO, "#{project}/").to_s
     project_builds_html = Shellrunner.run_call('curl', project_url).first
     # store build entries string from html into an array
     build_links_pattern = /(?<=">).+(?=\s{4})/

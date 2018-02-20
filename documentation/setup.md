@@ -81,26 +81,32 @@ In General > Restrict where this project can be run, set the Label Expression to
 A Jenkins build step is required to build, tag, and push all of your Docker images.
 See [documentation/deploy.md](deploy.md) for more.
 
+```
+# In your project's Jenkins build script
+
+bundle exec kdt publish_container # for each Docker image built
+```
+
 A Jenkins build step is required to render Kubernetes manifests and deploy
-artifacts.
+artifacts and push these release artifacts.
 
 ```bash
+# In your project's Jenkins build script
+
 bundle exec kdt render_deploys
+bundle exec kdt publish_artifacts
 ```
 
 A Jenkins build step is required to publish your project's deploy artifacts to
 Artifactory. See the image below and instructions.
 
-![](jenkins_build.png)
+![Jenkins Artifactory upload](jenkins_build.png)
 
-* Under Build Environment, check Generic Artifactory Integration, and then the
-Artifactory Configuration sections will appear.
-* In Artifactory Configuration > Upload Details > Artifactory upload server,
-fill with http://***REMOVED***/artifactory.
-* In Artifactory Configuration > Upload Details > Upload spec source > File Path,
-fill with `build/kubernetes/artifactory.json`.
-* In Artifactory Configuration > Download Details > Artifactory download server,
-fill with http://***REMOVED***/artifactory.
+* Under Bindings, add a username and password (separated) with
+`ARTIFACTORY_USERNAME` as the Username Variable,
+`ARTIFACTORY_PASSWORD` as the Password Variable, and
+`jenkins_publisher/****** (***REMOVED***)` selected as the specific
+credentials. See below.
 
 ## Directory structure
 

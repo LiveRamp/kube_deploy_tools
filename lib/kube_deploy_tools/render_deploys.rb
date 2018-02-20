@@ -26,12 +26,11 @@ module KubeDeployTools
         raise "Can't read deploy manifest: #{manifest}"
       end
 
-      @project = ENV['JOB_NAME'] || File.basename(`git config remote.origin.url`.chomp, '.git')
-      @build_number = ENV['BUILD_ID'] || DateTime.now.strftime('%Y%m%d%H%M%S')
+      @project = KubeDeployTools::PROJECT
+      @build_number = KubeDeployTools::BUILD_NUMBER
 
       @input_dir = input_dir
       @output_dir = output_dir
-      FileUtils.rm_rf @output_dir
       FileUtils.mkdir_p @output_dir
 
       @manifest = YAML.load(File.read(manifest)).fetch('deploy')
@@ -74,6 +73,7 @@ module KubeDeployTools
           # and a prefix to place all the files. Run many hooks in the
           # background.
           flavor_dir = File.join(@output_dir, target, env, flavor)
+          FileUtils.rm_rf flavor_dir
           FileUtils.mkdir_p flavor_dir
 
           puts "*** rendering configuration: #{target}_#{env}_#{flavor}"
@@ -113,29 +113,6 @@ module KubeDeployTools
       end
 
       raise 'rendering deploy configurations failed' if failure
-    # Render artifactory.json to output directory.
-    artifactory_spec_path = File.join(@output_dir, 'artifactory.json')
-    File.open(artifactory_spec_path, 'w') do |fh|
-      fh.write(artifactory_spec)
-    end
-  end
-
-  def artifactory_spec
-    <<-EOF
-{
-  "files": [{
-    "pattern": "#{@output_dir}/manifests:(*):(*):(*):(*):(*).tar.gz",
-    "target": "kubernetes-snapshot-local/{1}/{2}/manifests_{3}_{4}_{5}.tar.gz",
-    "recursive": "false",
-    "flat": "true"
-  },
-  {
-    "pattern": "#{@output_dir}/images.yaml",
-    "target": "kubernetes-snapshot-local/#{@project}/#{@build_number}/images.yaml",
-    "flat": "true"
-  }]
-}
-EOF
     end
 
     def render_erb_flags(flags)

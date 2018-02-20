@@ -64,25 +64,6 @@ YAML
         expect(rendered_no_tag).to eq(expectation)
       end
       expect(shellrunner).to have_received(:check_call).with('tar', any_args).exactly(MANIFEST_FILE_NUM_CLUSTERS).times
-      expect(File.file?(File.join(tmp_dir, 'artifactory.json'))).to be(true)
-    end
-  end
-
-  it "adds artifactory.json" do
-    Dir.mktmpdir do |tmp_dir|
-      # Stub out ENV
-      ENV["JOB_NAME"] = JOB_NAME
-      ENV["BUILD_ID"] = BUILD_ID
-
-      app = KubeDeployTools::RenderDeploys.new(
-        MANIFEST_FILE,
-        INPUT_DIR,
-        tmp_dir
-      )
-
-      app.render
-
-      expect(File.file?(File.join(tmp_dir, 'artifactory.json'))).to be(true)
     end
   end
 end

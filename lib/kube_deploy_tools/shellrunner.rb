@@ -16,8 +16,8 @@ module KubeDeployTools
     def initialize
     end
 
-    def check_call(*cmd)
-      out, err, status = run_call(*cmd)
+    def check_call(*cmd, print_cmd: true)
+      out, err, status = run_call(*cmd, print_cmd: print_cmd)
       if !status.success?
         raise "!!! Command failed: #{Shellwords.join(cmd)}"
       end

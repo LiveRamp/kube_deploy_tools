@@ -16,6 +16,11 @@ To enable kube_deploy_tools in your project, see
 To use kube_deploy_tools in your project, see
 [documentation/README.md](documentation).
 
+# Changes
+
+For breaking changes, new features, and new fixes, see
+[CHANGELOG.md](CHANGELOG.md).
+
 # Contribute
 
 ```bash

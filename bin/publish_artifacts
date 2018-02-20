@@ -1,0 +1,24 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+require 'kube_deploy_tools/publish_artifacts'
+require 'kube_deploy_tools/publish_artifacts/options'
+
+require 'kube_deploy_tools/formatted_logger'
+require 'kube_deploy_tools/shellrunner'
+
+def options
+  $options ||= begin
+    parser = KubeDeployTools::PublishArtifacts::Optparser.new
+    parser.parse(ARGV)
+  end
+end
+
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
+
+KubeDeployTools::PublishArtifacts.new(
+  manifest: options.manifest_file,
+  output_dir: options.output_path,
+).publish

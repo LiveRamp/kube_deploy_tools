@@ -28,3 +28,4 @@ bundle exec rake container_publish
 bundle exec rake container:kube_deploy_tools
 bundle exec rake container_push:kube_deploy_tools
 bundle exec kdt render_deploys
+bundle exec kdt publish_artifacts
