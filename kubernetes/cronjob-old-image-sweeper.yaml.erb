@@ -22,7 +22,7 @@ spec:
         spec:
           restartPolicy: OnFailure
           # NOTE (efries): prevent a job from retrying forever
-          activeDeadlineSeconds: 86400 # deadline of 24h
+          activeDeadlineSeconds: 3600 # deadline of 1h
           containers:
             - name: old-images-sweeper
               image: <%= config["image_registry"] %>/kube_deploy_tools:<%= config["image_tag"] %>

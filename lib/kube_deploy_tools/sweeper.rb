@@ -105,10 +105,18 @@ module KubeDeployTools
       # pointing to the specific images.yaml files
       
       built_artifacts_files.each do |image_uri|
-        # The download file is not at ARTIFACTORY_HOST/api/storage/<BUILD_INFO>
-        # so need to remove the 'api/storage' since at ARTIFACTORY_HOST/<BUILD_INFO>
-        image_yaml = YAML.load(open(image_uri.sub('api/storage/', '')).read)
-        
+        image_yaml = nil
+        begin
+          # The download file is not at ARTIFACTORY_HOST/api/storage/<BUILD_INFO>
+          # so need to remove the 'api/storage' since at ARTIFACTORY_HOST/<BUILD_INFO>
+          # Using open-uri reads
+          images_file = open(image_uri.sub('api/storage/', ''))
+          image_yaml = YAML.load(images_file.read)
+        rescue OpenURI::HTTPError => e
+          Logger.error("Error in reading file #{image_uri}: #{e.message}")
+          next
+        end
+
         # Sort into prefixes
         image_yaml['images'].each do |img|
            # Do not remove the 'latest' image since it is continually
@@ -224,11 +232,17 @@ module KubeDeployTools
     
       files.each do |file|
         if file.end_with? '.tar.gz'
-          fetch_url = "#{ARTIFACTORY_HOST}/#{build_path}#{file}"
+          fetch_url = "#{ARTIFACTORY_HOST}/#{build_path}/#{file}"
     
-          # Using open-uri reads
-          source = open(fetch_url)
-          gzip_reader = Zlib::GzipReader.new(source)
+          gzip_reader = nil
+          begin
+            # Using open-uri reads
+            source = open(fetch_url)
+            gzip_reader = Zlib::GzipReader.new(source)
+          rescue OpenURI::HTTPError => e
+            Logger.error("Error in reading file #{fetch_url}: #{e.message}")
+            next
+          end
     
           # Returns as a string of all the files with their content
           contents = gzip_reader.read
