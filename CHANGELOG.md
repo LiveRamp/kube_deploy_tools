@@ -5,7 +5,7 @@
 
 ### Breaking Changes
 Support for the Jenkins Generic Artifactory Integration is removed and
-images.yaml is no longer generated.
+artifactory.json is no longer generated.
 
 Instead, a new command `publish_artifacts` will upload release artifacts
 to Artifactory.
