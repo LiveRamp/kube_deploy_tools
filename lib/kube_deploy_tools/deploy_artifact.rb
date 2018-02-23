@@ -26,21 +26,28 @@ module KubeDeployTools
     if build_number == 'latest'
       build_number = get_latest_build_number(project)
     end
-    URI.join(
+    [
       Artifactory.endpoint,
       ARTIFACTORY_REPO,
       get_remote_deploy_artifact_key(project: project, build_number: build_number, target: target, environment: environment, flavor: flavor),
-    ).to_s
+    ].join('/')
   end
 
   def self.get_latest_build_number(project)
-    project_url = URI.join(Artifactory.endpoint, ARTIFACTORY_REPO, "#{project}/").to_s
+    project_url = [
+      Artifactory.endpoint,
+      ARTIFACTORY_REPO,
+      "#{project}/"
+    ].join('/')
     project_builds_html = Shellrunner.run_call('curl', project_url).first
     # store build entries string from html into an array
     build_links_pattern = /(?<=">).+(?=\s{4})/
     build_entries = project_builds_html.scan(build_links_pattern) # example of element: 10/</a>    13-Nov-2017 13:51
     build_number_pattern = /^\d+/
-    build_entries.max_by { |e| Time.parse(e) }.match(build_number_pattern)
+    build_entries.
+      map { |x| x.match(build_number_pattern).to_s.to_i }.
+      max.
+      to_s
   end
 
   class DeployArtifact
