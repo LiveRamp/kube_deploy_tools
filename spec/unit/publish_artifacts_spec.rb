@@ -12,7 +12,7 @@ describe KubeDeployTools::PublishArtifacts do
     KubeDeployTools::PROJECT = PROJECT
 
     # Stub out artifacts
-    File.stub(:exist?).and_return(true)
+    allow(File).to receive(:exist?).and_return(true)
 
     # Mock artifact upload
     allow_any_instance_of(Artifactory::Resource::Artifact).to receive(:upload) do |artifact, repo, path|

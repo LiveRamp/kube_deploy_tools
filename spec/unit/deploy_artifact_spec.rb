@@ -84,7 +84,6 @@ describe KubeDeployTools::DeployArtifact do
   end
 
   it "builds the correct remote artifact URL" do
-    # Artifactory.stub(:endpoint).and_return(KubeDeployTools::ARTIFACTORY_ENDPOINT)
     allow(Artifactory).to receive(:endpoint).and_return(KubeDeployTools::ARTIFACTORY_ENDPOINT)
 
     project = 'fake_project'
