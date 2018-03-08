@@ -26,6 +26,7 @@ credentials. See below.
 
 ### New Features
 * The new command `publish_artifacts` uploads release artifacts to Artifactory
+* ERB trim mode is now enabled (`<% "ruby code" -%>` no longer leaves a newline when rendered)
 
 ### New Fixes
 * `render_deploys` and `publish_container` can be called in any order in

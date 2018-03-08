@@ -15,7 +15,7 @@ module KubeDeployTools
 
     def render_erb_with_hash(template, values)
       begin
-        renderer = ERB.new(File.read(template))
+        renderer = ERB.new(File.read(template), nil, '-')
         config = StrictHash.new(values)
         renderer.result(binding)
       rescue Exception => e

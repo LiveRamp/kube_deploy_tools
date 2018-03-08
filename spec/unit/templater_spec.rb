@@ -12,7 +12,7 @@ describe KubeDeployTools::Templater do
       file = File.join(tmp_dir, "example.yaml")
       templater.template_to_file(TEMPLATE_FILEPATH, {'foo' => 'bar'}, file)
       expect(Dir["#{tmp_dir}/*"]).to eq([file])
-      expect(File.read(file).strip).to eq("Hello bar")
+      expect(File.read(file)).to eq("\nHello bar\n")
     end
   end
 
