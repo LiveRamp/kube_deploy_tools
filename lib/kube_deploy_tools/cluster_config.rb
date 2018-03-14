@@ -82,7 +82,7 @@ module KubeDeployTools
       }
     },
     'us-east-1' => {
-      'prod' => {
+      'prod_kops' => {
         'kube_context' => '<%= username %>@prod.us-east-1.k8s.***REMOVED***',
         'flags' => {
           'cloud' => 'aws',
@@ -91,7 +91,7 @@ module KubeDeployTools
           'pull_policy' => 'Always',
         }
       },
-      'prod_tectonic' => {
+      'prod' => {
         'kube_context' => '<%= username %>@us-east-1-prod.k8s.***REMOVED***',
         'flags' => {
           'cloud' => 'aws',
