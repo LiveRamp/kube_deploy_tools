@@ -64,7 +64,7 @@ module KubeDeployTools
           'cloud' => 'local',
           'image_registry' => 'local-registry',
           'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
+          'kubernetes_minor_version' => '8',
           'pull_policy' => 'IfNotPresent',
         }
       },
@@ -76,7 +76,7 @@ module KubeDeployTools
           'cloud' => 'gcp',
           'image_registry' => 'gcr.io/pippio-production',
           'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '6',
+          'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
         }
       }
