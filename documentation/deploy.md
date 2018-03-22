@@ -1,6 +1,14 @@
 
 # Releasing
 
+* [Prerequisites](#prerequisites)
+  + [Jenkins build](#jenkins-build)
+* [Releasing a deploy artifact from Jenkins](#releasing-a-deploy-artifact-from-jenkins)
+  + [Include and exclude flags](#include-and-exclude-flags)
+* [Releasing a deploy artifact from Jenkins with Pentagon on Rampmaster](#releasing-a-deploy-artifact-from-jenkins-with-pentagon-on-rampmaster)
+* [Releasing manually](#releasing-manually)
+  + [Deploy Kubernetes manifests to your local minikube context](#deploy-kubernetes-manifests-to-your-local-minikube-context)
+
 ## Prerequisites
 Ensure that your Jenkins build is set up according to
 [documentation/setup.md](setup.md).
@@ -8,7 +16,7 @@ Ensure that your Jenkins build is set up according to
 For building, tagging, and pushing your Docker images, as well as
 rendering, pushing, and deploying your Kubernetes manifests, see below.
 
-## Jenkins build
+### Jenkins build
 
 Your project's Jenkins build is responsible for the following:
 
@@ -66,11 +74,18 @@ bundle exec kdt deploy \
 `deploy` will recursively `kubectl apply -f` Kubernetes manifests in this deploy
 artifact.
 
-### include or exclude flags
-KDT also supports include or exclude flags to selectively deploy files. For example, to deploy all files in cluster-autoscaler directory, and all files in datadog directory but svc-dogstatsd.yaml.erb in [OpsRepos/kube-infra](https://git.***REMOVED***/OpsRepos/kube-infra) to the AWS staging cluster:
+See `bundle exec kdt deploy --help` for a description of all flags.
+
+### Include and exclude flags
+KDT also supports include or exclude flags to selectively deploy files.
+For example, to deploy all files in cluster-autoscaler directory, and
+all files in datadog directory but svc-dogstatsd.yaml.erb
+in [OpsRepos/kube-infra](https://git.***REMOVED***/OpsRepos/kube-infra)
+to the AWS staging cluster:
+
 ```bash
 
-DEBUG=TRUE bundle exec kdt deploy \
+bundle exec kdt deploy \
   --target us-east-1 \
   --environment staging \
   --project kube_infra_master \
@@ -80,9 +95,32 @@ DEBUG=TRUE bundle exec kdt deploy \
   --include '**/datadog/*' \
   --exclude '**/datadog/svc-dogstatsd.yaml.erb'
 ```
-`DEBUG=TRUE` will show list of filtered directories after text "Your filter generates following paths:"
+
 See [here](http://www.rubydoc.info/stdlib/core/File.fnmatch) for instructions on metacharacters
-See `bundle exec kdt deploy --help` for a description of all flags.
+
+## Releasing a deploy artifact from Jenkins with Pentagon on Rampmaster
+
+Add a Capfile for your project to [MasterRepos/pentagon](https://git.***REMOVED***/MasterRepos/pentagon).
+```ruby
+# pentagon:cap3
+set :application, "arbor_admin"
+set :project, "arbor_admin"
+set :repo_url, 'git@git.***REMOVED***:RailsRepos/arbor_admin.git'
+load(File.expand_path("../lib/cap/kube_deploy.rb", File.dirname(__FILE__)))
+```
+
+An example of the deploy command (notice on pentagon you need to use 'dry_run'
+instead of 'dry-run' because bash does not allow '-' in variables):
+
+```bash
+please deploy \
+  target=colo-service \
+  environment=staging \
+  build=61 \
+  include=**/dir1/* \
+  include=**/dir2/* \
+  exclude=**/dir2/file1 dry_run=false
+```
 
 ## Releasing manually
 
@@ -100,22 +138,6 @@ bundle exec kdt deploy \
   --dry-run false
 ```
 
-## Releasing a deploy artifact from Jenkins with Pentagon on Rampmaster
-
-Add a Capfile for your project to [MasterRepos/pentagon](https://git.***REMOVED***/MasterRepos/pentagon).
-```ruby
-# pentagon:cap3
-set :application, "arbor_admin"
-set :project, "arbor_admin"
-set :repo_url, 'git@git.***REMOVED***:RailsRepos/arbor_admin.git'
-load(File.expand_path("../lib/cap/kube_deploy.rb", File.dirname(__FILE__)))
-```
-
-An example of the deploy command(notice on pentagon you need to use 'dry_run' instead of 'dry-run' because bash does not allow '-' in variables):
-
-```bash
-please deploy target=colo-service environment=staging build=61 include=**/dir1/* include=**/dir2/* exclude=**/dir2/file1 dry_run=false
-```
 
 ### Deploy Kubernetes manifests to your local minikube context
 
