@@ -128,6 +128,15 @@ module KubeDeployTools
           'kubernetes_minor_version' => '8',
           'pull_policy' => 'Always',
         }
+      },
+      'secure' => {
+        'kube_context' => '<%= username %>@us-west-2-secure.k8s.***REMOVED***',
+        'flags' => {
+          'cloud' => 'aws',
+          'kubernetes_major_version' => '1',
+          'kubernetes_minor_version' => '8',
+          'pull_policy' => 'Always',
+        }
       }
     },
     'eu-west-1' => {
@@ -181,4 +190,3 @@ module KubeDeployTools
   end
 
 end
-
