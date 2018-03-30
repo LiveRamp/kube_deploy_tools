@@ -1,0 +1,287 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'optparse'
+
+require 'kube_deploy_tools/cluster_config'
+require 'kube_deploy_tools/formatted_logger'
+require 'kube_deploy_tools/shellrunner'
+
+def usage(stream = STDOUT)
+  stream.puts <<-EOF
+KDT utility for creating a debugging pod (mainly a wrapper around kubectl
+run, cp, exec and delete!)
+
+Syntax: toolbox [create|destroy|login|get|put] [TARGET] [ENVIRONMENT] [options...]
+
+toolbox create [TARGET] [ENV] [NAMESPACE] [kubectl-run-args]
+  Creates a debugging pod. Some arguments accepted by kubectl run are
+  understood: --image, --namespace, --requests and --limits.  Specify
+  --data=GIGABYTES argument to add a /data volume to your pod. The specified
+  image requires /bin/sh to exist.
+  e.g. 'toolbox create gcp prod --requests=cpu=2,memory=1Gi' or
+  'toolbox create us-east-1 staging --namespace=in-n-out'
+
+toolbox destroy [TARGET] [ENV] [NAMESPACE] [kubectl-delete-args]
+  Deletes your toolbox. Any argument accepted by kubectl delete is passed thru.
+  e.g. 'toolbox destroy local staging --namespace=pixel'
+
+toolbox login [TARGET] [ENV] [NAMESPACE] [kubectl-exec-args]
+  Uses 'kubectl exec' to enter your pod. Any argument accepted by kubectl exec
+  is passed thru. By default, runs the shell in your $SHELL argument, which is
+  expected to be available in your pod.
+
+toolbox get [TARGET] [ENV] [NAMESPACE] [kubectl-cp-args]
+  Uses 'kubectl cp' to bring a single file down from your running toolbox. Any
+  argument accepted by kubectl cp is passed thru, _after_ the source and
+  destination arguments.
+  e.g. 'toolbox get local staging /tmp/README.md . --namespace=pixel'
+
+toolbox put [TARGET] [ENV] [NAMESPACE] [kubectl-cp-args]
+  Uses 'kubectl cp' to transfer a single file to your running toolbox from your
+  machine. Any argument accepted by kubectl cp is passed thru, _after_ the
+  source and destination arguments.
+  e.g. 'toolbox put local staging README.md /tmp --namespace=pixel'
+EOF
+end
+
+def die(msg)
+  STDERR.puts "error: #{msg} "
+  usage STDERR
+  exit 1
+end
+
+def main(argv)
+  KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+  KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
+
+  $username = ENV.fetch('USER', Etc.getlogin)
+
+  action = argv.shift or die 'missing action (help, create, destroy, login, get, put)'
+  target = argv.shift or die 'missing target (e.g. us-east-1)'
+  environment = argv.shift or die 'missing environment (e.g. staging)'
+
+  cluster = KubeDeployTools::CLUSTERS[target][environment]
+  context = KubeDeployTools.kube_context(target: target, environment: environment)
+
+  die "no such cluster, target:#{target} environment:#{environment}" unless cluster
+
+  case action
+  when 'help'
+    usage
+    exit 0
+  when 'create'
+    registry = KubeDeployTools::REGISTRIES.fetch(cluster['flags']['cloud'])
+    opts = parse_create_args(argv, registry)
+    apply(context, pvc_spec(opts).to_json) if opts[:pvc]
+    apply(context, pod_spec(opts).to_json)
+  when 'destroy'
+    cmd = [
+      'kubectl', 'delete', 'pod',
+      '--context', context,
+      *argv,
+      toolbox_name,
+    ]
+
+    puts KubeDeployTools::Shellrunner.check_call(*cmd)
+  when 'login'
+    wait_cmd = [
+      'kubectl', 'get', 'pod',
+      '--context', context,
+      '--template', '{{.status.phase}}',
+      *argv,
+      toolbox_name
+    ]
+
+    interval = 10
+    phase, _, status = KubeDeployTools::Shellrunner.run_call(*wait_cmd)
+    raise "pod #{toolbox_name} does not exist. Run toolbox create first?" unless status.success?
+    phase = phase.rstrip
+
+    while phase != "Running"
+      KubeDeployTools::Logger.info("pod #{toolbox_name} is still in state #{phase}...")
+      sleep interval
+      phase = KubeDeployTools::Shellrunner.check_call(*wait_cmd).rstrip
+    end
+
+    cmd = [
+      'kubectl', 'exec', "-it",
+      '--context', context,
+      *argv,
+      toolbox_name,
+      ENV.fetch('SHELL', '/bin/sh')
+    ]
+
+    # required for proper tty passthrough
+    exec *cmd
+  when 'get'
+    src = argv.shift or die 'missing get action source path'
+    dst = argv.shift or die 'missing get action destination path'
+
+    cmd = [
+      'kubectl', 'cp',
+      '--context', context,
+      *argv,
+      "#{toolbox_name}:#{src}", dst
+    ]
+
+    # kubectl cp seems to exit 0 while actually erroring out, so force stdout
+    # and stderr to be printed unconditionally.
+    o, e, s = KubeDeployTools::Shellrunner.run_call(*cmd)
+    raise "command failed: #{Shellwords.join(cmd)}" unless s.success?
+
+    STDOUT.write o
+    STDERR.write e
+  when 'put'
+    src = argv.shift or die 'missing put action source path'
+    dst = argv.shift or die 'missing put action destination path'
+
+    cmd = [
+      'kubectl', 'cp',
+      '--context', context,
+      *argv,
+      src, "#{toolbox_name}:#{dst}",
+    ]
+
+    # kubectl cp seems to exit 0 while actually erroring out, so force stdout
+    # and stderr to be printed unconditionally.
+    o, e, s = KubeDeployTools::Shellrunner.run_call(*cmd)
+    raise "command failed: #{Shellwords.join(cmd)}" unless s.success?
+
+    STDOUT.write o
+    STDERR.write e
+  else
+    die "unknown action: #{action}"
+  end
+end
+
+def toolbox_name
+  "toolbox-#{$username}"
+end
+
+def parse_resources(n)
+  resources = {}
+  n.split(/,/).each do |set|
+    k, v = set.split(/=/, 1)
+    die "unknown request: #{k}" unless ['cpu', 'memory'].member?(k)
+    # TODO(joshk): unit parsing (cores, bytes)
+    resources[k] = v
+  end
+  resources
+end
+
+# Understand a subset of `kubectl run` options since we can't use it directly.
+# --image: override image
+# --requests: set container requests
+# --limits: set container limits
+# --namespace: set namespace
+def parse_create_args(args, registry)
+  opts = {
+    namespace: 'default',
+    image: "#{registry['prefix']}/toolbox:latest",
+    requests: {cpu: '200m', memory: '512Mi'},
+    limits: {cpu: '500m', memory: '2Gi'},
+  }
+
+  OptionParser.new do |p|
+    p.on('-nNAMESPACE', '--namespace=NAMESPACE', 'Namespace for toolbox') do |n|
+      opts[:namespace] = n
+    end
+    p.on('--iIMAGE', '--image=IMAGE', 'Image for toolbox') do |i|
+      opts[:image] = i
+    end
+    p.on('-rREQUESTSPEC', '--requests=REQUESTSPEC', 'Specify CPU / memory requests') do |n|
+      opts[:requests] = parse_resources(n)
+    end
+    p.on('-lLIMITSPEC', '--limits=REQUESTSPEC', 'Specify CPU / memory limits') do |n|
+      opts[:limits] = parse_resources(n)
+    end
+    p.on('-dCAPACITY', '--data=CAPACITY', 'Add a PVC to this toolbox with optional given size') do |n|
+      opts[:pvc] = true
+      opts[:pvc_size] = n ? n.to_i : 20
+    end
+  end.parse(*args)
+
+  opts
+end
+
+# Base pod spec used verbatim in create action,
+# and augmented in create_with_storage action.
+def pod_spec(opts)
+  pod = {
+    apiVersion: 'v1',
+    kind: 'Pod',
+    metadata: {
+      labels: {
+        app: 'toolbox',
+        username: $username,
+      },
+      name: toolbox_name,
+      namespace: opts[:namespace],
+    },
+    spec: {
+      containers: [{
+        name: 'toolbox',
+        image: opts[:image],
+        imagePullPolicy: 'IfNotPresent',
+        command: ['/bin/sh', '-c', 'sleep infinity'],
+        resources: {
+          limits: opts[:limits],
+          requests: opts[:requests],
+        }
+      }],
+    }
+  }
+
+  if opts[:pvc]
+    # Bind the PVC into the regular Pod spec.
+    pod[:spec][:containers][0][:volumeMounts] = [{
+      name: 'data',
+      mountPath: '/data',
+    }]
+    pod[:spec][:volumes] = [{
+      name: 'data',
+      persistentVolumeClaim: {
+        claimName: toolbox_name,
+      }
+    }]
+  end
+
+  pod
+end
+
+def pvc_spec(opts)
+  {
+    apiVersion: 'v1',
+    kind: 'PersistentVolumeClaim',
+    metadata: {
+      labels: {
+        app: 'toolbox',
+        username: $username,
+      },
+      name: toolbox_name,
+      namespace: opts[:namespace],
+    },
+    spec: {
+      accessModes: ['ReadWriteOnce'],
+      resources: {
+        requests: {
+          storage: "#{opts[:pvc_size]}Gi",
+        },
+      },
+    },
+  }
+end
+
+def apply(context, data)
+  KubeDeployTools::Logger.info "stdin: #{data}"
+
+  cmd = [
+    'kubectl', 'apply', '-f', '-',
+    '--context', context
+  ]
+
+  puts KubeDeployTools::Shellrunner.check_call(*cmd, stdin_data: data)
+end
+
+main(ARGV)

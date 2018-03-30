@@ -17,7 +17,6 @@ module KubeDeployTools
     'image_tag' => tag_from_local_env,
     'tag' => tag_from_local_env,
     'image_registry' => DEFAULT_REGISTRY,
-    'username' => Etc.getlogin,
   }.freeze
   class RenderDeploys
     def initialize(manifest, input_dir, output_dir)

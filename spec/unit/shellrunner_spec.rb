@@ -32,7 +32,7 @@ describe KubeDeployTools::Shellrunner do
     end
 
     it "prints the command" do
-      allow(Open3).to receive(:capture3).with(*cmd).and_return(captured_output)
+      allow(Open3).to receive(:capture3).with(*cmd, stdin_data: nil).and_return(captured_output)
       allow(logger).to receive(:info)
       allow(logger).to receive(:debug)
 

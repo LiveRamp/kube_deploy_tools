@@ -16,22 +16,23 @@ module KubeDeployTools
     def initialize
     end
 
-    def check_call(*cmd, print_cmd: true)
-      out, err, status = run_call(*cmd, print_cmd: print_cmd)
+    def check_call(*cmd, **opts)
+      out, err, status = run_call(*cmd, **opts)
       if !status.success?
         raise "!!! Command failed: #{Shellwords.join(cmd)}"
       end
       out
     end
 
-    def run_call(*cmd, print_cmd: true)
+    def run_call(*cmd, **opts)
+      print_cmd = opts.fetch(:print_cmd, true)
       if print_cmd
         Logger.info(Shellwords.join(cmd))
       else
         Logger.debug(Shellwords.join(cmd))
       end
 
-      out, err, status = Open3.capture3(*cmd)
+      out, err, status = Open3.capture3(*cmd, stdin_data: opts[:stdin_data])
       Logger.debug(out.shellescape)
 
       if !status.success? && print_cmd

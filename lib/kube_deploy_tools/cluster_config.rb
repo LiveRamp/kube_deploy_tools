@@ -183,7 +183,7 @@ module KubeDeployTools
 
   def self.kube_context(target:, environment:)
     b = binding
-    b.local_variable_set(:username, Etc.getlogin)
+    b.local_variable_set(:username, ENV.fetch('USER', Etc.getlogin))
     renderer = ERB.new(CLUSTERS[target][environment]['kube_context'])
 
     renderer.result(b)

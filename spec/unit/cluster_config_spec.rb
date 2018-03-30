@@ -2,14 +2,13 @@ require 'kube_deploy_tools/cluster_config'
 
 describe 'cluster config' do
   it "gets the kube context given a target and environment" do
-    username = 'fakeusername'
-    allow(Etc).to receive(:getlogin).and_return(username)
+    ENV['USER'] = 'fakeusername'
 
     kube_context = KubeDeployTools.kube_context(
       target: 'colo-service',
       environment: 'staging',
     )
-    expect(kube_context).to eq("#{username}@staging.service")
+    expect(kube_context).to eq("fakeusername@staging.service")
   end
 
   it "collects environmental Git information to create an appropriately long tag value" do
