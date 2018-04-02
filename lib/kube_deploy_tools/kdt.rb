@@ -27,10 +27,6 @@ module KubeDeployTools
       args.first
     end
 
-    def entire_command
-      "#{path}/" + args.join(' ')
-    end
-
     def display_bins
       # Print full runtime version
       puts Gem.loaded_specs["kube_deploy_tools"].version
@@ -43,7 +39,12 @@ module KubeDeployTools
 
     def execute!
       raise "command '#{bin}' is not a valid command" unless valid_bin?
-      exec entire_command
+      bin_with_path = "#{path}/#{bin}"
+      bin_args = args[1..-1]
+
+      # calling exec with multiple args will prevent shell expansion
+      # https://ruby-doc.org/core/Kernel.html#method-i-exec
+      exec bin_with_path, *bin_args
     end
 
     def valid_bin?

@@ -10,10 +10,11 @@ describe KubeDeployTools::Kdt do
 
     it 'builds the command to execute the specified bin file' do
         path = File.expand_path('../resources/bin', __dir__)
-        kdt = KubeDeployTools::Kdt.new(path, ['bin_test', '-anopt'])
+        kdt = KubeDeployTools::Kdt.new(path, ['bin_test', '-anopt', '--flag', '*'])
 
-        expect(kdt.entire_command).to match('kube_deploy_tools')
-        expect(kdt.entire_command).to match('/spec/resources/bin/bin_test -anopt')
+        expect(kdt).to receive(:exec).with(
+            /\/spec\/resources\/bin\/bin_test/, '-anopt', '--flag', '*')
+        kdt.execute!
     end
 
     it 'raises an error when trying to execute invalid command' do
