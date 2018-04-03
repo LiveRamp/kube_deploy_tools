@@ -11,7 +11,8 @@ module KubeDeployTools
         'render_deploys'      => 'Renders ERB templates',
         'render_deploys_hook' => 'The default hook used by render_deploys that uses templater to render Kubernetes manifests from the kubernetes/ directory into the build/kubernetes/ directory',
         'sweeper'             => 'Cleans up images and artifacts in our image and artifact repositories',
-        'templater'           => 'Renders ERB templates into Kubernetes manifests with a context defined in YAML'
+        'templater'           => 'Renders ERB templates into Kubernetes manifests with a context defined in YAML',
+        'toolbox'             => 'Creates a personal debugging pod in Kubernetes'
     }
 
     def initialize(path, args)
