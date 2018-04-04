@@ -304,3 +304,21 @@ and
 [build_tools/.../kdt.sh](https://git.***REMOVED***/MasterRepos/build_tools/blob/master/src/main/resources/com/liveramp/build_tools/common/kdt.sh)
 for the Maven build tasks.
 
+## Delivering extra files
+
+The `publish_artifacts` subcommand allows an extra flag, `--include`,
+which permits the user to publish other arbitrary artifacts along with
+the docker images and deploy configurations. This can be useful when
+sharing files between builds.
+
+From the generating build, run `publish_artifacts` as follows:
+
+```bash
+publish_artifacts --include extra_artifact.tar.gz
+```
+
+From the consuming build, locate the appropriate build in Artifactory
+and open the generated `images.yaml` file. That file will contain a
+manifest of any extra files that were included in that build and should
+be in the same directory.
+

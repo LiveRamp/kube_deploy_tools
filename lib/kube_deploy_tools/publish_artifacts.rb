@@ -2,6 +2,7 @@ require 'artifactory'
 require 'uri'
 require 'yaml'
 
+require 'kube_deploy_tools/built_artifacts_file'
 require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
@@ -11,12 +12,14 @@ module KubeDeployTools
   class PublishArtifacts
     def initialize(
       manifest:,
-      output_dir:)
+      output_dir:,
+      extra_files:)
       unless File.file?(manifest)
         raise "Can't read deploy manifest: #{manifest}"
       end
       @manifest = YAML.load(File.read(manifest)).fetch('deploy')
       @output_dir = output_dir
+      @extra_files = extra_files
 
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
@@ -69,6 +72,21 @@ module KubeDeployTools
       end
 
       images_yaml = File.join(@output_dir, 'images.yaml')
+
+      @extra_files.each do |f|
+        base = File.basename(f)
+        upload_artifact(
+          file_path: f,
+          artifactory_repo_key:
+          "#{@project}/#{@build_number}/#{base}",
+        )
+
+        manifest = KubeDeployTools::BuiltArtifactsFile.new(images_yaml)
+        manifest.extra_files.add base
+
+        Logger.info("Registered #{f} as extra artifact of the build")
+      end
+
       if File.exist?(images_yaml)
         upload_artifact(
           file_path: images_yaml,

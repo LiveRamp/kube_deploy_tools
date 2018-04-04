@@ -21,4 +21,5 @@ KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 KubeDeployTools::PublishArtifacts.new(
   manifest: options.manifest_file,
   output_dir: options.output_path,
+  extra_files: options.extra_files,
 ).publish
