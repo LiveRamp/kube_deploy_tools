@@ -161,7 +161,7 @@ For single- and multi-module Java projects, a couple of further changes are
 necessary.
 
 For examples, see
-- the single-module project [consul_kube_registrar](https://git.***REMOVED***/MasterRepos/consul_kube_registrar/pull/4), or
+- the single-module project [taxonomy_service](https://git.***REMOVED***/MasterRepos/taxonomy_service/pull/157/files), or
 - the multi-module project [validator_service](https://git.***REMOVED***/MasterRepos/validator_service/compare/959b1e1bf54bd17760b2dac40d5c619d1bfa5a94...bff6f4b99bf0dcae961faca5551e5bc9a61f6ea9?diff=unified&expand=1&name=bff6f4b99bf0dcae961faca5551e5bc9a61f6ea9).
 
 ### Java single-module projects
