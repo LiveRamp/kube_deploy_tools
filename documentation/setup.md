@@ -140,7 +140,8 @@ credentials. See above.
 
 For Java projects on `docker2` machines, the Artifactory configuration below is
 required for pushing Java artifacts.
-* Under Maven build > Advanced settings > Global settings.xml > Use
+![Jenkins Java Artifactory upload](java_jenkins_build.png)
+* Under Maven's build settings: Build > Advanced settings > Global settings.xml > Use
   provided settings.xml file, select `***REMOVED***`.
 
 ## Directory structure
