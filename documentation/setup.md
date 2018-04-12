@@ -278,14 +278,21 @@ bundle exec kdt render_deploys
 ### How do the Maven targets work?
 
 The `<skip.kdt.docker>` and `<skip.kdt.kubernetes>` flags enable generating and
-pushing Docker and Kubernetes release artifacts on `mvn deploy -Pjenkins`.
+pushing Docker and Kubernetes release artifacts on `clean deploy -Pjenkins`.
 
 In Jenkins master builds, this means pushing Docker images to ECR and pushing
 rendered Kubernetes manifests to Artifactory.
 
-In Jenkins PR builds where `mvn verify -Pjenkins` is generally used, currently:
-- Docker images will not be build nor pushed, and
-- Kubernetes manifests will not be rendered nor published.
+In Jenkins PR builds, we recommend using the following mvn arguments:
+`clean deploy -Dsnapshot.version=1.0-${ghprbSourceBranch}-SNAPSHOT -Pjenkins`
+
+In both cases, especially when running on `docker2` slave type, remember to set
+the following:
+* Maven advanced settings
+* Global settings.xml file: use provided settings.xml file
+* Select 'for internal publishing (***REMOVED***)'
+
+Otherwise you will get an error when mvn tries to publish artifacts to Artifactory.
 
 When working locally, use the plain `bundle` commands directly. For example:
 
