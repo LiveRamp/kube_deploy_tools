@@ -87,16 +87,8 @@ artifacts will be compressed and published to Artifactory.
 
 Thus, add the `build/` directory to your .gitignore file.
 
-## Set up Jenkins build steps
-
-(1) The Jenkins build should run on Docker-enabled Jenkins workers.
-In General > Restrict where this project can be run,
-set the Label Expression to `docker2`.
-
-(2) Jenkins credentials are required for Github auth on `docker2` machines below.
-* Under Credentials > Source Code Management > Git, select `rapleaf (RSA,  github)`.
-
-(3) Jenkins build steps are required
+## Application-specific Jenkins build step requirements
+Jenkins build steps are required
 1. to build, tag, and push all of your Docker images, and
 2. to render and push all Kubernetes manifests.
 
@@ -105,7 +97,7 @@ See [documentation/deploy.md](deploy.md) for more.
 For Java projects, see the Java projects section below for how to add these
 build tasks to your Maven build.
 
-For a generic project, below are the additional commands required for your
+For a generic, non-Java project, below are the additional commands required for your
 build.
 
 ```bash
@@ -121,7 +113,17 @@ bundle exec kdt render_deploys
 bundle exec kdt publish_artifacts
 ```
 
-(4) Jenkins credentials are required to publish your project's images to AWS ECR
+## Set up Jenkins build steps
+Below are Jenkins build steps required for configuration in the Jenkins UI.
+
+#### (1) The Jenkins build should run on Docker-enabled Jenkins workers.
+* Under General > Restrict where this project can be run,
+set the Label Expression to `docker2`.
+
+#### (2) Jenkins credentials are required for Github auth on `docker2` machines below.
+* Under Credentials > Source Code Management > Git, select `rapleaf (RSA,  github)`.
+
+#### (3) Jenkins credentials are required to publish your project's images to AWS ECR
 and your project's deploy artifacts to Artifactory. See the image below and instructions.
 
 ![Jenkins Artifactory upload](jenkins_build.png)
@@ -138,7 +140,7 @@ credentials. See above.
 `jenkins_publisher/****** (***REMOVED***)` selected as the specific
 credentials. See above.
 
-(5) For Java projects on `docker2` machines, the Artifactory configuration below is
+#### (4) For Java projects on `docker2` machines, the Artifactory configuration below is
 required for pushing Java artifacts.
 ![Jenkins Java Artifactory upload](java_jenkins_build.png)
 * Under Maven's build settings: Build > Advanced settings > Global settings.xml > Use
