@@ -92,8 +92,6 @@ Jenkins build steps are required
 1. to build, tag, and push all of your Docker images, and
 2. to render and push all Kubernetes manifests.
 
-See [documentation/deploy.md](deploy.md) for more.
-
 For Java projects, see the Java projects section below for how to add these
 build tasks to your Maven build.
 
@@ -112,6 +110,8 @@ bundle exec kdt render_deploys
 # Push Kubernetes deploy artifacts to Artifactory
 bundle exec kdt publish_artifacts
 ```
+
+See [documentation/deploy.md](deploy.md) for more on this topic.
 
 ## Set up Jenkins build steps
 Below are Jenkins build steps required for configuration in the Jenkins UI.
