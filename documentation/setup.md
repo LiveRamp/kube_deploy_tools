@@ -90,7 +90,7 @@ Thus, add the `build/` directory to your .gitignore file.
 ## Set up Jenkins build steps
 
 (1) The Jenkins build should run on Docker-enabled Jenkins workers.
-For non-Java projects, in General > Restrict where this project can be run,
+In General > Restrict where this project can be run,
 set the Label Expression to `docker2`.
 
 (2) Jenkins credentials are required for Github auth on `docker2` machines below.
