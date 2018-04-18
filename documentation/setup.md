@@ -89,14 +89,14 @@ Thus, add the `build/` directory to your .gitignore file.
 
 ## Set up Jenkins build steps
 
-The Jenkins build should run on Docker-enabled Jenkins workers.
+(1) The Jenkins build should run on Docker-enabled Jenkins workers.
 For non-Java projects, in General > Restrict where this project can be run,
 set the Label Expression to `docker2`.
 
-Jenkins credentials are required for Github auth on `docker2` machines below.
+(2) Jenkins credentials are required for Github auth on `docker2` machines below.
 * Under Credentials > Source Code Management > Git, select `rapleaf (RSA,  github)`.
 
-Jenkins build steps are required
+(3) Jenkins build steps are required
 1. to build, tag, and push all of your Docker images, and
 2. to render and push all Kubernetes manifests.
 
@@ -121,7 +121,7 @@ bundle exec kdt render_deploys
 bundle exec kdt publish_artifacts
 ```
 
-Jenkins credentials are required to publish your project's images to AWS ECR
+(4) Jenkins credentials are required to publish your project's images to AWS ECR
 and your project's deploy artifacts to Artifactory. See the image below and instructions.
 
 ![Jenkins Artifactory upload](jenkins_build.png)
@@ -138,7 +138,7 @@ credentials. See above.
 `jenkins_publisher/****** (***REMOVED***)` selected as the specific
 credentials. See above.
 
-For Java projects on `docker2` machines, the Artifactory configuration below is
+(5) For Java projects on `docker2` machines, the Artifactory configuration below is
 required for pushing Java artifacts.
 ![Jenkins Java Artifactory upload](java_jenkins_build.png)
 * Under Maven's build settings: Build > Advanced settings > Global settings.xml > Use
