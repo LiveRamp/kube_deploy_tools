@@ -141,4 +141,13 @@ describe KubeDeployTools::DeployArtifact do
     expect(latest_build_number).to eq('129')
 
   end
+
+  it "runs pre apply hook" do
+    deploy_artifact = KubeDeployTools::DeployArtifact.new(
+      input_path: "spec/resources/kubernetes",
+      pre_apply_hook: "some/hook.rb"
+    )
+    expect(shellrunner).to receive(:run_call).with("some/hook.rb", "spec/resources/kubernetes").once
+    deploy_artifact.path
+  end
 end

@@ -53,10 +53,12 @@ module KubeDeployTools
   class DeployArtifact
     def initialize(
       input_path:,
-      output_dir_path: nil)
+      output_dir_path: nil,
+      pre_apply_hook: nil)
 
       @input_path = input_path
       @output_dir_path = output_dir_path
+      @pre_apply_hook = pre_apply_hook
       raise ArgumentError, 'path is required' if input_path.blank?
 
       if !is_remote_deploy_artifact?(@input_path) &&
@@ -73,6 +75,13 @@ module KubeDeployTools
 
       if is_local_compressed_deploy_artifact?(@input_path)
         @input_path = uncompress_local_deploy_artifact(@input_path, @output_dir_path)
+      end
+
+      if @pre_apply_hook
+        out, err, status = Shellrunner.run_call(@pre_apply_hook, @input_path)
+        if !status.success?
+          raise "Failed to run post download hook #{@pre_apply_hook}"
+        end
       end
 
       @input_path

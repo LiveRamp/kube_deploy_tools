@@ -40,6 +40,7 @@ Dir.mktmpdir { |tmpdir|
         flavor: options.flavor,
       ),
       output_dir_path: tmpdir,
+      pre_apply_hook: options.pre_apply_hook
     ).path
   end
 

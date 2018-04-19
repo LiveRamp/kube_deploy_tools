@@ -16,7 +16,8 @@ module KubeDeployTools
         :flavor,
         :build_number,
         :dry_run,
-        :glob_files
+        :glob_files,
+        :pre_apply_hook
 
       def initialize
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
@@ -70,6 +71,10 @@ module KubeDeployTools
 
         parser.on('--exclude EXCLUDE', "Exclude glob pattern. Example: --exclude=**/gazette/* will exclude every file in gazette folder. Default is ''.") do |p|
           self.glob_files.push(Hash["exclude_files" => p])
+        end
+
+        parser.on("--pre-apply-hook CMD", "Shell command to run with the output directory before applying files") do |p|
+          self.pre_apply_hook = p
         end
 
         # Artifactory configuration is configurable by environment variables
