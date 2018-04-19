@@ -116,6 +116,10 @@ See [documentation/deploy.md](deploy.md) for more on this topic.
 ## Set up Jenkins build steps
 Below are Jenkins build steps required for configuration in the Jenkins UI.
 
+For examples of Jenkins configurations, see below.
+* [ingestion_file_locator](https://jenkins.***REMOVED***/job/ingestion_file_locator/configure)
+* [ingestion_file_locator_prs](https://jenkins.***REMOVED***/job/ingestion_file_locator_prs/configure)
+
 #### (1) The Jenkins build should run on Docker-enabled Jenkins workers.
 * Under General > Restrict where this project can be run,
 set the Label Expression to `docker2`.
