@@ -1,6 +1,15 @@
 
 # Changelog
 
+## 1.4.x
+
+### Breaking Changes
+kdt will now default to an image pull policy of  `IfNotPresent`,changed from `Always`.
+
+Any yaml templates using `imagePullPolicy: <%= config["pull_policy"] %>` will now default to not pulling an image tag if that tag is already on the node.
+* If you have always used kdt to template out the image tag of your containers, this change does not affect you.
+* However, if you have been using a static image tag that you keep replacing and rely on `imagePullPolicy: Always` to update that tag on nodes, then you will have to set that explicitly in your kubernetes yamls
+
 ## 1.3.x
 
 ### Breaking Changes

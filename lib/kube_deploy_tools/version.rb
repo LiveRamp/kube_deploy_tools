@@ -1,5 +1,5 @@
 module KubeDeployTools
-  VERSION_XY = "1.3"
+  VERSION_XY = "1.4"
   def self.version_xyz
     version_xyz = VERSION_XY
     version_xyz += '.'

@@ -13,6 +13,7 @@ spec:
       containers:
       - name: nginx
         image: nginx
+        imagePullPolicy: <%= config["pull_policy"] %>
         ports:
         - name: web
           containerPort: 80
