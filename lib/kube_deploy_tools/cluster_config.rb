@@ -2,6 +2,7 @@ require 'digest'
 require 'etc'
 require 'time'
 require 'erb'
+require 'yaml'
 
 module KubeDeployTools
   # Default method to derive a tag name based on the current environment.
@@ -56,130 +57,7 @@ module KubeDeployTools
 
   DEFAULT_REGISTRY = REGISTRIES['aws']['prefix']
 
-  CLUSTERS = {
-    'local' => {
-      'staging' => {
-        'kube_context' => 'minikube',
-        'flags' => {
-          'cloud' => 'local',
-          'image_registry' => 'local-registry',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'IfNotPresent',
-        }
-      },
-    },
-    'gcp' => {
-      'prod' => {
-        'kube_context' => 'production',
-        'flags' => {
-          'cloud' => 'gcp',
-          'image_registry' => 'gcr.io/pippio-production',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'Always',
-        }
-      }
-    },
-    'us-east-1' => {
-      'prod_kops' => {
-        'kube_context' => '<%= username %>@prod.us-east-1.k8s.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
-          'pull_policy' => 'Always',
-        }
-      },
-      'prod' => {
-        'kube_context' => '<%= username %>@us-east-1-prod.k8s.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'Always',
-        }
-      },
-      'staging' => {
-        'kube_context' => '<%= username %>@us-east-1-staging.k8s.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'Always',
-        }
-      }
-    },
-    'us-west-2' => {
-      'prod' => {
-        'kube_context' => '<%= username %>@us-west-2-prod.k8s.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'Always',
-        }
-      },
-      'staging' => {
-        'kube_context' => '<%= username %>@us-west-2-staging.k8s.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'Always',
-        }
-      },
-      'secure' => {
-        'kube_context' => '<%= username %>@us-west-2-secure.k8s.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '8',
-          'pull_policy' => 'Always',
-        }
-      }
-    },
-    'eu-west-1' => {
-      'prod' => {
-        'kube_context' => '<%= username %>@prod.eu-west-1.k8s.eu.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
-          'pull_policy' => 'Always',
-        }
-      },
-      'staging' => {
-        'kube_context' => '<%= username %>@staging.eu-west-1.k8s.eu.***REMOVED***',
-        'flags' => {
-          'cloud' => 'aws',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
-          'pull_policy' => 'Always',
-        }
-      }
-    },
-    'colo-service' => {
-      'prod' => {
-        'kube_context' => '<%= username %>@prod.service',
-        'flags' => {
-          'cloud' => 'colo',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
-          'pull_policy' => 'Always',
-        }
-      },
-      'staging' => {
-        'kube_context' => '<%= username %>@staging.service',
-        'flags' => {
-          'cloud' => 'colo',
-          'kubernetes_major_version' => '1',
-          'kubernetes_minor_version' => '7',
-          'pull_policy' => 'Always',
-        }
-      }
-    }
-  }.freeze
+  CLUSTERS = YAML.load(File.read('clusters.yml')).freeze
 
   def self.kube_context(target:, environment:)
     b = binding
