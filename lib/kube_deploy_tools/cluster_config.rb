@@ -57,7 +57,8 @@ module KubeDeployTools
 
   DEFAULT_REGISTRY = REGISTRIES['aws']['prefix']
 
-  CLUSTERS = YAML.load(File.read('clusters.yml')).freeze
+  CLUSTERS = YAML.load(File.read(
+    File.join(File.dirname(__FILE__), '../../clusters.yml'))).freeze
 
   def self.kube_context(target:, environment:)
     b = binding
