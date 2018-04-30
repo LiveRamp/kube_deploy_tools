@@ -162,7 +162,7 @@ end
 def parse_resources(n)
   resources = {}
   n.split(/,/).each do |set|
-    k, v = set.split(/=/, 1)
+    k, v = set.split(/=/)
     die "unknown request: #{k}" unless ['cpu', 'memory'].member?(k)
     # TODO(joshk): unit parsing (cores, bytes)
     resources[k] = v
