@@ -13,6 +13,8 @@ Gem::Specification.new do |gem|
   gem.email    = 'ops@***REMOVED***'
   gem.homepage = 'http://git.***REMOVED***/OpsRepos/kube_deploy_tools'
 
+  gem.required_ruby_version = '>= 2.3'
+
   gem.add_dependency 'colorize', '~> 0.8'
   gem.add_dependency 'artifactory', '~> 2.0'
   gem.add_development_dependency 'rake', '~> 12.0'
