@@ -11,59 +11,61 @@ BUILT_ARTIFACTS_FILE = 'build/kubernetes/images.yaml'.freeze
 
 module KubeDeployTools
   class PublishContainer
-    def initialize(local_prefix, registry_name, images, tag)
+    def initialize(local_prefix, registries, images, tag)
       @local_prefix = local_prefix
-      @registry = REGISTRIES[registry_name]
+      @registries = registries.map do |r|
+        registry = REGISTRIES.fetch(r)
+        driver_class = Driver::MAPPINGS.fetch(registry['driver'])
+        [registry, driver_class.new(registry: registry)]
+      end.to_h
       @base_image_names = images
       @tag = tag
-
-      if (driver_class = Driver::MAPPINGS[@registry['driver']])
-        @registry_driver = driver_class.new(registry: @registry)
-      else
-        raise "No driver exists for registry type #{@registry['driver']}"
-      end
     end
 
     def publish
-      images_to_push = tag_images(@base_image_names)
+      dirname = File.dirname(BUILT_ARTIFACTS_FILE)
+      FileUtils.mkdir_p(dirname)
 
-      # Does whatever is necessary to authorize against this registry
-      @registry_driver.authorize
-      push_images(images_to_push)
+      driver_images = []
+
+      @registries.each_pair do |registry, driver|
+        driver_images.unshift [driver, tag_images(registry, @base_image_names)]
+        # Does whatever is necessary to authorize against this registry
+        driver.authorize
+      end
+
+      # Push first images to each registry in parallel
+      driver_images.map do |driver, all_images|
+        Thread.new { driver.push_image all_images[0] }
+      end.each(&:join)
+
+      # Push the rest of the images to each registry in parallel
+      driver_images.map do |driver, all_images|
+        _, *remaining_images = all_images
+        remaining_images.map do |i|
+          Thread.new { driver.push_image i }
+        end
+      end.flatten.each(&:join)
 
       # Can't lock the file if it doesn't exist. Create the file as a
       # placeholder until more content is loaded
-      dirname = File.dirname(BUILT_ARTIFACTS_FILE)
-      FileUtils.mkdir_p(dirname)
       File.open(BUILT_ARTIFACTS_FILE, File::CREAT|File::RDWR) do |file|
         flock(file, File::LOCK_EX) do |file|
-          update_built_artifacts(images_to_push, file)
+          driver_images.each do |_, all_images|
+            update_built_artifacts(all_images, file)
+          end
         end
       end
     end
 
     private
 
-    def tag_images(base_image_names)
+    def tag_images(r, base_image_names)
       base_image_names.map do |i|
         local = Image.new(@local_prefix, i, 'latest')
-        remote = Image.new(@registry['prefix'], i, @tag)
+        remote = Image.new(r['prefix'], i, @tag)
         Shellrunner.check_call('docker', 'tag', local.full_tag, remote.full_tag)
         remote
-      end
-    end
-
-    def push_images(all_images)
-      # Split a list into head and tail (car, cdr)
-      first_image, *remaining_images = *all_images
-
-      # Push a single container under the assumption that
-      # most containers in this pass are built on a similar image.
-      @registry_driver.push_image(first_image)
-
-      # Push the rest of the containers in parallel
-      remaining_images.each do |i|
-        Thread.new { @registry_driver.push_image i }.join
       end
     end
 

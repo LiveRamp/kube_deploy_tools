@@ -1,4 +1,5 @@
-require_relative '../image'
+require 'kube_deploy_tools/formatted_logger'
+require 'kube_deploy_tools/publish_container/image'
 require 'kube_deploy_tools/shellrunner'
 
 # Abstract Driver class that specific implementations inherit
@@ -15,7 +16,8 @@ module KubeDeployTools
         end
 
         def authorize
-          Shellrunner.check_call(*authorize_command)
+          Logger.info "performing registry login for #{@registry['driver']}"
+          Shellrunner.check_call(*authorize_command, print_cmd: false)
         end
 
         def authorize_command

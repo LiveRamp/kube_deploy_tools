@@ -28,7 +28,7 @@ describe KubeDeployTools::PublishContainer do
     let(:images) { ['project1'] }
 
     context 'local' do
-      let(:remote_registry) { 'local' }
+      let(:remote_registry) { ['local'] }
 
       it 'tags properly' do
         expect(shellrunner).to(receive(:check_call).with(
@@ -40,18 +40,17 @@ describe KubeDeployTools::PublishContainer do
     end
 
     context 'aws' do
-      let(:remote_registry) { 'aws' }
+      let(:remote_registry) { ['aws'] }
       let(:images) { ['project1', 'project2', 'project3'] }
 
       it 'works' do
+        # -e none should be stripped if it is there.
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://***REMOVED***', print_cmd: false).once
 
         expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'get-login', '--region', 'us-west-2') do
           'docker login -u AWS -p paws -e none https://***REMOVED***'
         end
-        # -e none should be stripped if it is there.
-        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://***REMOVED***').once
-
         expect(shellrunner).to receive(:run_call).with('aws', 'ecr', 'describe-repositories', '--repository-names', 'project1', '--region', 'us-west-2') do
           [stdoutput, nil, double(:status, success?: false)]
         end
@@ -65,11 +64,11 @@ describe KubeDeployTools::PublishContainer do
     end
 
     context 'gcp' do
-      let(:remote_registry) { 'gcp' }
+      let(:remote_registry) { ['gcp'] }
 
       it 'works' do
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
-        expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a').once
+        expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
         expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/pippio-production/project1:releaseTag').once
 
         publisher.publish
@@ -77,8 +76,27 @@ describe KubeDeployTools::PublishContainer do
       end
     end
 
+    context 'multi registry' do
+      let(:remote_registry) { ['aws', 'gcp'] }
+
+      it 'works' do
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://***REMOVED***', print_cmd: false).once
+        expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'get-login', '--region', 'us-west-2') do
+          'docker login -u AWS -p paws -e none https://***REMOVED***'
+        end
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/pippio-production/project1:releaseTag').exactly(images.length).times
+
+        publisher.publish
+        FileUtils.rm_rf(BUILT_ARTIFACTS_PATH) # Removes build/kubernetes/images.yaml created in update_built_artifacts
+      end
+    end
+
     context 'artifacts file behavior' do
-      let(:remote_registry) { 'aws' }
+      let(:remote_registry) { ['aws'] }
       file_name = "test_#{SecureRandom.uuid}.yaml"
 
       after(:context) do
