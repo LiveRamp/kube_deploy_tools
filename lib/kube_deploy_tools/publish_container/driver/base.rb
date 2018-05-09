@@ -16,7 +16,7 @@ module KubeDeployTools
         end
 
         def authorize
-          Logger.info "performing registry login for #{@registry['driver']}"
+          Logger.info "performing registry login for #{@registry['prefix']}"
           Shellrunner.check_call(*authorize_command, print_cmd: false)
         end
 

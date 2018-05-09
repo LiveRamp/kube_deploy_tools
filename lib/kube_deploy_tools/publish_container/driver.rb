@@ -1,6 +1,7 @@
 require_relative 'driver/base'
 require_relative 'driver/aws'
 require_relative 'driver/gcp'
+require_relative 'driver/login'
 require_relative 'driver/noop'
 
 module KubeDeployTools
@@ -9,6 +10,7 @@ module KubeDeployTools
       MAPPINGS = {
         'aws' => Aws,
         'gcp' => Gcp,
+        'login' => Login,
         'noop' => Noop
       }
     end

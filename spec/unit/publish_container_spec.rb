@@ -39,6 +39,26 @@ describe KubeDeployTools::PublishContainer do
       end
     end
 
+    context 'artifactory' do
+      let(:remote_registry) { ['artifactory'] }
+      let(:images) { ['project1', 'project2', 'project3'] }
+
+      it 'works' do
+        fake_username = 'bill'
+        fake_password = 'definitely_not_aaron'
+
+        # -e none should be stripped if it is there.
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '--username', fake_username, '--password', fake_password, '***REMOVED***:6555', print_cmd: false).once
+
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', any_args).exactly(images.length).times
+
+        ENV['ARTIFACTORY_USERNAME'] = fake_username
+        ENV['ARTIFACTORY_PASSWORD'] = fake_password
+        publisher.publish
+      end
+    end
+
     context 'aws' do
       let(:remote_registry) { ['aws'] }
       let(:images) { ['project1', 'project2', 'project3'] }

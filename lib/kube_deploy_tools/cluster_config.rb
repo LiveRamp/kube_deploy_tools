@@ -38,6 +38,12 @@ module KubeDeployTools
   end
 
   REGISTRIES = {
+    'artifactory' => {
+      'driver' => 'login',
+      'prefix' => '***REMOVED***:6555',
+      'username_var' => 'ARTIFACTORY_USERNAME',
+      'password_var' => 'ARTIFACTORY_PASSWORD',
+    },
     'aws' => {
       'driver' => 'aws',
       'prefix' => '***REMOVED***',
