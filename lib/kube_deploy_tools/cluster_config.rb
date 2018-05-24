@@ -53,6 +53,11 @@ module KubeDeployTools
       'driver' => 'noop',
       'prefix' => 'local-registry',
     },
+    'colo' => {
+      'driver' => 'aws',
+      'prefix' => '***REMOVED***',
+      'region' => 'us-west-2',
+    },
     'gcp' => {
       'driver' => 'gcp',
       'prefix' => 'gcr.io/pippio-production',
