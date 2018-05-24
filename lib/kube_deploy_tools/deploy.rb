@@ -81,7 +81,6 @@ module KubeDeployTools
         next unless filepath.end_with?(".yml", ".yaml")
         read_resource_definition(filepath) do |resource_definition|
           resource = KubeDeployTools::KubernetesResource.build(
-            filepath: filepath,
             definition: resource_definition,
             kubectl: @kubectl,
           )

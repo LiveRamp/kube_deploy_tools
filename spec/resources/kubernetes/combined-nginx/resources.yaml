@@ -1,0 +1,42 @@
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: test-nginx
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - name: web
+          containerPort: 80
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: test-nginx
+  labels:
+    app: test-nginx
+spec:
+  ports:
+  - port: 80
+    targetPort: web
+    protocol: TCP
+  selector:
+    app: test-nginx
+
+

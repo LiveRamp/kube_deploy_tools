@@ -3,6 +3,7 @@ require 'kube_deploy_tools/deploy/options'
 
 KUBERNETES_MANIFESTS_INVALID_NGINX="spec/resources/kubernetes/invalid-nginx/"
 KUBERNETES_MANIFESTS_TEST_NGINX="spec/resources/kubernetes/test-nginx/"
+KUBERNETES_MANIFESTS_COMBINED_NGINX="spec/resources/kubernetes/combined-nginx/"
 CONTEXT="fake.context.k8s"
 def make_argv(ops)
   ops.flat_map do |k,v|
@@ -49,6 +50,24 @@ describe KubeDeployTools::Deploy do
     )
     resources = deploy.read_resources
     expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
+  end
+
+  it "reads YAML files with multiple resources" do
+    deploy = KubeDeployTools::Deploy.new(
+      input_path: KUBERNETES_MANIFESTS_COMBINED_NGINX,
+      kubectl: kubectl,
+    )
+    resources = deploy.read_resources
+    expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Service" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Namespace" }).to_not be_nil
+
+    # Namespaces are deployed before Services
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Namespace'), any_args).ordered
+    # Services are deployed before Deployments
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered
+    deploy.run
   end
 
   it "predeploys resources" do
