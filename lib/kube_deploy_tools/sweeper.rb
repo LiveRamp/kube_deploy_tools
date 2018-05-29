@@ -40,14 +40,14 @@ module KubeDeployTools
         remove(repo, retention, prefixes)
       end
     end
-    
+
     # Find the containers that are past their expiry time
     # on artifactory
     def search_artifactory(retention, repo_name, prefixes)
       time_now = Time.now
       to = (time_now - retention).to_i * 1000
       from = 0
-    
+
       http_path = "#{ARTIFACTORY_HOST}/api/search/creation"
       uri = URI.parse(http_path)
       uri.query = "to=#{to}&from=#{from}&repos=#{repo_name}"
@@ -67,14 +67,14 @@ module KubeDeployTools
         response_body['results'].each do |res|
           uri_result = res['uri']
           uri_split = uri_result.split('/')
-    
-          # The uri has the structure of: 
+
+          # The uri has the structure of:
           # {host}/api/storage/{repo_name}/{prefix}/{build}/{file}
           prefix_index = uri_split.find_index(repo_name) + 1
           prefix = uri_split[prefix_index]
           build = uri_split[prefix_index + 1]
           file = uri_split[prefix_index + 2]
-    
+
           if not prefixes.include?(prefix)
             next
           end
@@ -96,14 +96,14 @@ module KubeDeployTools
 
       return images_to_remove, built_artifacts_files
     end
-    
+
     # Method to fetch and read images.yaml
     def fetch_built_artifacts_files(built_artifacts_files)
       prefix_images = Hash[REGISTRIES.map {|name, values| [name, []]}]
-    
+
       # built_artifacts_files is a list of artifactory urls
       # pointing to the specific images.yaml files
-      
+
       built_artifacts_files.each do |image_uri|
         image_yaml = nil
         begin
@@ -125,28 +125,22 @@ module KubeDeployTools
           if img.end_with? 'latest'
             next
           end
-    
+
           PREFIX_TO_REGISTRY.each_key.each do |pre|
             if img.include? pre
               prefix_images[PREFIX_TO_REGISTRY[pre]].push(img)
               next
             end
-          end 
+          end
         end
       end
-      return prefix_images 
+      return prefix_images
     end
-    
+
     # Remove the expired binaries from Artifactory
     def remove_from_artifactory(builds)
       builds.each do |job, files|
         build_path = "#{job['repository']}/#{job['job']}/#{job['build']}"
-    
-        # Check if the job has an images.yaml file
-        # TODO (efries) Remove this section once all artifacts have images.yaml
-        if files['files'].grep(/images.yaml/).empty?
-          search_all_the_files(files['files'], build_path)
-        end
 
         # This is to remove the folder which the files were in once all the files
         # are deleted
@@ -174,7 +168,7 @@ module KubeDeployTools
         end
       end
     end
-    
+
     # Remove the expired container images from GCR
     # Link: https://cloud.google.com/container-registry/docs/managing#deleting_images
     def remove_from_gcp(image_ids)
@@ -183,7 +177,7 @@ module KubeDeployTools
         PublishContainer::Driver::Gcp.new(registry: REGISTRIES['gcp']).delete_image(id, @dryrun)
       end
     end
-    
+
     # Remove the expired containers images from ECR
     # Link: https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html
     def remove_from_ecr(image_ids)
@@ -196,7 +190,7 @@ module KubeDeployTools
         aws_driver = PublishContainer::Driver::Aws.new(registry: REGISTRIES['aws']).delete_image(repository, image, @dryrun)
       end
     end
-    
+
     def remove(repository, retention, prefixes)
       artifactory_builds, built_artifacts_files = search_artifactory(retention, repository, prefixes)
       # Need to fetch the other images before removing the files from artifactory
@@ -205,7 +199,7 @@ module KubeDeployTools
       remove_from_ecr(images.fetch('aws', []))
       remove_from_artifactory(artifactory_builds)
     end
-    
+
     # Function to convert the config times of format "<>M" or "<>d"
     # to seconds
     def human_duration_in_seconds(time)
@@ -219,81 +213,6 @@ module KubeDeployTools
         raise "Invalid retention value, unexpected input #{time}"
       end
       return time * 60 * 60 * 24
-    end
-    
-    # TODO: (efries) Delete me once all artifactory pushes contain an images.yaml file
-    # Method to search the tar.gz files for image_tags and build versions to be used
-    # to link aws/gcp/artifactory builds when no images.yaml file is present
-    def search_all_the_files(files, build_path)
-      images = Hash[REGISTRIES.map {|source, values| [source, []]}]
-      sources_with_images = Set.new([])
-      # List of repositories to check for images of in tar.gz files on artifactory
-      repos = ['toolbox', 'tracectl', 'backfills', 'gcloud', 'cfs-sync']
-    
-      files.each do |file|
-        if file.end_with? '.tar.gz'
-          fetch_url = "#{ARTIFACTORY_HOST}/#{build_path}/#{file}"
-    
-          gzip_reader = nil
-          begin
-            # Using open-uri reads
-            source = open(fetch_url)
-            gzip_reader = Zlib::GzipReader.new(source)
-          rescue OpenURI::HTTPError => e
-            Logger.error("Error in reading file #{fetch_url}: #{e.message}")
-            next
-          end
-    
-          # Returns as a string of all the files with their content
-          contents = gzip_reader.read
-    
-          PREFIX_TO_REGISTRY.each do |prefix, source|
-    
-            # !!! This match is ONLY for arbor_master !!!
-            # Each repo might need it's own customization
-            # The reason we are searching for cfs-sync is since it is in the tar.gz
-            # files upon publishing of the container
-            matches = contents.scan(/#{prefix}\/cfs-sync:[\w-].+?(?=[,\"])/)
-    
-            # Workaround to add values in for the images of repositories that are not
-            # found in the tar.gz files. The tagged version of cfs-sync will be the same
-            # across multiple repositories. This workaround allows us to populate a list of
-            # images to delete when they are not found in the tar.gz files OR there is no images.yaml
-            if not matches.empty?
-              # Image tags are of the form <prefix>/<repo>:<image_tag>
-              version = matches[0].split(':').last
-              repos.each do |repo|
-                matches.push("#{prefix}/#{repo}:#{version}")
-              end
-              sources_with_images.add(prefix)
-            end
-            images[source].push(*matches.to_set)
-          end
-         end
-        end
-    
-      # This case here covers when there are images found for at least one but not all
-      # image keys.
-      missing_images = images.keys.to_set - sources_with_images
-      if not missing_images.empty? and missing_images.size < images.size
-        images.keys.each do |source|
-          if sources_with_images.include?(source)
-            next
-          end
-    
-          images_exist_source = sources_with_images.to_a[0] # Get one of the main images to copy over
-          created_images = []
-          images[images_exist_source].each do |existing|
-            created = existing.sub(REGISTRIES[images_exist_source]['prefix'], REGISTRIES[source]['prefix'])
-            created_images.push(created)
-          end
-    
-          images[source].push(*created_images)
-        end
-      end
-    
-      remove_from_ecr(images.fetch('aws', []))
-      remove_from_gcp(images.fetch('gcp', []))
     end
   end
 end
