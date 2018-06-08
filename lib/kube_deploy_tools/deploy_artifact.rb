@@ -44,10 +44,14 @@ module KubeDeployTools
     build_links_pattern = /(?<=">).+(?=\s{4})/
     build_entries = project_builds_html.scan(build_links_pattern) # example of element: 10/</a>    13-Nov-2017 13:51
     build_number_pattern = /^\d+/
-    build_entries.
+    build_number = build_entries.
       map { |x| x.match(build_number_pattern).to_s.to_i }.
       max.
       to_s
+    if build_number.empty?
+      raise "Failed to find a valid build number. Project URL: #{project_url}"
+    end
+    build_number
   end
 
   class DeployArtifact
@@ -131,4 +135,3 @@ module KubeDeployTools
   end
 
 end
-

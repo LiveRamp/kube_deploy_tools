@@ -142,6 +142,20 @@ describe KubeDeployTools::DeployArtifact do
 
   end
 
+  it 'bombs on failing to get build' do
+    document = ''
+    project = 'my-project'
+    allow(Artifactory).to receive(:endpoint).and_return(KubeDeployTools::ARTIFACTORY_ENDPOINT)
+    expect(shellrunner).to receive(:run_call) do |curl, url|
+      expect(url).to start_with("#{KubeDeployTools::ARTIFACTORY_ENDPOINT}/#{KubeDeployTools::ARTIFACTORY_REPO}/#{project}/")
+      [document, nil, status]
+    end
+    expect{
+      KubeDeployTools.get_latest_build_number(project)
+    }.to raise_error(RuntimeError, "Failed to find a valid build number. Project URL: #{KubeDeployTools::ARTIFACTORY_ENDPOINT}/#{KubeDeployTools::ARTIFACTORY_REPO}/#{project}/")
+
+  end
+
   it "runs pre apply hook" do
     deploy_artifact = KubeDeployTools::DeployArtifact.new(
       input_path: "spec/resources/kubernetes",
