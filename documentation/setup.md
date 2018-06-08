@@ -101,6 +101,11 @@ my-project/
 ```
 
 ## Jenkins build script
+
+Cross reference the KB page
+[Migrating Backend Applications to Kubernetes](https://support.***REMOVED***/display/CI/Migrating+Backend+Applications+to+Kubernetes)
+with `java_project_tools`, or `jpt`.
+
 Jenkins build steps are required
 1. to build, tag, and push all of your Docker images, and
 2. to render and push all Kubernetes manifests.
