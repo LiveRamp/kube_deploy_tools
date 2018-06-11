@@ -79,7 +79,7 @@ See `bundle exec kdt deploy --help` for a description of all flags.
 ### Include and exclude flags
 KDT also supports include or exclude flags to selectively deploy files.
 For example, to deploy all files in cluster-autoscaler directory, and
-all files in datadog directory but svc-dogstatsd.yaml.erb
+all files in datadog directory but svc-dogstatsd.yaml
 in [OpsRepos/kube-infra](https://git.***REMOVED***/OpsRepos/kube-infra)
 to the AWS staging cluster:
 
@@ -93,7 +93,7 @@ bundle exec kdt deploy \
   --dry-run false \
   --include '**/cluster-autoscaler/*' \
   --include '**/datadog/*' \
-  --exclude '**/datadog/svc-dogstatsd.yaml.erb'
+  --exclude '**/datadog/svc-dogstatsd.yaml'
 ```
 
 See [here](http://www.rubydoc.info/stdlib/core/File.fnmatch) for instructions on metacharacters
