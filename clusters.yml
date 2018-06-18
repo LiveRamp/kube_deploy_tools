@@ -1,4 +1,12 @@
 local:
+  mac:
+    kube_context: docker-for-desktop
+    flags:
+      cloud: local
+      image_registry: local-registry
+      kubernetes_major_version: '1'
+      kubernetes_minor_version: '8'
+      pull_policy: IfNotPresent
   staging:
     kube_context: minikube
     flags:
