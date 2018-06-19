@@ -23,7 +23,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rubygems-tasks', '~> 0.2'
 
   # ensure the gem is built out of versioned files
-  gem.files = Dir['{bin,lib}/**/*', 'clusters.yml', 'README*', 'LICENSE*']
+  gem.files = Dir['{bin,lib}/**/*', 'README*', 'LICENSE*']
   gem.executables = ['kdt']
   gem.require_paths = ['lib']
 end

@@ -33,34 +33,25 @@ module KubeDeployTools
       FileUtils.mkdir_p @output_dir
 
       @manifest = YAML.load(File.read(manifest)).fetch('deploy')
+      validate_manifest
     end
 
     def render
       clusters = @manifest.fetch('clusters')
       flavors = @manifest.fetch('flavors')
 
-      # Sanity check.
-      unless clusters.size > 0
-        raise 'Must support deployment to at least one cluster'
-      end
-
-      unless flavors.size > 0
-        raise 'Must support at least one flavor (try "_default": {})'
-      end
-
       hooks = @manifest['hooks'] || [DEFAULT_HOOK_SCRIPT_LABEL]
       pids = {}
       clusters.each do |c|
-        target = c.fetch('target')
-        env = c.fetch('environment')
+        target = c.fetch('target') # pippio-production
+        env = c.fetch('environment') # prod
 
-        # Get metadata for this target/environment pair.
-        cluster = CLUSTERS.fetch(target).fetch(env)
+        # Get metadata for this target/environment pair from manifest
         cluster_flags = DEFAULT_FLAGS.dup
 
+        # Update and merge deploy flags for rendering
         cluster_flags.update('target' => target, 'environment' => env)
-        cluster_flags.merge!(render_erb_flags(cluster['flags']))
-        cluster_flags.merge!(render_erb_flags(c['extra_flags'])) if c['extra_flags']
+        cluster_flags.merge!(render_erb_flags(c.fetch('flags', {})))
 
         # Allow deploy.yml to gate certain flavors to certain targets.
         cluster_flavors = flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
@@ -127,6 +118,36 @@ module KubeDeployTools
       end
 
       result
+    end
+
+    def validate_manifest
+      clusters = @manifest.fetch('clusters')
+      flavors = @manifest.fetch('flavors')
+
+      unless clusters.size > 0
+        raise 'Must support deployment to at least one cluster'
+      end
+
+      unless flavors.size > 0
+        raise 'Must support at least one flavor (try "_default": {})'
+      end
+
+      clusters.each do |c|
+        if c['target'].nil? || c['environment'].nil? || c['flags'].nil?
+          raise 'Invalid cluster in deploy.yaml. Missing following  : '\
+          "target" if  c['target'].nil? \
+          "environment" if  c['environment'].nil?
+          "flags" if  c['flags'].nil?
+        end
+
+        if c['flags']['cloud'].nil? || c['flags']['image_registry'].nil?|| c['flags']['pull_policy'].nil?
+          raise 'Invalid cluster flags in deploy.yaml. Missing following for flags : '\
+          "cloud" if  c['flags']['cloud'].nil? \
+          "image_registry" if  c['flags']['image_registry'].nil? \
+          "pull_policy" if  c['flags']['pull_policy'].nil?
+        end
+      end
+
     end
   end
 end

@@ -1,7 +1,7 @@
 FROM ruby:2.3-alpine as build
 
 WORKDIR /opt/kube_deploy_tools
-COPY Gemfile Rakefile kube_deploy_tools.gemspec README* LICENSE* clusters.yml /opt/kube_deploy_tools/
+COPY Gemfile Rakefile kube_deploy_tools.gemspec README* LICENSE* /opt/kube_deploy_tools/
 COPY bin /opt/kube_deploy_tools/bin
 COPY lib /opt/kube_deploy_tools/lib
 

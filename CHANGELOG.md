@@ -4,6 +4,44 @@
 ## 2.0.x
 
 ### Breaking Changes
+* For `kdt deploy`, `--context` is now a required argument.
+  * To view your contexts, see `kubectl config get-contexts`.
+* For `kdt render_deploys`, in `deploy.yml`,
+  * `extra_flags` has been renamed to `flags`
+  * `cloud`, `image_registry`, and `pull_policy` are required `flags`
+
+For example,
+```yaml
+deploy:
+  clusters:
+    - target: colo-service
+      environment: prod
+      flags:
+        cloud: colo
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
+```
+
+* You must add any new configuration for a cluster deploy target in `deploy.yml`
+
+For example,
+```yaml
+deploy:
+  clusters:
+    - target: distribution
+      environment: prod
+      flags:
+        cloud: gcp
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
+    - target: distribution-pii
+      environment: staging
+      flags:
+    # ... etc
+```
+
+This `deploy.yml` support for new clusters extends `kdt render_deploys`, `kdt publish_artifacts`, and `kdt deploy`.
+
 * kdt will now only surface the `kdt` binary as a singular entrypoint. This means
 that if you were previously invoking the kdt subcommands directly (eg.
 `bundle exec publish_container` or

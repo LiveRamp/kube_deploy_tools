@@ -2,7 +2,7 @@ require 'kube_deploy_tools/render_deploys'
 
 INPUT_DIR='spec/resources/kubernetes/render-deploys-example/'
 MANIFEST_FILE="spec/resources/deploy.yml"
-MANIFEST_FILE_NUM_CLUSTERS=6
+MANIFEST_FILE_NUM_CLUSTERS=8
 JOB_NAME="FAKE_PROJECT"
 BUILD_ID="12345"
 
@@ -57,9 +57,9 @@ spec:
 
 YAML
 
-      flavors = %w(local/staging gcp/prod us-east-1/prod us-east-1/staging colo-service/prod colo-service/staging)
-      flavors.each do |flavor|
-        rendered = File.join(tmp_dir, flavor, 'default', 'dep-nginx.yaml')
+      clusters = %w(local/staging pippio-production/prod platforms/prod ingestion/prod us-east-1/prod us-east-1/staging colo-service/prod colo-service/staging)
+      clusters.each do |cluster|
+        rendered = File.join(tmp_dir, cluster, 'default', 'dep-nginx.yaml')
         expect(File.file?(rendered)).to be(true)
         rendered_no_tag = File.read(rendered).gsub(/tag: .*/, 'tag: REMOVED')
         expect(rendered_no_tag).to eq(expectation)

@@ -23,7 +23,7 @@ context = options.context || KubeDeployTools.kube_context(target: options.target
 namespace = KubeDeployTools.kube_namespace(context: context)
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build(context: context, namespace: namespace)
 kubectl = KubeDeployTools::Kubectl.new(
-  context: context,
+  context: options.context,
   kubeconfig: options.kubeconfig,
 )
 

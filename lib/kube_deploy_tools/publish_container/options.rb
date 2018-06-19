@@ -9,11 +9,7 @@ module KubeDeployTools
       attr_accessor :local_prefix, :registries, :images, :tag
 
       def initialize
-        self.local_prefix = KubeDeployTools::CLUSTERS
-          .fetch('local')
-          .fetch('staging')
-          .fetch('flags')
-          .fetch('image_registry')
+        self.local_prefix = "local-registry"
         self.registries = Set.new
         self.tag = KubeDeployTools::tag_from_local_env
       end

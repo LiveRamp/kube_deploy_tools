@@ -1,18 +1,65 @@
 # This deploy.yml is a testing fixture
+# Required flags: target, environment, flags
 deploy:
   clusters:
     - target: local
       environment: staging
+      flags:
+        cloud: local
+        image_registry: local-registry
+        pull_policy: IfNotPresent
     - target: colo-service
       environment: prod
+      flags:
+        cloud: colo
+        image_registry: ''
+        pull_policy: IfNotPresent
     - target: colo-service
       environment: staging
-    - target: gcp
+      flags:
+        cloud: colo
+        image_registry: ''
+        pull_policy: IfNotPresent
+    - target: pippio-production
       environment: prod
+      flags:
+        cloud: gcp
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
     - target: us-east-1
       environment: prod
+      flags:
+        cloud: aws
+        image_registry: ''
+        pull_policy: IfNotPresent
     - target: us-east-1
       environment: staging
+      flags:
+        cloud: aws
+        image_registry: ''
+        pull_policy: IfNotPresent
+    - target: ingestion
+      environment: prod
+      flags:
+        cloud: gcp
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
+    - target: platforms
+      environment: prod
+      flags:
+        cloud: gcp
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
+        feature_grafana: true
+        feature_heapster: true
+        feature_kube_state_metrics: true
+        feature_prometheus_k8s: true
+        feature_prometheus_operator: true
+        feature_voyager: true
+        elasticsearch_hosts: elasticsearch
+        kubernetes_major_version: '1'
+        kubernetes_minor_version: '8'
+
   flavors:
     default:
       test_bool: true

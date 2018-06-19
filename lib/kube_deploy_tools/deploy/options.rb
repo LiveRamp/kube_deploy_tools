@@ -89,7 +89,7 @@ module KubeDeployTools
       end
 
       def require_options
-        raise ArgumentError, 'Expect --target and --environment, or --context, to be provided' if (target.blank? || environment.blank?) && context.blank?
+        raise ArgumentError, 'Expect --context to be provided' if context.blank?
 
         files_mode = from_files.present? && (target.blank? && environment.blank? && build_number.blank?)
         deploy_artifact_mode = from_files.blank? && (target.present? && environment.present? && build_number.present?)
