@@ -1,6 +1,41 @@
 
 # Changelog
 
+## 2.0.x
+
+### Breaking Changes
+* kdt will now only surface the `kdt` binary as a singular entrypoint. This means
+that if you were previously invoking the kdt subcommands directly (eg.
+`bundle exec publish_container` or
+`bundle binstub kube_deploy_tools && bin/render_deploys`) then you will be
+unable to invoke the binaries.
+
+The fix is to modify your build script to execute commands through the kdt
+entrypoint. For instance:
+
+```bash
+bundle exec publish_artifacts
+
+# becomes
+
+bundle exec kdt publish_artifacts
+```
+
+Please search for invocations of the following binaries and update them to use
+the kdt entrypoint:
+
+```
+deploy
+make_configmap
+publish_artifacts
+publish_container
+render_deploys
+render_deploys_hook
+sweeper
+templater
+toolbox
+```
+
 ## 1.4.x
 
 ### Breaking Changes

@@ -24,6 +24,6 @@ Gem::Specification.new do |gem|
 
   # ensure the gem is built out of versioned files
   gem.files = Dir['{bin,lib}/**/*', 'clusters.yml', 'README*', 'LICENSE*']
-  gem.executables = gem.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  gem.executables = ['kdt']
   gem.require_paths = ['lib']
 end

@@ -28,7 +28,7 @@ Gemfile:
 source 'https://gemserver.***REMOVED***'
 
 group :kdt do
-  gem 'kube_deploy_tools', '~> 1.0'
+  gem 'kube_deploy_tools', '~> 2.0'
 end
 ```
 
