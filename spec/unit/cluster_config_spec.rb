@@ -1,6 +1,20 @@
 require 'kube_deploy_tools/cluster_config'
 
 describe 'cluster config' do
+  describe 'it provides informative error messages' do
+    it "for invalid target" do
+      expect do
+        KubeDeployTools.resolve_cluster_config('kwantonimo-bay', 'staging')
+      end.to raise_error(/kwantonimo-bay is not a valid target/)
+    end
+
+    it "for invalid environment" do
+      expect do
+        KubeDeployTools.resolve_cluster_config('us-east-1', 'qa')
+      end.to raise_error(/qa is not a valid environment/)
+    end
+  end
+
   it "gets the kube context given a target and environment" do
     ENV['USER'] = 'fakeusername'
 

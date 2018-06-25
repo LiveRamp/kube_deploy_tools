@@ -71,12 +71,25 @@ module KubeDeployTools
   CLUSTERS = YAML.load(File.read(
     File.join(File.dirname(__FILE__), '../../clusters.yml'))).freeze
 
+  def self.resolve_cluster_config(target, environment)
+    target_config = CLUSTERS.fetch(target) do
+      raise "#{target} is not a valid target. Please choose a value among: " \
+        "#{CLUSTERS.keys}."
+    end
+
+    target_config.fetch(environment) do
+      raise "#{environment} is not a valid environment for #{target}. " \
+        "Please choose a value among: #{target_config.keys}."
+    end
+  end
+
   def self.kube_context(target:, environment:)
     b = binding
     b.local_variable_set(:username, ENV.fetch('USER', Etc.getlogin))
-    renderer = ERB.new(CLUSTERS[target][environment]['kube_context'])
+    renderer = ERB.new(
+      resolve_cluster_config(target, environment)['kube_context']
+    )
 
     renderer.result(b)
   end
-
 end
