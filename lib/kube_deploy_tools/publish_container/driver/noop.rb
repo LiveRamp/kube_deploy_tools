@@ -8,5 +8,8 @@ module KubeDeployTools
 
     def authorize
     end
+
+    def unauthorize
+    end
   end
 end

@@ -23,6 +23,15 @@ module KubeDeployTools
         def authorize_command
           raise "#{self.class}#authorize_command needs explicit implementation"
         end
+
+        def unauthorize
+          Logger.info "Performing registry unauthorization for #{@registry['prefix']}"
+          Shellrunner.check_call(*unauthorize_command, print_cmd: false)
+        end
+
+        def unauthorize_command
+          raise "#{self.class}#unauthorize_command needs explicit implementation"
+        end
       end
     end
   end

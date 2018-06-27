@@ -15,6 +15,9 @@ module KubeDeployTools
       login_cmd
     end
 
+    def unauthorize
+    end
+
     def delete_image(repository, image, dryrun)
      if dryrun
        Logger.info("DRYRUN: delete aws repository=#{repository} region=#{@registry['region']} imageTag=#{image}")
@@ -27,7 +30,6 @@ module KubeDeployTools
     end
 
     private
-
     def get_docker_login
       args = Shellrunner.check_call('aws', 'ecr', 'get-login', '--region', @registry['region']).split
 

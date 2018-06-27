@@ -31,7 +31,6 @@ module KubeDeployTools
       else
         Logger.debug(Shellwords.join(cmd))
       end
-
       out, err, status = Open3.capture3(*cmd, stdin_data: opts[:stdin_data])
       Logger.debug(out.shellescape)
 

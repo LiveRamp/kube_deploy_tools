@@ -56,6 +56,13 @@ module KubeDeployTools
           end
         end
       end
+
+    # Clean registry authorization in the end no matter what
+    ensure
+      Logger.info "Removing registry authorizations"
+      @registries.each_pair do |registry, driver|
+        driver.unauthorize
+      end
     end
 
     private

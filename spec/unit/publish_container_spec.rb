@@ -85,15 +85,22 @@ describe KubeDeployTools::PublishContainer do
 
     context 'gcp' do
       let(:remote_registry) { ['gcp'] }
+      let(:emptyActivation) { '' }
 
       it 'works' do
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
+        expect(shellrunner).to receive(:run_call).with('gcloud', 'config', 'list','account','--format', "value(core.account)") do
+          [emptyActivation, nil, double(:status, success?: false)]
+        end
+        ENV['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/ops/***REMOVED***.json'
+        expect(shellrunner).to receive(:run_call).with('gcloud', 'auth', 'activate-service-account', '--key-file', ENV['GOOGLE_APPLICATION_CREDENTIALS']).once
         expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
-        expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/pippio-production/project1:releaseTag').once
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').once
 
         publisher.publish
         FileUtils.rm_rf(BUILT_ARTIFACTS_PATH) # Removes build/kubernetes/images.yaml created in update_built_artifacts
       end
+
     end
 
     context 'multi registry' do
@@ -108,7 +115,7 @@ describe KubeDeployTools::PublishContainer do
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
         expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
         expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').exactly(images.length).times
-        expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/pippio-production/project1:releaseTag').exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').exactly(images.length).times
 
         publisher.publish
         FileUtils.rm_rf(BUILT_ARTIFACTS_PATH) # Removes build/kubernetes/images.yaml created in update_built_artifacts

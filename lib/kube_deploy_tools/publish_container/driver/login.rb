@@ -17,5 +17,8 @@ module KubeDeployTools
     def delete_image(repository, image, dryrun)
       raise 'not implemented'
     end
+
+    def unauthorize
+    end
   end
 end

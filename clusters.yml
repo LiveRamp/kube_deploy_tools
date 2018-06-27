@@ -20,7 +20,7 @@ gcp:
     kube_context: production
     flags:
       cloud: gcp
-      image_registry: gcr.io/pippio-production
+      image_registry: ***REMOVED***
       kubernetes_major_version: '1'
       kubernetes_minor_version: '8'
       pull_policy: IfNotPresent

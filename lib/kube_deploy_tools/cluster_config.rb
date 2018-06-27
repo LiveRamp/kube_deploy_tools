@@ -60,7 +60,7 @@ module KubeDeployTools
     },
     'gcp' => {
       'driver' => 'gcp',
-      'prefix' => 'gcr.io/pippio-production',
+      'prefix' => '***REMOVED***',
     }
   }.freeze
 
