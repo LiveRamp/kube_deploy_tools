@@ -1,4 +1,5 @@
 require_relative 'base'
+require 'tmpdir'
 
 module KubeDeployTools
   class PublishContainer::Driver::Gcp < PublishContainer::Driver::Base
