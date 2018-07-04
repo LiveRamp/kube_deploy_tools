@@ -70,14 +70,14 @@ us-west-2:
       pull_policy: IfNotPresent
 eu-west-1:
   prod:
-    kube_context: "<%= username %>@tectonic-prod.k8s.eu.***REMOVED***"
+    kube_context: "<%= username %>@eu-west-1-prod.k8s.eu.***REMOVED***"
     flags:
       cloud: aws
       kubernetes_major_version: '1'
       kubernetes_minor_version: '8'
       pull_policy: IfNotPresent
   staging:
-    kube_context: "<%= username %>@tectonic-staging.k8s.eu.***REMOVED***"
+    kube_context: "<%= username %>@eu-west-1-staging.k8s.eu.***REMOVED***"
     flags:
       cloud: aws
       kubernetes_major_version: '1'
