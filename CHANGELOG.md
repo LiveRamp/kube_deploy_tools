@@ -74,6 +74,9 @@ templater
 toolbox
 ```
 
+* The `config['image_tag']` value no longer contains the current branch nor
+  Jenkins build id, only the git sha.
+
 ## 1.4.x
 
 ### Breaking Changes

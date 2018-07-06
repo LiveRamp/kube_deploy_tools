@@ -7,36 +7,28 @@ require 'yaml'
 require 'kube_deploy_tools/shellrunner'
 
 module KubeDeployTools
-  # Default method to derive a tag name based on the current environment.
-  # An image is tagged for the current branch, git sha, and Jenkins build id.
+  # Default method to derive a tag name.
+  # An image is tagged for the git sha.
   def self.tag_from_local_env
-    codestamp = (ENV['GIT_COMMIT'] || `git rev-parse HEAD`.rstrip)[0...7]
+    codestamp = `git describe --always --abbrev=7 --match=NONE --dirty`
 
-    branch = ENV['GIT_BRANCH'] || `git rev-parse --abbrev-ref HEAD`.rstrip
-    if branch.start_with?('origin/')
-      branch = branch['origin/'.size..-1]
+    # Definition of a valid image tag via:
+    # https://docs.docker.com/engine/reference/commandline/tag/#extended-description:
+    #
+    # > A tag name must be valid ASCII and may contain lowercase and uppercase
+    # > letters, digits, underscores, periods and dashes.
+    # > A tag name may not start with a period or a dash and
+    # > may contain a maximum of 128 characters.
+    #
+    # Regex for a valid image tag via:
+    # https://github.com/docker/distribution/blob/749f6afb4572201e3c37325d0ffedb6f32be8950/reference/regexp.go#L37
+    docker_tag = codestamp.scan(/[\w][\w.-]{0,127}/).first
+
+    if docker_tag.nil?
+      raise "Expected valid Docker tag, but received '#{codestamp}'"
     end
 
-    # From the Docker docs:
-    # "A tag name must be valid ASCII and may contain lowercase and uppercase
-    # letters, digits, underscores, periods and dashes. A tag name may not
-    # start with a period or a dash and may contain a maximum of 128
-    # characters."
-    branch = branch.gsub(/[^A-Za-z0-9_\.\-\.]/, '_')
-    if branch[0] == '.' || branch[0] == '-'
-      # We could do something more clever here. Not worth it right now.
-      raise "First char of branch name must be alphanumeric: #{branch}"
-    end
-
-    # Include the Jenkins build ID, in the case that there are
-    # multiple builds at the same git branch and git commit,
-    # but with different dependencies.
-    build = ENV.fetch('BUILD_ID', 'dev')[0...5]
-
-    # Docker maximum tag length is 128 characters long.
-    # Kubernetes maximum label length is 63 characters long. Go with that.
-    # 63 >= max 49 char branch + 1 char hyphen + 7 char codestamp + max 5 char build id
-    "#{branch[0...49]}-#{codestamp}-#{build}"
+    "#{docker_tag}"
   end
 
   REGISTRIES = {
