@@ -17,9 +17,11 @@ def options
   ops
 end
 
-context = options.context || KubeDeployTools.kube_context(target: options.target, environment: options.environment)
-KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build(context: context)
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
+context = options.context || KubeDeployTools.kube_context(target: options.target, environment: options.environment)
+namespace = KubeDeployTools.kube_namespace(context: context)
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build(context: context, namespace: namespace)
 kubectl = KubeDeployTools::Kubectl.new(
   context: context,
   kubeconfig: options.kubeconfig,
@@ -45,8 +47,9 @@ Dir.mktmpdir { |tmpdir|
   end
 
   deploy = KubeDeployTools::Deploy.new(
-    input_path: deploy_artifact_path,
     kubectl: kubectl,
+    namespace: namespace,
+    input_path: deploy_artifact_path,
     glob_files: options.glob_files,
   )
   deploy.run(

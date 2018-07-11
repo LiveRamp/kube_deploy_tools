@@ -2,7 +2,6 @@ require 'set'
 require 'yaml'
 require 'kube_deploy_tools/errors'
 require 'kube_deploy_tools/formatted_logger'
-require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/kubernetes_resource'
 require 'kube_deploy_tools/kubernetes_resource/deployment'
 require 'kube_deploy_tools/concurrency'
@@ -29,10 +28,12 @@ module KubeDeployTools
   class Deploy
     def initialize(
       kubectl:,
+      namespace: nil,
       input_path:,
       glob_files: [Hash['include_files'=> '**/*']]
       )
       @kubectl = kubectl
+      @namespace = namespace
       @input_path = input_path
       @glob_files = glob_files
     end
@@ -43,6 +44,11 @@ module KubeDeployTools
       if dry_run == true
         Logger.warn("Running in dry-run mode")
       end
+
+      if ! @namespace.nil? && @namespace != 'default'
+        Logger.warn("Deploying to non-default Namespace: #{@namespace}")
+      end
+
       resources = read_resources(select_resources(@glob_files))
 
       Logger.phase_heading("Checking initial resource statuses")

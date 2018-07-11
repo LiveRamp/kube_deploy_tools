@@ -9,12 +9,15 @@ module KubeDeployTools
   class FormattedLogger < ::Logger
     include DeferredSummaryLogging
 
-    def self.build(context: nil, stream: $stderr)
+    def self.build(context: nil, namespace: nil, stream: $stderr)
       l = new(stream)
       l.level = level_from_env
 
       l.formatter = proc do |severity, datetime, _progname, msg|
         middle = context ? "[#{context}]" : ""
+        if ! namespace.nil? && namespace != 'default'
+          middle += "[#{namespace}]"
+        end
         colorized_line = ColorizedString.new("[#{severity}][#{datetime}]#{middle}\t#{msg}\n")
 
         case severity

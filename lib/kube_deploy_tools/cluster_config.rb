@@ -4,6 +4,8 @@ require 'time'
 require 'erb'
 require 'yaml'
 
+require 'kube_deploy_tools/shellrunner'
+
 module KubeDeployTools
   # Default method to derive a tag name based on the current environment.
   # An image is tagged for the current branch, git sha, and Jenkins build id.
@@ -91,5 +93,12 @@ module KubeDeployTools
     )
 
     renderer.result(b)
+  end
+
+  def self.kube_namespace(context:)
+    namespace, _, _ = Shellrunner.check_call('kubectl', 'config', 'view', '--minify', "--output=jsonpath={..namespace}", "--context=#{context}")
+    namespace = 'default' if namespace.to_s.empty?
+
+    namespace
   end
 end
