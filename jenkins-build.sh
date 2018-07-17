@@ -19,6 +19,10 @@ case "$GIT_BRANCH" in
   # Publish versioned gem
   bundle exec rake push
   ;;
+*/release-*)
+  # Publish versioned gem
+  bundle exec rake push
+  ;;
 esac
 
 # Publish versioned image
