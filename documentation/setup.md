@@ -46,12 +46,23 @@ deploy:
   clusters:
     - target: local
       environment: staging
-      extra_flags:
+      flags:
+        cloud: local
+        image_registry: local-registry
+        pull_policy: IfNotPresent
         image_tag: latest
     - target: colo-service
       environment: prod
+      flags:
+        cloud: colo
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
     - target: colo-service
       environment: staging
+      flags:
+        cloud: colo
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
   flavors:
     default: {}
 EOF

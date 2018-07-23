@@ -9,22 +9,46 @@ deploy:
   clusters:
     - target: local
       environment: staging
-      # Creates the behavior that everything you run in your local stack
-      # will be pinned to the latest container that you already have on
-      # your machine. Without this, you explicitly have to publish_container
-      # --registry local.
-      extra_flags:
+      flags:
+        cloud: local
+        image_registry: local-registry
+        pull_policy: IfNotPresent
+
+        # Create the behavior that everything you run in your local stack
+        # will be pinned to the latest container that you already have on
+        # your machine. Without this, you explicitly have to publish_container
+        # --registry local.
         image_tag: latest
     - target: colo-service
       environment: prod
+      flags:
+        cloud: colo
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
     - target: colo-service
       environment: staging
+      flags:
+        cloud: colo
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
     - target: gcp
       environment: prod
+      flags:
+        cloud: gcp
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
     - target: us-east-1
       environment: prod
+      flags:
+        cloud: aws
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
     - target: us-east-1
       environment: staging
+      flags:
+        cloud: aws
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
 
   # The flavors section can be specified globally or at the cluster level. It's
   # a freeform way to specify how you'd like to separate stages or kinds of

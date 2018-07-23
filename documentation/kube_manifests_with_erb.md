@@ -25,28 +25,28 @@ By default, the following context variables are available.
 ```
 config['username']                  # your username
 config['tag']                       # the git tag
-config['cloud']                     # the Kubernetes cluster's cloud e.g. colo, aws, local (minikube), gcp
-config['target']                    # the Kubernetes cluster target name e.g. colo-service, us-east-1, eu-west-1
-config['kubernetes_major_version']  # the Kubernetes cluster's major version e.g. 1
-config['kubernetes_minor_version']  # the Kubernetes cluster's major version e.g. 7
-config['image_registry']            # the Kubernetes cluster's Docker image registry e.g. AWS ECR, GCP GCR, "local-registry" (none)
 config['image_tag']                 # Docker tag used for all images
-config['pull_policy']               # the default image pull policy for Kubernetes container templates
 ```
 
-Extra flags can be provided by configuring your deploy.yml's `extra_flags`.
+Flags must be provided by configuring your deploy.yml's `flags`.
 
 ```
 deploy:
   clusters:
     - target: local
       environment: staging
-      extra_flags:
-        cloud_fs: /etc/data/
+      flags:
+        cloud: local
+        image_registry: local-registry
+        pull_policy: IfNotPresent
         image_tag: latest
-    - target: colo-service
+        cloud_fs: /etc/data/
+    - target: dist
       environment: prod
-      extra_flags:
+      flags:
+        cloud: gcp
+        image_registry: ***REMOVED***
+        pull_policy: IfNotPresent
         cloud_fs: s3://
   flavors:
     default: {}
@@ -54,6 +54,14 @@ deploy:
 
 As you can see above with `image_tag`, the default variables above can be
 overriden. See [examples/projects/deploy.yml](../examples/project/deploy.yml).
+
+The following flags must be provided in your deploy.yml:
+
+```
+config['cloud']                     # the Kubernetes cluster's cloud e.g. colo, aws, local (minikube), gcp
+config['image_registry']            # the Kubernetes cluster's Docker image registry e.g. AWS ECR, GCP GCR, "local-registry" (none)
+config['pull_policy']               # the default image pull policy for Kubernetes container templates
+```
 
 ## A word on container image registry, tag, and pull policy
 
