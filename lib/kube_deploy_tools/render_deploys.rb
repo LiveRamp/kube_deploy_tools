@@ -6,6 +6,7 @@ require 'yaml'
 
 require 'kube_deploy_tools/render_deploys_hook'
 require 'kube_deploy_tools/deploy_artifact'
+require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/tag'
 
@@ -31,7 +32,9 @@ module KubeDeployTools
       @output_dir = output_dir
       FileUtils.mkdir_p @output_dir
 
-      @manifest = YAML.load(File.read(manifest)).fetch('deploy')
+      @config = DeployConfigFile.new(manifest)
+      # TODO(joshk): Get rid of this version and use only DeployConfigFile instance
+      @manifest = YAML.load_file(manifest).fetch('deploy')
       validate_manifest
     end
 
@@ -47,6 +50,8 @@ module KubeDeployTools
 
         # Get metadata for this target/environment pair from manifest
         cluster_flags = DEFAULT_FLAGS.dup
+        # Merge in configured default flags
+        cluster_flags.merge!(@config.default_flags)
 
         # Update and merge deploy flags for rendering
         cluster_flags.update('target' => target, 'environment' => env)
@@ -142,8 +147,7 @@ module KubeDeployTools
         if c['flags']['cloud'].nil? || c['flags']['image_registry'].nil?|| c['flags']['pull_policy'].nil?
           raise 'Invalid cluster flags in deploy.yaml. Missing following for flags : '\
           "cloud" if  c['flags']['cloud'].nil? \
-          "image_registry" if  c['flags']['image_registry'].nil? \
-          "pull_policy" if  c['flags']['pull_policy'].nil?
+          "image_registry" if  c['flags']['image_registry'].nil?
         end
       end
 

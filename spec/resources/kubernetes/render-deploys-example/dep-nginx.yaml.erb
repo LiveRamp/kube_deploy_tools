@@ -5,6 +5,7 @@ metadata:
   namespace: default
   name: test-nginx
   labels:
+    from_default_flag: <%= config['baz'] %>
     tag: "<%= config["tag"] %>"
 spec:
   replicas: 0

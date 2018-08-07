@@ -1,6 +1,9 @@
 # This deploy.yml is a testing fixture
-# Required flags: target, environment, flags
+default_flags:
+  food: bar
+  baz: bing
 deploy:
+  # Required flags: target, environment, flags
   clusters:
     - target: local
       environment: staging
@@ -66,7 +69,7 @@ deploy:
 image_registries:
   - name: artifactory
     driver: login
-    prefix: ***REMOVED***:6555
+    prefix: my-artifactory.com:1234
     config:
       username_var: ARTIFACTORY_USERNAME
       password_var: ARTIFACTORY_PASSWORD

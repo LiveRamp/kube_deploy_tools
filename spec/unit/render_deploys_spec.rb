@@ -42,6 +42,7 @@ metadata:
   namespace: default
   name: test-nginx
   labels:
+    from_default_flag: bing
     tag: REMOVED
 spec:
   replicas: 0

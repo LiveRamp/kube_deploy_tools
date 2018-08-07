@@ -51,7 +51,7 @@ describe KubeDeployTools::PublishContainer do
 
         # -e none should be stripped if it is there.
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
-        expect(shellrunner).to receive(:check_call).with('docker', 'login', '--username', fake_username, '--password', fake_password, '***REMOVED***:6555', print_cmd: false).once
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '--username', fake_username, '--password', fake_password, 'my-artifactory.com:1234', print_cmd: false).once
 
         expect(shellrunner).to receive(:check_call).with('docker', 'push', any_args).exactly(images.length).times
 
@@ -114,9 +114,9 @@ describe KubeDeployTools::PublishContainer do
         # Local
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', 'local-registry/project1:releaseTag').once
         # Artifactory
-        expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', '***REMOVED***:6555/project1:releaseTag').once
-        expect(shellrunner).to receive(:check_call).with('docker', 'login', '--username', 'bill', '--password', 'definitely_not_aaron', '***REMOVED***:6555', print_cmd: false)
-        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***:6555/project1:releaseTag')
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', 'my-artifactory.com:1234/project1:releaseTag').once
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '--username', 'bill', '--password', 'definitely_not_aaron', 'my-artifactory.com:1234', print_cmd: false)
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', 'my-artifactory.com:1234/project1:releaseTag')
         # AWS
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', '123456789.dkr.ecr.us-west-2.amazonaws.com/project1:releaseTag').once
         expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://123456789.dkr.ecr.us-west-2.amazonaws.com', print_cmd: false).once

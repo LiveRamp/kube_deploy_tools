@@ -13,7 +13,7 @@ module KubeDeployTools
 
     def self.render_deploys(config_file, input_dir, output_root)
       # Parse config into a struct.
-      config = YAML.load(File.read(config_file))
+      config = YAML.load_file(config_file)
       t = KubeDeployTools::Templater.new
 
       Dir["#{input_dir}/**/*.y*ml*"].each do |yml|
@@ -39,7 +39,7 @@ module KubeDeployTools
         # Bonus: YAML validate the output.
         begin
           if File.file?(output_file)
-            YAML.load(File.read(output_file))
+            YAML.load_file(output_file)
           end
         rescue => e
           raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"

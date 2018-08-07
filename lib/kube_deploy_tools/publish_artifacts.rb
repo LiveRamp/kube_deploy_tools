@@ -16,6 +16,8 @@ module KubeDeployTools
       unless File.file?(manifest)
         raise "Can't read deploy manifest: #{manifest}"
       end
+
+      # XXX(joshk): Can't use YAML.load_file as it is mocked in spec test.
       @manifest = YAML.load(File.read(manifest)).fetch('deploy')
       @output_dir = output_dir
       @extra_files = extra_files

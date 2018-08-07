@@ -1,3 +1,5 @@
+default_flags:
+  pull_policy: IfNotPresent
 deploy:
   clusters:
     - target: local
@@ -5,19 +7,16 @@ deploy:
       flags:
         cloud: local
         image_registry: local-registry
-        pull_policy: IfNotPresent
     - target: colo-service
       environment: prod
       flags:
         cloud: colo
         image_registry: ''
-        pull_policy: IfNotPresent
     - target: colo-service
       environment: staging
       flags:
         cloud: colo
         image_registry: ''
-        pull_policy: IfNotPresent
   flavors:
     default: {}
 image_registries:
