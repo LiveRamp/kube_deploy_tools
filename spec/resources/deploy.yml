@@ -24,7 +24,7 @@ deploy:
       environment: prod
       flags:
         cloud: gcp
-        image_registry: ***REMOVED***
+        image_registry: gcr.io/kdt-example
         pull_policy: IfNotPresent
     - target: us-east-1
       environment: prod
@@ -42,13 +42,13 @@ deploy:
       environment: prod
       flags:
         cloud: gcp
-        image_registry: ***REMOVED***
+        image_registry: gcr.io/kdt-example
         pull_policy: IfNotPresent
     - target: platforms
       environment: prod
       flags:
         cloud: gcp
-        image_registry: ***REMOVED***
+        image_registry: gcr.io/kdt-example
         pull_policy: IfNotPresent
         feature_grafana: true
         feature_heapster: true
@@ -63,3 +63,21 @@ deploy:
   flavors:
     default:
       test_bool: true
+image_registries:
+  - name: artifactory
+    driver: login
+    prefix: ***REMOVED***:6555
+    config:
+      username_var: ARTIFACTORY_USERNAME
+      password_var: ARTIFACTORY_PASSWORD
+  - name: aws
+    driver: aws
+    prefix: 123456789.dkr.ecr.us-west-2.amazonaws.com
+    config:
+      region: us-west-2
+  - name: local
+    driver: noop
+    prefix: local-registry
+  - name: gcp
+    driver: gcp
+    prefix: gcr.io/kdt-example

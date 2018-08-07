@@ -7,11 +7,10 @@ require 'set'
 require 'uri'
 require 'yaml'
 
-require 'kube_deploy_tools/cluster_config'
+require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/formatted_logger'
-require 'kube_deploy_tools/publish_container'
-require 'kube_deploy_tools/publish_container/driver/aws'
-require 'kube_deploy_tools/publish_container/driver/gcp'
+require 'kube_deploy_tools/image_registry'
+require 'kube_deploy_tools/image_registry/driver'
 require 'kube_deploy_tools/shellrunner'
 
 ARTIFACTORY_USERNAME = ENV.fetch('ARTIFACTORY_USERNAME')
@@ -25,6 +24,16 @@ module KubeDeployTools
     def initialize(config_file, dryrun)
       @config_file = config_file
       @dryrun = dryrun
+
+      # Load file once for registries & drivers
+      @registries = DeployConfigFile.new(config_file).image_registries
+      @drivers = @registries.map do |_, registry|
+        driver_class = ImageRegistry::Driver::MAPPINGS.fetch(registry.driver)
+        [registry.name, driver_class.new(registry: registry)]
+      end.to_h
+
+      # Load file again for sweeper data
+      @configs = YAML.load_file(@config_file).fetch('sweeper')
     end
 
     def remove_images
@@ -32,8 +41,7 @@ module KubeDeployTools
         KubeDeployTools::Logger.error("This config file does not exist: #{@config_file}")
       end
 
-      configs = YAML.load_file(@config_file)
-      configs.each do |config|
+      @configs.each do |config|
         retention = human_duration_in_seconds(config['retention'])
         repo = config['repository']
         prefixes = config['prefix']
@@ -99,7 +107,8 @@ module KubeDeployTools
 
     # Method to fetch and read images.yaml
     def fetch_built_artifacts_files(built_artifacts_files)
-      prefix_images = Hash[REGISTRIES.map {|name, values| [name, []]}]
+      prefix_images = Hash[@registries.map {|reg, _| [reg, []]}]
+      prefix_to_registry = Hash[@registries.map {|reg, info| [info.prefix, reg]}]
 
       # built_artifacts_files is a list of artifactory urls
       # pointing to the specific images.yaml files
@@ -126,9 +135,9 @@ module KubeDeployTools
             next
           end
 
-          PREFIX_TO_REGISTRY.each_key.each do |pre|
+          prefix_to_registry.each_key.each do |pre|
             if img.include? pre
-              prefix_images[PREFIX_TO_REGISTRY[pre]].push(img)
+              prefix_images[prefix_to_registry[pre]].push(img)
               next
             end
           end
@@ -172,22 +181,26 @@ module KubeDeployTools
     # Remove the expired container images from GCR
     # Link: https://cloud.google.com/container-registry/docs/managing#deleting_images
     def remove_from_gcp(image_ids)
+      # TODO(joshk): Avoid hardcoding registry name as 'gcp'
+      driver = @drivers.fetch('gcp')
       image_ids.each do |id|
         # Need the id path to be [HOSTNAME]/[PROJECT-ID]/[IMAGE]<:[TAG]|@[DIGEST]>
-        PublishContainer::Driver::Gcp.new(registry: REGISTRIES['gcp']).delete_image(id, @dryrun)
+        driver.delete_image(id, @dryrun)
       end
     end
 
     # Remove the expired containers images from ECR
     # Link: https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html
     def remove_from_ecr(image_ids)
+      driver = @drivers.fetch('aws')
+      prefix = @registries.fetch('aws').prefix
       image_ids.each do |img|
         # Need the image tag and repository, not full path of the image
-        val = img.partition "#{REGISTRIES['aws']['prefix']}/"
+        val = img.partition "#{prefix}/"
         repo_image = val.last.rpartition(':')
         repository = repo_image.first
         image = repo_image.last
-        aws_driver = PublishContainer::Driver::Aws.new(registry: REGISTRIES['aws']).delete_image(repository, image, @dryrun)
+        aws_driver = driver.delete_image(repository, image, @dryrun)
       end
     end
 

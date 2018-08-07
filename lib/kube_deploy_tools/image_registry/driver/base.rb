@@ -1,10 +1,11 @@
 require 'kube_deploy_tools/formatted_logger'
-require 'kube_deploy_tools/publish_container/image'
 require 'kube_deploy_tools/shellrunner'
+
+require 'kube_deploy_tools/image_registry/image'
 
 # Abstract Driver class that specific implementations inherit
 module KubeDeployTools
-  class PublishContainer
+  class ImageRegistry
     module Driver
       class Base
         def initialize(registry:)
@@ -16,7 +17,7 @@ module KubeDeployTools
         end
 
         def authorize
-          Logger.info "performing registry login for #{@registry['prefix']}"
+          Logger.info "performing registry login for #{@registry.prefix}"
           Shellrunner.check_call(*authorize_command, print_cmd: false)
         end
 
@@ -25,7 +26,7 @@ module KubeDeployTools
         end
 
         def unauthorize
-          Logger.info "Performing registry unauthorization for #{@registry['prefix']}"
+          Logger.info "Performing registry unauthorization for #{@registry.prefix}"
           Shellrunner.check_call(*unauthorize_command, print_cmd: false)
         end
 

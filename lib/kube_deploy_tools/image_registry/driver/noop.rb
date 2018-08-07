@@ -2,7 +2,7 @@ require_relative 'base'
 
 # Noop driver, does nothing!
 module KubeDeployTools
-  class PublishContainer::Driver::Noop < PublishContainer::Driver::Base
+  class ImageRegistry::Driver::Noop < ImageRegistry::Driver::Base
     def push_image(image)
     end
 

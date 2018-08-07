@@ -5,7 +5,7 @@ require_relative 'driver/login'
 require_relative 'driver/noop'
 
 module KubeDeployTools
-  class PublishContainer
+  class ImageRegistry
     module Driver
       MAPPINGS = {
         'aws' => Aws,

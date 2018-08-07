@@ -143,5 +143,12 @@ module KubeDeployTools
         end
       end
     end
+
+    def self.kube_namespace(context:)
+      namespace, _, _ = Shellrunner.check_call('kubectl', 'config', 'view', '--minify', "--output=jsonpath={..namespace}", "--context=#{context}")
+      namespace = 'default' if namespace.to_s.empty?
+
+      namespace
+    end
   end
 end

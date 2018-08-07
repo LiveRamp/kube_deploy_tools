@@ -6,6 +6,11 @@
 ### Breaking Changes
 * For `kdt deploy`, `--context` is now a required argument.
   * To view your contexts, see `kubectl config get-contexts`.
+* For `kdt publish_container`, in `deploy.yaml`,
+  * `image_registries` has been added as a mandatory entry in each deploy.yaml.
+    KDT no longer has built-in knowledge about any image registry target and
+    you must specify your own.
+    See `spec/resources/deploy.yml` for the stock configuration that was used in KDT 1.x.
 * For `kdt render_deploys`, in `deploy.yml`,
   * `extra_flags` has been renamed to `flags`
   * `cloud`, `image_registry`, and `pull_policy` are required `flags`
@@ -76,6 +81,9 @@ toolbox
 
 * The `config['image_tag']` value no longer contains the current branch nor
   Jenkins build id, only the git sha.
+* `toolbox` is no longer part of KDT. It relied on a data model which we
+  have discarded in 2.x (the concept of target/environment being linked
+  to a specific registry.)
 
 ## 1.4.x
 

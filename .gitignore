@@ -1,6 +1,6 @@
 .*.sw*
 .bundle/
-vendor/
+.bundle-gems/
 pkg/
 Gemfile.lock
 /build

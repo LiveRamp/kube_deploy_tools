@@ -43,7 +43,7 @@ namespace :container_push do
     container_path = File.join(containers_path, container)
     desc "Push Docker image for #{container_path}"
     task container, [:tag] => [:"container:#{container}"]do |t, args|
-      cmd = "bundle exec kdt publish_container --registry=aws #{container}"
+      cmd = "bundle exec kdt publish_container #{container}"
       cmd += " --tag #{args[:tag]}" if args[:tag]
       sh cmd
     end

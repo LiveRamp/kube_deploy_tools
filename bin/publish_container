@@ -41,8 +41,6 @@ def images
 Example usage:
 
 publish_container \
---registry aws \
---registry gcp \
 --local-prefix local-registry/ \
 --tag my-custom-tag \
 image1 image2 image3
@@ -56,5 +54,6 @@ end
 
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
+config = KubeDeployTools::DeployConfigFile.new(options.manifest_file)
 
-KubeDeployTools::PublishContainer.new(options.local_prefix, options.registries, images, options.tag).publish
+KubeDeployTools::PublishContainer.new(config, options.local_prefix, options.registries, images, options.tag).publish

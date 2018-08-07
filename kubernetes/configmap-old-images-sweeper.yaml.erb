@@ -7,25 +7,44 @@ metadata:
     app: old-images-sweeper
 data:
   sweeper.yaml: |
-    - repository: kubernetes-snapshot-local
-      prefix:
-        - arbor_admin
-        - arbor_bin_artifacts_test
-        - arbor_master
-        - arbor_staging
-        - k8s-reaper
-        - kube_infra_master
-        - menu
-        - opt_outs
-        - planetarium
-        - sidek8
-        - strike
-      retention: 3M
-    - repository: kubernetes-snapshot-local
-      prefix:
-        - arbor_prs
-        - k8s-reaper_prs
-        - kube_infra_prs
-        - kube_deploy_tools_prs
-        - opt_outs_prs
-      retention: 14d
+    image_registries:
+      - name: artifactory
+        driver: login
+        prefix: ***REMOVED***:6555
+        config:
+          username_var: ARTIFACTORY_USERNAME
+          password_var: ARTIFACTORY_PASSWORD
+      - name: aws
+        driver: aws
+        prefix: ***REMOVED***
+        config:
+          region: us-west-2
+      - name: local
+        driver: noop
+        prefix: local-registry
+      - name: gcp
+        driver: gcp
+        prefix: ***REMOVED***
+    sweeper:
+      - repository: kubernetes-snapshot-local
+        prefix:
+          - arbor_admin
+          - arbor_bin_artifacts_test
+          - arbor_master
+          - arbor_staging
+          - k8s-reaper
+          - kube_infra_master
+          - menu
+          - opt_outs
+          - planetarium
+          - sidek8
+          - strike
+        retention: 3M
+      - repository: kubernetes-snapshot-local
+        prefix:
+          - arbor_prs
+          - k8s-reaper_prs
+          - kube_infra_prs
+          - kube_deploy_tools_prs
+          - opt_outs_prs
+        retention: 14d

@@ -159,6 +159,25 @@ describe KubeDeployTools::Deploy do
       end
     end
   end
+
+  context "helper functions" do
+    # Mock shellrunner
+    let(:status) { double(:status, success?: true) }
+
+    it 'gets the kube namespace' do
+      kubectl_output = ''
+      KubeDeployTools::Shellrunner.shellrunner = instance_double("shellrunner", :check_call => [kubectl_output, nil, status])
+      actual = KubeDeployTools::Deploy.kube_namespace(context: 'fake-context')
+      expected = 'default'
+      expect(actual).to eq(expected)
+
+      kubectl_output = 'some-other-namespace'
+      KubeDeployTools::Shellrunner.shellrunner = instance_double("shellrunner", :check_call => [kubectl_output, nil, status])
+      actual = KubeDeployTools::Deploy.kube_namespace(context: 'fake-context')
+      expected = kubectl_output
+      expect(actual).to eq(expected)
+    end
+  end
 end
 
 describe KubeDeployTools::Deploy::Optparser do
@@ -183,8 +202,6 @@ describe KubeDeployTools::Deploy::Optparser do
     expect(options.from_files).to match(from_files)
     expect(options.context).to match(CONTEXT)
   end
-
-
 
 end
 

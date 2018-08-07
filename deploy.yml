@@ -20,3 +20,12 @@ deploy:
         pull_policy: IfNotPresent
   flavors:
     default: {}
+image_registries:
+  - name: aws
+    driver: aws
+    prefix: ***REMOVED***
+    config:
+      region: us-west-2
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***

@@ -5,6 +5,7 @@ require 'tmpdir'
 require 'kube_deploy_tools/publish_container'
 
 BUILT_ARTIFACTS_PATH = 'build'
+MANIFEST_FILE = 'spec/resources/deploy.yml'
 
 describe KubeDeployTools::PublishContainer do
   # Mock shellrunner
@@ -19,6 +20,7 @@ describe KubeDeployTools::PublishContainer do
   describe 'publish' do
     let(:publisher) do
       KubeDeployTools::PublishContainer.new(
+        KubeDeployTools::DeployConfigFile.new(MANIFEST_FILE),
         'my-registry',
         remote_registry,
         images,
@@ -66,10 +68,10 @@ describe KubeDeployTools::PublishContainer do
       it 'works' do
         # -e none should be stripped if it is there.
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
-        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://***REMOVED***', print_cmd: false).once
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://123456789.dkr.ecr.us-west-2.amazonaws.com', print_cmd: false).once
 
         expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'get-login', '--region', 'us-west-2') do
-          'docker login -u AWS -p paws -e none https://***REMOVED***'
+          'docker login -u AWS -p paws -e none https://123456789.dkr.ecr.us-west-2.amazonaws.com'
         end
         expect(shellrunner).to receive(:run_call).with('aws', 'ecr', 'describe-repositories', '--repository-names', 'project1', '--region', 'us-west-2') do
           [stdoutput, nil, double(:status, success?: false)]
@@ -92,10 +94,11 @@ describe KubeDeployTools::PublishContainer do
         expect(shellrunner).to receive(:run_call).with('gcloud', 'config', 'list','account','--format', "value(core.account)") do
           [emptyActivation, nil, double(:status, success?: false)]
         end
-        ENV['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/ops/***REMOVED***.json'
+
+        ENV['GOOGLE_APPLICATION_CREDENTIALS'] = '/no/need/to/exist/kdt-example.json'
         expect(shellrunner).to receive(:run_call).with('gcloud', 'auth', 'activate-service-account', '--key-file', ENV['GOOGLE_APPLICATION_CREDENTIALS']).once
         expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
-        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').once
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/kdt-example/project1:releaseTag').once
 
         publisher.publish
         FileUtils.rm_rf(BUILT_ARTIFACTS_PATH) # Removes build/kubernetes/images.yaml created in update_built_artifacts
@@ -104,18 +107,27 @@ describe KubeDeployTools::PublishContainer do
     end
 
     context 'multi registry' do
-      let(:remote_registry) { ['aws', 'gcp'] }
+      # Test implicit usage of all supported registries
+      let(:remote_registry) { [] }
 
       it 'works' do
-        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
-        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://***REMOVED***', print_cmd: false).once
+        # Local
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', 'local-registry/project1:releaseTag').once
+        # Artifactory
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', '***REMOVED***:6555/project1:releaseTag').once
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '--username', 'bill', '--password', 'definitely_not_aaron', '***REMOVED***:6555', print_cmd: false)
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***:6555/project1:releaseTag')
+        # AWS
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', '123456789.dkr.ecr.us-west-2.amazonaws.com/project1:releaseTag').once
+        expect(shellrunner).to receive(:check_call).with('docker', 'login', '-u', 'AWS', '-p', 'paws', 'https://123456789.dkr.ecr.us-west-2.amazonaws.com', print_cmd: false).once
         expect(shellrunner).to receive(:check_call).with('aws', 'ecr', 'get-login', '--region', 'us-west-2') do
-          'docker login -u AWS -p paws -e none https://***REMOVED***'
+          'docker login -u AWS -p paws -e none https://123456789.dkr.ecr.us-west-2.amazonaws.com'
         end
-        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
+        # GCP
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', 'gcr.io/kdt-example/project1:releaseTag').once
         expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
-        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').exactly(images.length).times
-        expect(shellrunner).to receive(:check_call).with('docker', 'push', '***REMOVED***/project1:releaseTag').exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', '123456789.dkr.ecr.us-west-2.amazonaws.com/project1:releaseTag').exactly(images.length).times
+        expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/kdt-example/project1:releaseTag').exactly(images.length).times
 
         publisher.publish
         FileUtils.rm_rf(BUILT_ARTIFACTS_PATH) # Removes build/kubernetes/images.yaml created in update_built_artifacts

@@ -3,7 +3,6 @@ require 'uri'
 require 'yaml'
 
 require 'kube_deploy_tools/built_artifacts_file'
-require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/object'

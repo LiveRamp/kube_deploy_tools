@@ -2,7 +2,7 @@ require_relative 'base'
 require 'tmpdir'
 
 module KubeDeployTools
-  class PublishContainer::Driver::Gcp < PublishContainer::Driver::Base
+  class ImageRegistry::Driver::Gcp < ImageRegistry::Driver::Base
     @gcloud_config_dir
     def authorize_command
       if check_if_activated[0].empty?
@@ -14,7 +14,7 @@ module KubeDeployTools
 
     # Delete temporary config dir for gcloud authentication
     def unauthorize
-      Logger.info "Cleaning up authorization for #{@registry['prefix']}"
+      Logger.info "Cleaning up authorization for #{@registry.prefix}"
       FileUtils.rm_rf(@gcloud_config_dir) unless @gcloud_config_dir.nil?
     end
 

@@ -1,21 +1,35 @@
 require 'fileutils'
 
-require 'kube_deploy_tools/cluster_config'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/built_artifacts_file'
+require 'kube_deploy_tools/deploy_config_file'
 
-require 'kube_deploy_tools/publish_container/image'
-require 'kube_deploy_tools/publish_container/driver'
+require 'kube_deploy_tools/image_registry/driver'
+require 'kube_deploy_tools/image_registry/image'
 
 BUILT_ARTIFACTS_FILE = 'build/kubernetes/images.yaml'.freeze
 
 module KubeDeployTools
   class PublishContainer
-    def initialize(local_prefix, registries, images, tag)
+    def initialize(config, local_prefix, registries, images, tag)
+      @config = config
       @local_prefix = local_prefix
-      @registries = registries.map do |r|
-        registry = REGISTRIES.fetch(r)
-        driver_class = Driver::MAPPINGS.fetch(registry['driver'])
+
+      # If |registries| is empty, assume we will push them all,
+      # if not, subtract unwanted ones from |config.image_registries|
+      if registries.empty?
+        to_instantiate = config.image_registries.values
+      else
+        to_instantiate = []
+        config.image_registries.each do |name, registry|
+          if registries.member? name
+            to_instantiate.push registry
+          end
+        end
+      end
+
+      @drivers = to_instantiate.map do |registry|
+        driver_class = ImageRegistry::Driver::MAPPINGS.fetch(registry.driver)
         [registry, driver_class.new(registry: registry)]
       end.to_h
       @base_image_names = images
@@ -28,7 +42,7 @@ module KubeDeployTools
 
       driver_images = []
 
-      @registries.each_pair do |registry, driver|
+      @drivers.each_pair do |registry, driver|
         driver_images.unshift [driver, tag_images(registry, @base_image_names)]
         # Does whatever is necessary to authorize against this registry
         driver.authorize
@@ -60,7 +74,7 @@ module KubeDeployTools
     # Clean registry authorization in the end no matter what
     ensure
       Logger.info "Removing registry authorizations"
-      @registries.each_pair do |registry, driver|
+      @drivers.each_pair do |registry, driver|
         driver.unauthorize
       end
     end
@@ -70,7 +84,7 @@ module KubeDeployTools
     def tag_images(r, base_image_names)
       base_image_names.map do |i|
         local = Image.new(@local_prefix, i, 'latest')
-        remote = Image.new(r['prefix'], i, @tag)
+        remote = Image.new(r.prefix, i, @tag)
         Shellrunner.check_call('docker', 'tag', local.full_tag, remote.full_tag)
         remote
       end

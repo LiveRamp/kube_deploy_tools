@@ -1,15 +1,16 @@
 require 'optparse'
 require 'set'
-require 'kube_deploy_tools/cluster_config.rb'
+require 'kube_deploy_tools/tag'
 
 module KubeDeployTools
   class PublishContainer::Optparser
 
     class PublishContainerOptions
-      attr_accessor :local_prefix, :registries, :images, :tag
+      attr_accessor :local_prefix, :manifest_file, :registries, :images, :tag
 
       def initialize
-        self.local_prefix = "local-registry"
+        self.local_prefix = 'local-registry'
+        self.manifest_file = 'deploy.yml'
         self.registries = Set.new
         self.tag = KubeDeployTools::tag_from_local_env
       end
@@ -21,6 +22,10 @@ module KubeDeployTools
 
         parser.on('-tTAG', '--tag TAG', 'Tag Docker images with TAG') do |t|
           self.tag = t
+        end
+
+        parser.on('-mMANIFEST', '--manifest MANIFEST', 'The configuration MANIFEST to render deploys with.') do |f|
+          self.manifest_file = f
         end
 
         parser.on('-rPREFIX', '--registry REGISTRY', 'The remote Docker registry to push to (can specify multiple times)') do |r|

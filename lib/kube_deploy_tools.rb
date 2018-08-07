@@ -10,8 +10,6 @@ require 'kube_deploy_tools/deploy/options'
 require 'kube_deploy_tools/templater'
 require 'kube_deploy_tools/templater/options'
 
-require 'kube_deploy_tools/cluster_config'
-
 require 'kube_deploy_tools/render_deploys'
 require 'kube_deploy_tools/render_deploys/options'
 
