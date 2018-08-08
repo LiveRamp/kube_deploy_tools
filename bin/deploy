@@ -19,7 +19,7 @@ end
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 context = options.context || KubeDeployTools.kube_context(target: options.target, environment: options.environment)
-namespace = KubeDeployTools::Deploy::kube_namespace(context: context)
+namespace = KubeDeployTools::Deploy::kube_namespace(context: context, kubeconfig: options.kubeconfig)
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build(context: context, namespace: namespace)
 kubectl = KubeDeployTools::Kubectl.new(
   context: options.context,

@@ -176,6 +176,11 @@ describe KubeDeployTools::Deploy do
       actual = KubeDeployTools::Deploy.kube_namespace(context: 'fake-context')
       expected = kubectl_output
       expect(actual).to eq(expected)
+
+      kubeconfig = 'fake-kubeconfig'
+      KubeDeployTools::Shellrunner.shellrunner = instance_double("shellrunner", :check_call => [kubectl_output, nil, status])
+      expect(KubeDeployTools::Shellrunner.shellrunner).to receive(:check_call).with(any_args, "--kubeconfig=#{kubeconfig}").once
+      KubeDeployTools::Deploy.kube_namespace(context: 'fake-context', kubeconfig: kubeconfig)
     end
   end
 end
