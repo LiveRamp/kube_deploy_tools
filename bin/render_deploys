@@ -21,5 +21,6 @@ app = KubeDeployTools::RenderDeploys.new(
   options.manifest_file,
   options.input_path,
   options.output_path,
+  options.file_filters
 )
 app.render

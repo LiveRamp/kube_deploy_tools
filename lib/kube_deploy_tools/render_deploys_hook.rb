@@ -7,17 +7,18 @@ require 'json'
 require 'yaml'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/templater'
+require 'kube_deploy_tools/file_filter'
 
 module KubeDeployTools
   module RenderDeploysHook
     TEMPLATING_SUFFIX = '.erb'
 
-    def self.render_deploys(config_file, input_dir, output_root)
+    def self.render_deploys(config_file, input_dir, output_root, file_filters)
       # Parse config into a struct.
       config = YAML.load_file(config_file)
       t = KubeDeployTools::Templater.new
 
-      Dir[File.join(input_dir, "**", "*.y*ml*")].each do |yml|
+      get_valid_files(file_filters, input_dir).each do |yml|
         # PREFIX/b/c/foo.yml.in -> foo.yml
         output_base = File.basename(yml, TEMPLATING_SUFFIX)
 
@@ -68,6 +69,11 @@ module KubeDeployTools
           raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"
         end
       end
+    end
+
+    def self.get_valid_files(file_filters, input_dir)
+      filtered_files = FileFilter.filter_files(filters: file_filters, files_path: input_dir)
+      filtered_files.select { |f| f =~ /\.y.ml[^\/]*$/ }
     end
   end
 end

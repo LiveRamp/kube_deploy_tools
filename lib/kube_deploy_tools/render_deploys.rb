@@ -19,7 +19,7 @@ module KubeDeployTools
     'tag' => tag_from_local_env,
   }.freeze
   class RenderDeploys
-    def initialize(manifest, input_dir, output_dir)
+    def initialize(manifest, input_dir, output_dir, file_filters = [])
 
       unless File.file?(manifest)
         raise "Can't read deploy manifest: #{manifest}"
@@ -36,6 +36,8 @@ module KubeDeployTools
       # TODO(joshk): Get rid of this version and use only DeployConfigFile instance
       @manifest = YAML.load_file(manifest)
       validate_manifest
+
+      @file_filters = file_filters
     end
 
     def render
@@ -77,7 +79,7 @@ module KubeDeployTools
             hooks.each do |hook|
               if hook == DEFAULT_HOOK_SCRIPT_LABEL
                 # TODO(joshk): render_deploys method should take a hash for testability
-                KubeDeployTools::RenderDeploysHook.render_deploys(rendered.path, @input_dir, flavor_dir)
+                KubeDeployTools::RenderDeploysHook.render_deploys(rendered.path, @input_dir, flavor_dir, @file_filters)
               else
                 Shellrunner.check_call(hook, rendered.path, @input_dir, flavor_dir)
               end
