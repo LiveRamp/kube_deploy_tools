@@ -43,7 +43,7 @@ module KubeDeployTools
       flavors = @manifest.fetch('flavors')
 
       hooks = @manifest['hooks'] || [DEFAULT_HOOK_SCRIPT_LABEL]
-      pids = {}
+      permutations = {}
       clusters.each do |c|
         target = c.fetch('target') # pippio-production
         env = c.fetch('environment') # prod
@@ -66,11 +66,10 @@ module KubeDeployTools
           # Call individual templating hook with the rendered configuration
           # and a prefix to place all the files. Run many hooks in the
           # background.
-          flavor_dir = File.join(@output_dir, target, env, flavor)
+          flavor_dir = File.join(@output_dir, "#{target}_#{env}_#{flavor}")
           FileUtils.rm_rf flavor_dir
           FileUtils.mkdir_p flavor_dir
 
-          puts "*** rendering configuration: #{target}_#{env}_#{flavor}"
           pid = fork do
             # Save rendered release configuration to a temp file.
             rendered = Tempfile.new('deploy_config')
@@ -88,20 +87,19 @@ module KubeDeployTools
             end
 
             # Pack up contents of each flavor_dir to a correctly named artifact tarball.
-            tarball = KubeDeployTools.build_deploy_artifact_name(project: @project, build_number: @build_number, target: target, environment: env, flavor: flavor)
+            tarball = KubeDeployTools.build_deploy_artifact_name(target: target, environment: env, flavor: flavor)
             tarball_full_path = File.join(@output_dir, tarball)
             Shellrunner.check_call('tar', '-C', flavor_dir, '-czf', tarball_full_path, '.')
-            puts "*** generated manifest archive: #{tarball_full_path}"
           end
 
-          pids[pid] = "#{target}_#{env}_#{flavor}"
+          permutations[pid] = "#{target}_#{env}_#{flavor}"
         end
       end
 
       failure = false
       Process.waitall.each do |pid, status|
         if status.exitstatus != 0
-          puts "!!! rendering #{pids[pid]} failed: exit status #{status.exitstatus}"
+          Logger.error "Rendering #{permutations[pid]} failed: exit status #{status.exitstatus}"
           failure = true
         end
       end

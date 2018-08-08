@@ -46,8 +46,6 @@ module KubeDeployTools
         cluster_flavors = flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
         cluster_flavors.each do |flavor, _|
           tarball = KubeDeployTools.build_deploy_artifact_name(
-            project: @project,
-            build_number: @build_number,
             target: target,
             environment: env,
             flavor: flavor

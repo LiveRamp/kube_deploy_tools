@@ -58,10 +58,12 @@ spec:
 
 YAML
 
-      clusters = %w(local/staging pippio-production/prod platforms/prod ingestion/prod us-east-1/prod us-east-1/staging colo-service/prod colo-service/staging)
-      clusters.each do |cluster|
-        rendered = File.join(tmp_dir, cluster, 'default', 'dep-nginx.yaml')
-        expect(File.file?(rendered)).to be(true)
+      clusters = %w(local_staging pippio-production_prod platforms_prod ingestion_prod us-east-1_prod us-east-1_staging colo-service_prod colo-service_staging)
+      expected = clusters.map do |cluster|
+        File.join(tmp_dir, "#{cluster}_default", 'dep-nginx.yaml')
+      end
+      expect(Dir["#{tmp_dir}/**/*.yaml"]).to contain_exactly(*expected)
+      expected.each do |rendered|
         rendered_no_tag = File.read(rendered).gsub(/tag: .*/, 'tag: REMOVED')
         expect(rendered_no_tag).to eq(expectation)
       end

@@ -18,11 +18,13 @@ module KubeDeployTools
         if ! namespace.nil? && namespace != 'default'
           middle += "[#{namespace}]"
         end
-        colorized_line = ColorizedString.new("[#{severity}][#{datetime}]#{middle}\t#{msg}\n")
+
+        dt = datetime.strftime('%F %T')
+        colorized_line = ColorizedString.new("[#{severity}][#{dt}]#{middle} #{msg}\n")
 
         case severity
         when "FATAL"
-          ColorizedString.new("[#{severity}][#{datetime}]#{middle}\t").red + "#{msg}\n"
+          ColorizedString.new("[#{severity}][#{dt}]#{middle} ").red + "#{msg}\n"
         when "ERROR"
           colorized_line.red
         when "WARN"

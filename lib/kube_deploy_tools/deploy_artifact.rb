@@ -14,12 +14,15 @@ module KubeDeployTools
   ARTIFACTORY_ENDPOINT = "http://***REMOVED***/artifactory"
   ARTIFACTORY_REPO = "kubernetes-snapshot-local"
 
-  def self.build_deploy_artifact_name(project:, build_number:, target:, environment:, flavor:)
-    "manifests:#{project}:#{build_number}:#{target}:#{environment}:#{flavor}#{EXT_TAR_GZ}"
+  def self.build_deploy_artifact_name(target:, environment:, flavor:)
+    "manifests_#{target}_#{environment}_#{flavor}#{EXT_TAR_GZ}"
   end
 
   def self.get_remote_deploy_artifact_key(project:, build_number:, target:, environment:, flavor:)
-    "#{project}/#{build_number}/manifests_#{target}_#{environment}_#{flavor}#{EXT_TAR_GZ}"
+    # NOTE(joshk): If the naming format changes, it represents a breaking
+    # change where all past clients will not be able to download new builds and
+    # new clients will not be able to download old builds. Change with caution.
+    "#{project}/#{build_number}/#{build_deploy_artifact_name(target: target, environment: environment, flavor: flavor)}"
   end
 
   def self.get_remote_deploy_artifact_url(project:, build_number:, target:, environment:, flavor:)
