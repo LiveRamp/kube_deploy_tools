@@ -5,6 +5,7 @@ require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/kubernetes_resource'
 require 'kube_deploy_tools/kubernetes_resource/deployment'
 require 'kube_deploy_tools/concurrency'
+require 'kube_deploy_tools/file_filter'
 
 # NOTE(jmodes): the order matters, and predeploy resources will be deployed
 # in order.
@@ -30,7 +31,7 @@ module KubeDeployTools
       kubectl:,
       namespace: nil,
       input_path:,
-      glob_files: [Hash['include_files'=> '**/*']]
+      glob_files: []
       )
       @kubectl = kubectl
       @namespace = namespace
@@ -49,7 +50,7 @@ module KubeDeployTools
         Logger.warn("Deploying to non-default Namespace: #{@namespace}")
       end
 
-      resources = read_resources(select_resources(@glob_files))
+      resources = read_resources(FileFilter.filter_files(filters: @glob_files, files_path: @input_path))
 
       Logger.phase_heading("Checking initial resource statuses")
       KubernetesDeploy::Concurrency.split_across_threads(resources, &:sync)
@@ -94,26 +95,6 @@ module KubeDeployTools
         end
       end
       resources
-    end
-
-    # Load corresponding resource files filtered by include and exlude tags
-    def select_resources(glob_files)
-      all_files = Dir[File.join(@input_path, '**', '*')].to_set
-      filtered_files = if glob_files.any? { |e| e.has_key?("include_files")}
-        Set.new
-      else
-        Set.new(all_files)
-      end
-
-      glob_files.each do |gf|
-        if gf.has_key?("include_files")
-          filtered_files.merge( all_files.select{ |f| File.fnmatch?(gf["include_files"], f, File::FNM_PATHNAME) } )
-        else
-          filtered_files.reject!{ |f| File.fnmatch?(gf["exclude_files"], f, File::FNM_PATHNAME) }
-        end
-      end
-      Logger.debug("\nYour filter generates following paths: \n#{filtered_files.to_a.join("\n")}")
-      filtered_files
     end
 
     def read_resource_definition(filepath)

@@ -60,12 +60,20 @@ module KubeDeployTools
           self.dry_run = p
         end
 
-        parser.on('--include INCLUDE', "Include glob pattern. Example: --inlude=**/* will include every file. Default is ''.") do |p|
-          self.glob_files.push(Hash["include_files" => p])
+        parser.on('--include INCLUDE', "Include glob pattern. Example: --include=**/* will include every file. Default is ''.") do |p|
+          self.glob_files.push(["include_files", p])
         end
 
         parser.on('--exclude EXCLUDE', "Exclude glob pattern. Example: --exclude=**/gazette/* will exclude every file in gazette folder. Default is ''.") do |p|
-          self.glob_files.push(Hash["exclude_files" => p])
+          self.glob_files.push(["exclude_files", p])
+        end
+
+        parser.on('--include-dir INCLUDE', "Recursively include all files in a directory and its subdirectories. Example: --include-dir=gazette/ (equivalent of --include=**/gazette/**/*)") do |p|
+          self.glob_files.push(["include_dir", p])
+        end
+
+        parser.on('--exclude-dir EXCLUDE', "Recursively exclude all files in a directory and its subdirectories. Example: --exclude-dir=gazette/ (equivalent of --exclude=**/gazette/**/*)") do |p|
+          self.glob_files.push(["exclude_dir", p])
         end
 
         parser.on("--pre-apply-hook CMD", "Shell command to run with the output directory before applying files") do |p|
