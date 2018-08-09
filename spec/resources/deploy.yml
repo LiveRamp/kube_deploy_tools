@@ -2,70 +2,76 @@
 default_flags:
   food: bar
   baz: bing
-deploy:
-  # Required flags: target, environment, flags
-  clusters:
-    - target: local
+# Required flags: target, environment, flags
+artifacts:
+  - name: local
+    flags:
+      target: local
       environment: staging
-      flags:
-        cloud: local
-        image_registry: local-registry
-        pull_policy: IfNotPresent
-    - target: colo-service
+      cloud: local
+      image_registry: local-registry
+      pull_policy: IfNotPresent
+  - name: colo-service-prod
+    flags:
+      target: colo-service
       environment: prod
-      flags:
-        cloud: colo
-        image_registry: ''
-        pull_policy: IfNotPresent
-    - target: colo-service
+      cloud: colo
+      image_registry: ''
+      pull_policy: IfNotPresent
+  - name: colo-service-staging
+    flags:
+      target: colo-service
       environment: staging
-      flags:
-        cloud: colo
-        image_registry: ''
-        pull_policy: IfNotPresent
-    - target: pippio-production
+      cloud: colo
+      image_registry: ''
+      pull_policy: IfNotPresent
+  - name: pippio-production
+    flags:
+      target: pippio-production
       environment: prod
-      flags:
-        cloud: gcp
-        image_registry: gcr.io/kdt-example
-        pull_policy: IfNotPresent
-    - target: us-east-1
+      cloud: gcp
+      image_registry: gcr.io/kdt-example
+      pull_policy: IfNotPresent
+  - name: us-east-1-prod
+    flags:
+      target: us-east-1
       environment: prod
-      flags:
-        cloud: aws
-        image_registry: ''
-        pull_policy: IfNotPresent
-    - target: us-east-1
+      cloud: aws
+      image_registry: ''
+      pull_policy: IfNotPresent
+  - name: us-east-1-staging
+    flags:
+      target: us-east-1
       environment: staging
-      flags:
-        cloud: aws
-        image_registry: ''
-        pull_policy: IfNotPresent
-    - target: ingestion
+      cloud: aws
+      image_registry: ''
+      pull_policy: IfNotPresent
+  - name: ingestion-prod
+    flags:
+      target: ingestion
       environment: prod
-      flags:
-        cloud: gcp
-        image_registry: gcr.io/kdt-example
-        pull_policy: IfNotPresent
-    - target: platforms
+      cloud: gcp
+      image_registry: gcr.io/kdt-example
+      pull_policy: IfNotPresent
+  - name: platforms-prod
+    flags:
+      target: platforms
       environment: prod
-      flags:
-        cloud: gcp
-        image_registry: gcr.io/kdt-example
-        pull_policy: IfNotPresent
-        feature_grafana: true
-        feature_heapster: true
-        feature_kube_state_metrics: true
-        feature_prometheus_k8s: true
-        feature_prometheus_operator: true
-        feature_voyager: true
-        elasticsearch_hosts: elasticsearch
-        kubernetes_major_version: '1'
-        kubernetes_minor_version: '8'
-
-  flavors:
-    default:
-      test_bool: true
+      cloud: gcp
+      image_registry: gcr.io/kdt-example
+      pull_policy: IfNotPresent
+      feature_grafana: true
+      feature_heapster: true
+      feature_kube_state_metrics: true
+      feature_prometheus_k8s: true
+      feature_prometheus_operator: true
+      feature_voyager: true
+      elasticsearch_hosts: elasticsearch
+      kubernetes_major_version: '1'
+      kubernetes_minor_version: '8'
+flavors:
+  default:
+    test_bool: true
 image_registries:
   - name: artifactory
     driver: login

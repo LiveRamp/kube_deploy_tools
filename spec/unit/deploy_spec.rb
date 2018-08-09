@@ -15,8 +15,7 @@ def parse(ops)
   KubeDeployTools::Deploy::Optparser.new.parse(make_argv(ops))
 end
 
-target = 'bogus-target-cluster'
-environment = 'staging'
+artifact = 'bogus-target-cluster-prod'
 build_number = '12345'
 
 describe KubeDeployTools::Deploy do
@@ -109,7 +108,7 @@ describe KubeDeployTools::Deploy do
     }
 
     context "when no include and exclude tags are specified" do
-      let(:options) { parse(target: target, environment: environment, build: build_number, context: CONTEXT) }
+      let(:options) { parse(artifact: artifact, build: build_number, context: CONTEXT) }
 
       it "loads all files" do
         expect(resources.length).to eq(6)
@@ -123,7 +122,7 @@ describe KubeDeployTools::Deploy do
     end
 
     context "when only include tag is specified" do
-      let(:options) { parse(target: target, environment: environment, build: build_number, include: '**/ingress*', context: CONTEXT) }
+      let(:options) { parse(artifact: artifact, build: build_number, include: '**/ingress*', context: CONTEXT) }
 
       it "load include files" do
         expect(resources.length).to eq(1)
@@ -132,7 +131,7 @@ describe KubeDeployTools::Deploy do
     end
 
     context "when only exclude tag is specified" do
-      let(:options) { parse(target: target, environment: environment, build: build_number, exclude: '**/ser*', context: CONTEXT) }
+      let(:options) { parse(artifact: artifact, build: build_number, exclude: '**/ser*', context: CONTEXT) }
 
       it "do not load exclude files" do
         expect(resources.length).to eq(5)
@@ -146,7 +145,7 @@ describe KubeDeployTools::Deploy do
     end
 
     context "when both include and exclude tags are specified" do
-      let(:options) { parse(target: target, environment: environment, build: build_number, include: '**/*', exclude: '**/socks-server/*', context: CONTEXT) }
+      let(:options) { parse(artifact: artifact, build: build_number, include: '**/*', exclude: '**/socks-server/*', context: CONTEXT) }
 
       it "load include files and do not load exclude files" do
         expect(resources.length).to eq(5)
@@ -191,13 +190,12 @@ describe KubeDeployTools::Deploy::Optparser do
     expect { KubeDeployTools::Deploy::Optparser.new.parse({}) }.to raise_error(/Expect/)
   end
 
-  it "accepts (--target, --environment, --build) or --from-files to fetch deploy artifact" do
-    options = parse(target: target,
-      environment: environment,
+  it "accepts (--artifact, --build) or --from-files to fetch deploy artifact" do
+    options = parse(
+      artifact: artifact,
       build: build_number,
       context: CONTEXT)
-    expect(options.target).to match(target)
-    expect(options.environment).to match(environment)
+    expect(options.artifact).to match(artifact)
     expect(options.build_number).to match(build_number)
     expect(options.context).to match(CONTEXT)
 

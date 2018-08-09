@@ -58,7 +58,7 @@ spec:
 
 YAML
 
-      clusters = %w(local_staging pippio-production_prod platforms_prod ingestion_prod us-east-1_prod us-east-1_staging colo-service_prod colo-service_staging)
+      clusters = %w(local pippio-production platforms-prod ingestion-prod us-east-1-prod us-east-1-staging colo-service-prod colo-service-staging)
       expected = clusters.map do |cluster|
         File.join(tmp_dir, "#{cluster}_default", 'dep-nginx.yaml')
       end

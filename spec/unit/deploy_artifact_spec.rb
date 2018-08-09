@@ -39,9 +39,8 @@ describe KubeDeployTools::DeployArtifact do
       remote_url = KubeDeployTools.get_remote_deploy_artifact_url(
         project: "foo",
         build_number: "latest",
-        target: "targetX",
-        environment: "prod",
-        flavor: "",
+        name: "targetX-prod",
+        flavor: ""
       )
 
       expect(remote_url).to include(latest_build_number)
@@ -88,14 +87,12 @@ describe KubeDeployTools::DeployArtifact do
 
     project = 'fake_project'
     build_number = '1234'
-    target = 'us-east-1'
-    environment = 'prod'
     flavor = 'default'
+    artifact = 'fake-artifact'
     url = KubeDeployTools.get_remote_deploy_artifact_url(
       project: project,
       build_number: build_number,
-      target: target,
-      environment: environment,
+      name: artifact,
       flavor: flavor)
     expect(url).to start_with("#{KubeDeployTools::ARTIFACTORY_ENDPOINT}/#{KubeDeployTools::ARTIFACTORY_REPO}/#{project}/#{build_number}/")
   end

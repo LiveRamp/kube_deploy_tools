@@ -1,24 +1,26 @@
 default_flags:
   pull_policy: IfNotPresent
-deploy:
-  clusters:
-    - target: local
+artifacts:
+  - name: local
+    flags:
+      target: local
       environment: staging
-      flags:
-        cloud: local
-        image_registry: local-registry
-    - target: colo-service
+      cloud: local
+      image_registry: local-registry
+  - name: colo-service-prod
+    flags:
+      target: colo-service
       environment: prod
-      flags:
-        cloud: colo
-        image_registry: ''
-    - target: colo-service
+      cloud: colo
+      image_registry: ''
+  - name: colo-service-staging
+    flags:
+      target: colo-service
       environment: staging
-      flags:
-        cloud: colo
-        image_registry: ''
-  flavors:
-    default: {}
+      cloud: colo
+      image_registry: ''
+flavors:
+  default: {}
 image_registries:
   - name: aws
     driver: aws

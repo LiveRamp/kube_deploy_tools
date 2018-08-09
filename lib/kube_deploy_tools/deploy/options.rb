@@ -11,9 +11,8 @@ module KubeDeployTools
         :context,
         :from_files,
         :project,
-        :target,
-        :environment,
         :flavor,
+        :artifact,
         :build_number,
         :dry_run,
         :glob_files,
@@ -45,16 +44,12 @@ module KubeDeployTools
           self.project = p
         end
 
-        parser.on('--target TARGET', 'The target to deploy') do |p|
-          self.target = p
-        end
-
-        parser.on('--environment ENVIRONMENT', 'The environment to deploy') do |p|
-          self.environment = p
-        end
-
         parser.on('--flavor FLAVOR', "The flavor to deploy. Default is '#{flavor}'") do |p|
           self.flavor = p
+        end
+
+        parser.on('--artifact ARTIFACT', 'The artifact name to deploy') do |p|
+          self.artifact = p
         end
 
         parser.on('--build BUILD', 'The Jenkins build number to deploy') do |p|
@@ -91,11 +86,11 @@ module KubeDeployTools
       def require_options
         raise ArgumentError, 'Expect --context to be provided' if context.blank?
 
-        files_mode = from_files.present? && (target.blank? && environment.blank? && build_number.blank?)
-        deploy_artifact_mode = from_files.blank? && (target.present? && environment.present? && build_number.present?)
+        files_mode = from_files.present? && (artifact.blank? && build_number.blank?)
+        deploy_artifact_mode = from_files.blank? && (artifact.present? && flavor.present? && build_number.present?)
 
         if !files_mode && !deploy_artifact_mode
-          raise ArgumentError, 'Expect either --from-files or all of [--target, --environment, --flavor, --build] to be provided'
+          raise ArgumentError, 'Expect either --from-files or all of [--artifact, --flavor, --build] to be provided'
         end
       end
     end

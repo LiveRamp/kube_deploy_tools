@@ -34,19 +34,18 @@ module KubeDeployTools
 
       @config = DeployConfigFile.new(manifest)
       # TODO(joshk): Get rid of this version and use only DeployConfigFile instance
-      @manifest = YAML.load_file(manifest).fetch('deploy')
+      @manifest = YAML.load_file(manifest)
       validate_manifest
     end
 
     def render
-      clusters = @manifest.fetch('clusters')
+      artifacts = @manifest.fetch('artifacts')
       flavors = @manifest.fetch('flavors')
 
       hooks = @manifest['hooks'] || [DEFAULT_HOOK_SCRIPT_LABEL]
       permutations = {}
-      clusters.each do |c|
-        target = c.fetch('target') # pippio-production
-        env = c.fetch('environment') # prod
+      artifacts.each do |c|
+        artifact = c.fetch('name')
 
         # Get metadata for this target/environment pair from manifest
         cluster_flags = DEFAULT_FLAGS.dup
@@ -54,7 +53,6 @@ module KubeDeployTools
         cluster_flags.merge!(@config.default_flags)
 
         # Update and merge deploy flags for rendering
-        cluster_flags.update('target' => target, 'environment' => env)
         cluster_flags.merge!(render_erb_flags(c.fetch('flags', {})))
 
         # Allow deploy.yml to gate certain flavors to certain targets.
@@ -66,10 +64,9 @@ module KubeDeployTools
           # Call individual templating hook with the rendered configuration
           # and a prefix to place all the files. Run many hooks in the
           # background.
-          flavor_dir = File.join(@output_dir, "#{target}_#{env}_#{flavor}")
+          flavor_dir = File.join(@output_dir, "#{artifact}_#{flavor}")
           FileUtils.rm_rf flavor_dir
           FileUtils.mkdir_p flavor_dir
-
           pid = fork do
             # Save rendered release configuration to a temp file.
             rendered = Tempfile.new('deploy_config')
@@ -87,12 +84,12 @@ module KubeDeployTools
             end
 
             # Pack up contents of each flavor_dir to a correctly named artifact tarball.
-            tarball = KubeDeployTools.build_deploy_artifact_name(target: target, environment: env, flavor: flavor)
+            tarball = KubeDeployTools.build_deploy_artifact_name(name: artifact, flavor: flavor)
             tarball_full_path = File.join(@output_dir, tarball)
             Shellrunner.check_call('tar', '-C', flavor_dir, '-czf', tarball_full_path, '.')
           end
 
-          permutations[pid] = "#{target}_#{env}_#{flavor}"
+          permutations[pid] = "#{artifact}_#{flavor}"
         end
       end
 
@@ -123,32 +120,16 @@ module KubeDeployTools
     end
 
     def validate_manifest
-      clusters = @manifest.fetch('clusters')
+      artifacts = @manifest.fetch('artifacts')
       flavors = @manifest.fetch('flavors')
 
-      unless clusters.size > 0
-        raise 'Must support deployment to at least one cluster'
+      unless artifacts.size > 0
+        raise 'Must support deployment to at least one artifact'
       end
 
       unless flavors.size > 0
         raise 'Must support at least one flavor (try "_default": {})'
       end
-
-      clusters.each do |c|
-        if c['target'].nil? || c['environment'].nil? || c['flags'].nil?
-          raise 'Invalid cluster in deploy.yaml. Missing following  : '\
-          "target" if  c['target'].nil? \
-          "environment" if  c['environment'].nil?
-          "flags" if  c['flags'].nil?
-        end
-
-        if c['flags']['cloud'].nil? || c['flags']['image_registry'].nil?|| c['flags']['pull_policy'].nil?
-          raise 'Invalid cluster flags in deploy.yaml. Missing following for flags : '\
-          "cloud" if  c['flags']['cloud'].nil? \
-          "image_registry" if  c['flags']['image_registry'].nil?
-        end
-      end
-
     end
   end
 end

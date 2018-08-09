@@ -14,25 +14,25 @@ module KubeDeployTools
   ARTIFACTORY_ENDPOINT = "http://***REMOVED***/artifactory"
   ARTIFACTORY_REPO = "kubernetes-snapshot-local"
 
-  def self.build_deploy_artifact_name(target:, environment:, flavor:)
-    "manifests_#{target}_#{environment}_#{flavor}#{EXT_TAR_GZ}"
+  def self.build_deploy_artifact_name(name:, flavor:)
+    "manifests_#{name}_#{flavor}#{EXT_TAR_GZ}"
   end
 
-  def self.get_remote_deploy_artifact_key(project:, build_number:, target:, environment:, flavor:)
+  def self.get_remote_deploy_artifact_key(project:, build_number:, name:, flavor:)
     # NOTE(joshk): If the naming format changes, it represents a breaking
     # change where all past clients will not be able to download new builds and
     # new clients will not be able to download old builds. Change with caution.
-    "#{project}/#{build_number}/#{build_deploy_artifact_name(target: target, environment: environment, flavor: flavor)}"
+    "#{project}/#{build_number}/#{build_deploy_artifact_name(name: name, flavor: flavor)}"
   end
 
-  def self.get_remote_deploy_artifact_url(project:, build_number:, target:, environment:, flavor:)
+  def self.get_remote_deploy_artifact_url(project:, build_number:, name:, flavor:)
     if build_number == 'latest'
       build_number = get_latest_build_number(project)
     end
     [
       Artifactory.endpoint,
       ARTIFACTORY_REPO,
-      get_remote_deploy_artifact_key(project: project, build_number: build_number, target: target, environment: environment, flavor: flavor),
+      get_remote_deploy_artifact_key(project: project, build_number: build_number, flavor: flavor, name: name),
     ].join('/')
   end
 

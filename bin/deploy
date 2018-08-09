@@ -36,9 +36,8 @@ Dir.mktmpdir { |tmpdir|
       input_path: KubeDeployTools.get_remote_deploy_artifact_url(
         project: options.project,
         build_number: options.build_number,
-        target: options.target,
-        environment: options.environment,
         flavor: options.flavor,
+        name: options.artifact_name,
       ),
       output_dir_path: tmpdir,
       pre_apply_hook: options.pre_apply_hook

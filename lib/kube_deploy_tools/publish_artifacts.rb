@@ -16,9 +16,10 @@ module KubeDeployTools
       unless File.file?(manifest)
         raise "Can't read deploy manifest: #{manifest}"
       end
-
       # XXX(joshk): Can't use YAML.load_file as it is mocked in spec test.
-      @manifest = YAML.load(File.read(manifest)).fetch('deploy')
+      config = YAML.load(File.read(manifest))
+      @artifacts = config.fetch('artifacts')
+      @flavors = config.fetch('flavors')
       @output_dir = output_dir
       @extra_files = extra_files
 
@@ -37,25 +38,20 @@ module KubeDeployTools
     end
 
     def publish()
-      clusters = @manifest.fetch('clusters')
-      flavors = @manifest.fetch('flavors')
-      clusters.each do |c|
-        target = c.fetch('target')
-        env = c.fetch('environment')
+      @artifacts.each do |c|
+        name = c.fetch('name')
         # Allow deploy.yml to gate certain flavors to certain targets.
-        cluster_flavors = flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
+        cluster_flavors = @flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
         cluster_flavors.each do |flavor, _|
           tarball = KubeDeployTools.build_deploy_artifact_name(
-            target: target,
-            environment: env,
+            name: name,
             flavor: flavor
           )
           tarball_full_path = File.join(@output_dir, tarball)
           artifactory_repo_key = KubeDeployTools.get_remote_deploy_artifact_key(
             project: @project,
             build_number: @build_number,
-            target: target,
-            environment: env,
+            name: name,
             flavor: flavor
           )
 

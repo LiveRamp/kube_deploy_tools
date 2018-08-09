@@ -43,14 +43,14 @@ describe KubeDeployTools::PublishArtifacts do
     # images.yaml, tarballs, and bare deploy.yml to test extra file
     # support
     expected_uploads = [
-      'manifests_colo-service_prod_default.tar.gz',
-      'manifests_colo-service_staging_default.tar.gz',
-      'manifests_local_staging_default.tar.gz',
-      'manifests_us-east-1_prod_default.tar.gz',
-      'manifests_us-east-1_staging_default.tar.gz',
-      'manifests_ingestion_prod_default.tar.gz',
-      'manifests_pippio-production_prod_default.tar.gz',
-      'manifests_platforms_prod_default.tar.gz',
+      'manifests_colo-service-prod_default.tar.gz',
+      'manifests_colo-service-staging_default.tar.gz',
+      'manifests_local_default.tar.gz',
+      'manifests_us-east-1-prod_default.tar.gz',
+      'manifests_us-east-1-staging_default.tar.gz',
+      'manifests_ingestion-prod_default.tar.gz',
+      'manifests_pippio-production_default.tar.gz',
+      'manifests_platforms-prod_default.tar.gz',
       'deploy.yml',
       'images.yaml',
     ]
