@@ -1,0 +1,15 @@
+<% return unless config.fetch('test_bool', false) %>
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: other
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: other
+        image: other
+        imagePullPolicy: <%= config["pull_policy"] %>
+

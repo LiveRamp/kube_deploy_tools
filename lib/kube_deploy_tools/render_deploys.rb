@@ -7,6 +7,7 @@ require 'yaml'
 require 'kube_deploy_tools/render_deploys_hook'
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/deploy_config_file'
+require 'kube_deploy_tools/file_filter'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/tag'
 
@@ -63,6 +64,8 @@ module KubeDeployTools
           full_flags = cluster_flags.clone
           full_flags.merge!(render_erb_flags(flavor_flags)) if flavor_flags
 
+          file_filters = FileFilter.filters_from_hash(c) + @file_filters
+
           # Call individual templating hook with the rendered configuration
           # and a prefix to place all the files. Run many hooks in the
           # background.
@@ -79,7 +82,7 @@ module KubeDeployTools
             hooks.each do |hook|
               if hook == DEFAULT_HOOK_SCRIPT_LABEL
                 # TODO(joshk): render_deploys method should take a hash for testability
-                KubeDeployTools::RenderDeploysHook.render_deploys(rendered.path, @input_dir, flavor_dir, @file_filters)
+                KubeDeployTools::RenderDeploysHook.render_deploys(rendered.path, @input_dir, flavor_dir, file_filters)
               else
                 Shellrunner.check_call(hook, rendered.path, @input_dir, flavor_dir)
               end

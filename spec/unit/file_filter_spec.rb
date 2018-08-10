@@ -124,4 +124,27 @@ describe KubeDeployTools::FileFilter do
       end
     end
   end
+
+  describe '.filters_from_hash' do
+    it 'converts a hash with filter keys into an array of filter tuples' do
+      h = {
+        'cloud' => 'blah',
+        'environment' => 'blah',
+        'include_dir' => ['dir1/', 'dir2/'],
+        'exclude_dir' => 'dir3/'
+      }
+
+      expect(subject.filters_from_hash(h)).to eq(
+        [['include_dir', 'dir1/'], ['include_dir', 'dir2/'], ['exclude_dir', 'dir3/']]
+      )
+    end
+
+    it 'handles missing filter keys properly' do
+      h = {
+        'include_dir' => ['dir1/']
+      }
+
+      expect(subject.filters_from_hash(h)).to eq [['include_dir', 'dir1/']]
+    end
+  end
 end

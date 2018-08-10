@@ -3,6 +3,7 @@ require 'kube_deploy_tools/formatted_logger'
 # frozen_string_literal: true
 module KubeDeployTools
   module FileFilter
+    VALID_FILTER_NAMES = %w(include_dir exclude_dir)
 
     def self.filter_files(filters:, files_path:)
       all_files = Dir[File.join(files_path, '**', '*')].to_set
@@ -31,6 +32,12 @@ module KubeDeployTools
       end
       Logger.debug("\nYour filter generates following paths: \n#{filtered_files.to_a.join("\n")}")
       filtered_files
+    end
+
+    def self.filters_from_hash(h)
+      VALID_FILTER_NAMES.flat_map do |filter_name|
+        Array(h[filter_name]).map { |dir_path| [filter_name, dir_path] }
+      end
     end
   end
 end

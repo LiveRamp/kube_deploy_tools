@@ -69,6 +69,15 @@ artifacts:
       elasticsearch_hosts: elasticsearch
       kubernetes_major_version: '1'
       kubernetes_minor_version: '8'
+  - name: filtered-artifact
+    include_dir:
+      - nginx/
+    flags:
+      target: us-east-1
+      environment: staging
+      cloud: aws
+      image_registry: ''
+      pull_policy: IfNotPresent
 flavors:
   default:
     test_bool: true

@@ -51,6 +51,7 @@ describe KubeDeployTools::PublishArtifacts do
       'manifests_ingestion-prod_default.tar.gz',
       'manifests_pippio-production_default.tar.gz',
       'manifests_platforms-prod_default.tar.gz',
+      'manifests_filtered-artifact_default.tar.gz',
       'deploy.yml',
       'images.yaml',
     ]
