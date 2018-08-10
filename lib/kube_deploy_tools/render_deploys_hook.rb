@@ -49,9 +49,20 @@ module KubeDeployTools
         puts output_file
 
         # Bonus: YAML validate the output.
+        # * Must be valid YAML
+        # * If .kind is a type that takes .metadata.namespace, then require
+        #   that .metadata.namespace is present.
         begin
           if File.file?(output_file)
-            YAML.load_file(output_file)
+            data = YAML.load_file(output_file)
+            # XXX(joshk): Non-exhaustive list.
+            must_have_ns = [
+              'ConfigMap', 'CronJob', 'DaemonSet', 'Deployment', 'Endpoints', 'HorizontalPodAutoscaler',
+              'Ingress', 'PersistentVolumeClaim', 'PodDisruptionBudget', 'ServiceAccount', 'Secret', 'Service'
+            ]
+            if must_have_ns.member?(data.fetch('kind'))
+              raise "Rendered Kubernetes template missing a .metadata.namespace: #{yml}" if data.fetch('metadata', {}).fetch('namespace', '').empty?
+            end
           end
         rescue => e
           raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"
