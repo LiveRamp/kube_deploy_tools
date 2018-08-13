@@ -12,13 +12,13 @@ artifacts:
       target: colo-service
       environment: prod
       cloud: colo
-      image_registry: ''
+      image_registry: ***REMOVED***
   - name: colo-service-staging
     flags:
       target: colo-service
       environment: staging
       cloud: colo
-      image_registry: ''
+      image_registry: ***REMOVED***
 flavors:
   default: {}
 image_registries:

@@ -37,7 +37,7 @@ Dir.mktmpdir { |tmpdir|
         project: options.project,
         build_number: options.build_number,
         flavor: options.flavor,
-        name: options.artifact_name,
+        name: options.artifact,
       ),
       output_dir_path: tmpdir,
       pre_apply_hook: options.pre_apply_hook
