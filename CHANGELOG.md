@@ -108,8 +108,8 @@ templater
 toolbox
 ```
 
-* The `config['image_tag']` value no longer contains the current branch nor
-  Jenkins build id, only the git sha.
+* The `config['image_tag']` value no longer contains the current branch,
+  only the git sha and Jenkins build id.
 * `toolbox` is no longer part of KDT. It relied on a data model which we
   have discarded in 2.x (the concept of target/environment being linked
   to a specific registry.)
