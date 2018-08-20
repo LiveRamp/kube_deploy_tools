@@ -55,6 +55,36 @@ describe KubeDeployTools::KubernetesResource do
     let(:logger) { instance_double("logger", :warn => {}) }
     let(:filepath) { KUBERNETES_DEPLOYMENT_RESOURCE }
 
+    # In kubectl version <= 1.7, `kubectl apply view-last-applied` may
+    # produces an invalid JSON output, which we must sanitize.
+    #
+    # The upstream fix is in kubect >= 1.8:
+    # https://github.com/kubernetes/kubernetes/commit/7c656ab4d2ca41e07db9f90c99ee360b0d48c651
+    it "syncs a Deployment with error" do
+      remote_replicas = 21
+
+      allow(kubectl).to receive(:run).and_return(
+        # kubectl get
+        ['{ "spec": { "replicas": 21 } }', nil, status],
+        # kubectl apply view-last-applied
+        [
+          '{
+            "spec": {
+              "strategy": {
+                "rollingUpdate": {
+                  "maxUnavailable": "50%!"(MISSING)
+                },
+                "type": "RollingUpdate"
+              },
+              "replicas": 21
+            }
+          }', nil, status],
+      )
+
+      resource.sync
+      expect(resource.remote_replicas).to eq(remote_replicas)
+    end
+
     it "syncs a Deployment" do
       remote_replicas = 21
 

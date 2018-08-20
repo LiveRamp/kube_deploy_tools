@@ -25,6 +25,7 @@ module KubeDeployTools
 
       raw_json, _err, st = @kubectl.run("apply", "view-last-applied", "-f", filepath, "--output=json", print_cmd: false, timeout: TIMEOUT)
       if st.success?
+        raw_json = fix_kubectl_apply_view_last_applied_output(raw_json)
         deployment_data = JSON.parse(raw_json)
         @recorded_replicas = deployment_data["spec"]["replicas"]
       end
@@ -43,4 +44,13 @@ module KubeDeployTools
       end
     end
   end
+end
+
+# In kubectl version <= 1.7, `kubectl apply view-last-applied` may
+# produces an invalid JSON output, which we must sanitize.
+#
+# The upstream fix is in kubect >= 1.8:
+# https://github.com/kubernetes/kubernetes/commit/7c656ab4d2ca41e07db9f90c99ee360b0d48c651
+def fix_kubectl_apply_view_last_applied_output(json)
+  json.sub(/\!\"\(MISSING\)/, '"')
 end
