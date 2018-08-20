@@ -18,8 +18,8 @@ module KubeDeployTools
       end
       # XXX(joshk): Can't use YAML.load_file as it is mocked in spec test.
       config = YAML.load(File.read(manifest))
-      @artifacts = config.fetch('artifacts')
-      @flavors = config.fetch('flavors')
+      @artifacts = config.fetch('artifacts', [])
+      @flavors = config.fetch('flavors', {})
       @output_dir = output_dir
       @extra_files = extra_files
 

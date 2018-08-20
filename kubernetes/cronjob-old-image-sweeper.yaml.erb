@@ -27,6 +27,7 @@ spec:
             - name: old-images-sweeper
               image: <%= config["image_registry"] %>/kube_deploy_tools:<%= config["image_tag"] %>
               args: [
+                'kdt',
                 'sweeper',
                 '/config/sweeper.yaml',
                 <% if config["environment"] == "staging" || config['cloud'] == 'local' %>

@@ -37,28 +37,33 @@ module KubeDeployTools
     end
 
     def remove_images
-      if not File.exists? @config_file
-        KubeDeployTools::Logger.error("This config file does not exist: #{@config_file}")
-      end
-
       @configs.each do |config|
-        retention = human_duration_in_seconds(config['retention'])
-        repo = config['repository']
-        prefixes = config['prefix']
-        remove(repo, retention, prefixes)
+        artifactory_builds, built_artifacts_files = search_artifactory(config)
+        # Need to fetch the other images before removing the files from artifactory
+        images = fetch_built_artifacts_files(built_artifacts_files)
+        remove_from_gcp(images.fetch('gcp', []))
+        remove_from_ecr(images.fetch('aws', []))
+        remove_from_artifactory(artifactory_builds)
       end
     end
 
     # Find the containers that are past their expiry time
     # on artifactory
-    def search_artifactory(retention, repo_name, prefixes)
-      time_now = Time.now
-      to = (time_now - retention).to_i * 1000
-      from = 0
+    def search_artifactory(config)
+      largest_retention = 0
+      config.fetch('prefixes').each do |config|
+        this_retention = human_duration_in_seconds(config['retention'])
+        if this_retention > largest_retention
+          largest_retention = this_retention
+        end
+      end
 
-      http_path = "#{ARTIFACTORY_HOST}/api/search/creation"
-      uri = URI.parse(http_path)
-      uri.query = "to=#{to}&from=#{from}&repos=#{repo_name}"
+      repo_name = config.fetch('repository')
+      prefixes = config.fetch('prefixes')
+      to = (Time.now - largest_retention).to_i * 1000
+
+      uri = URI.parse("#{ARTIFACTORY_HOST}/api/search/creation")
+      uri.query = "to=#{to}&from=0&repos=#{repo_name}"
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Get.new(uri)
       request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
@@ -83,21 +88,30 @@ module KubeDeployTools
           build = uri_split[prefix_index + 1]
           file = uri_split[prefix_index + 2]
 
-          if not prefixes.include?(prefix)
-            next
-          end
+          created = DateTime.strptime(res['created'][0 .. 10], '%Y-%m-%d').to_time
+          config.fetch('prefixes', []).each do |item|
+            pattern = item.fetch('pattern')
+            retention = human_duration_in_seconds(item.fetch('retention'))
+            horizon = Time.now - retention
 
-          # Pull out the images.yaml files for reading
-          if file.eql? IMAGES_FILE
-            built_artifacts_files.push(uri_result)
-          end
+            if not File.fnmatch?(pattern, prefix)
+              Logger.debug "skip #{prefix} build #{build} did not match #{pattern}"
+            elsif created > horizon
+              Logger.debug "skip #{prefix} build #{build} horizon #{horizon} created #{created}"
+            else
+              # Pull out the images.yaml files for reading
+              if file.eql? IMAGES_FILE
+                built_artifacts_files.push(uri_result)
+              end
 
-          key = {'job' => prefix, 'build' => build, 'repository' => repo_name}
-          if images_to_remove.has_key?(key)
-            images_to_remove[key]['files'].push(file)
-          else
-            created = DateTime.strptime(res['created'][0 .. 10], '%Y-%m-%d')
-            images_to_remove[key] = {'files' => [file], 'created' => created}
+              key = {'job' => prefix, 'build' => build, 'repository' => repo_name}
+              Logger.debug "remove #{key} horizon #{horizon} created #{created}"
+              if images_to_remove.has_key?(key)
+                images_to_remove[key]['files'].push(file)
+              else
+                images_to_remove[key] = {'files' => [file], 'created' => created}
+              end
+            end
           end
         end
       end
@@ -115,14 +129,22 @@ module KubeDeployTools
 
       built_artifacts_files.each do |image_uri|
         image_yaml = nil
+        # The download file is not at ARTIFACTORY_HOST/api/storage/<BUILD_INFO>
+        # so need to remove the 'api/storage' since at ARTIFACTORY_HOST/<BUILD_INFO>
+        # Using open-uri reads
+        image_uri = image_uri.sub('api/storage/', '')
+        images_file = open(image_uri)
         begin
-          # The download file is not at ARTIFACTORY_HOST/api/storage/<BUILD_INFO>
-          # so need to remove the 'api/storage' since at ARTIFACTORY_HOST/<BUILD_INFO>
-          # Using open-uri reads
-          images_file = open(image_uri.sub('api/storage/', ''))
           image_yaml = YAML.load(images_file.read)
         rescue OpenURI::HTTPError => e
           Logger.error("Error in reading file #{image_uri}: #{e.message}")
+          next
+        end
+
+        # Some YAML files are blank, because Ruby, this returns 'false'
+        # which wouldn't be a valid file anyway so just skip it.
+        if image_yaml == false
+          Logger.warn("Invalid images.yaml file: #{image_uri}, skipping")
           next
         end
 
@@ -153,10 +175,14 @@ module KubeDeployTools
 
         # This is to remove the folder which the files were in once all the files
         # are deleted
-        files['files'].push(' ')
+        files['files'].push(nil)
 
         files['files'].each do |file|
-          file_path = file.strip.empty? ? '' : "/#{file}"
+          if file.nil?
+            file_path = ''
+          else
+            file_path = "/#{file}"
+          end
           remove_path = "#{ARTIFACTORY_HOST}/#{build_path}#{file_path}"
 
           if @dryrun
@@ -202,15 +228,6 @@ module KubeDeployTools
         image = repo_image.last
         aws_driver = driver.delete_image(repository, image, @dryrun)
       end
-    end
-
-    def remove(repository, retention, prefixes)
-      artifactory_builds, built_artifacts_files = search_artifactory(retention, repository, prefixes)
-      # Need to fetch the other images before removing the files from artifactory
-      images = fetch_built_artifacts_files(built_artifacts_files)
-      remove_from_gcp(images.fetch('gcp', []))
-      remove_from_ecr(images.fetch('aws', []))
-      remove_from_artifactory(artifactory_builds)
     end
 
     # Function to convert the config times of format "<>M" or "<>d"

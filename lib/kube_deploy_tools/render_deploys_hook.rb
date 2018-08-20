@@ -47,8 +47,6 @@ module KubeDeployTools
           FileUtils.copy(yml, output_file)
         end
 
-        puts output_file
-
         # Bonus: YAML validate the output.
         # * Must be valid YAML
         # * If .kind is a type that takes .metadata.namespace, then require
