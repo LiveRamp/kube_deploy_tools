@@ -1,5 +1,10 @@
 # kube_deploy_tools
 
+<aside class="notice">
+You're viewing docs for v2.x. To view docs for v1.4.x, please see:
+https://git.***REMOVED***/OpsRepos/kube_deploy_tools/tree/release-1.4
+</aside>
+
 LiveRamp Kubernetes build and release tools for:
 - tagging and publishing Docker images to our image registry;
 - rendering Kubernetes manifests with ERB;
