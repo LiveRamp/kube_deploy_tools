@@ -1,3 +1,5 @@
+require 'json'
+
 require_relative 'base'
 require_relative '../image'
 require 'kube_deploy_tools/shellrunner'
@@ -18,15 +20,41 @@ module KubeDeployTools
     def unauthorize
     end
 
-    def delete_image(repository, image, dryrun)
-     if dryrun
-       Logger.info("DRYRUN: delete aws repository=#{repository} region=#{@registry.config.fetch('region')} imageTag=#{image}")
-     else
-       Shellrunner.run_call('aws', 'ecr', 'batch-delete-image',
-         '--repository-name', repository,
-         '--region', @registry.config.fetch('region'),
-         '--image-ids', "imageTag=#{image}")
-     end
+    def delete_image(image, dryrun)
+      # In the AWS driver, the 'delete many' primitive is the primary one.
+      delete_images([image], dryrun)
+    end
+
+    def delete_images(images, dryrun)
+      # Aggregate images by repository and call aws ecr batch-delete-image
+      # once per repository.
+      ids_by_repository = {}
+      images.each do |image|
+        repository, tag = split_full_image_id(image)
+        item = {'imageTag': tag}
+        if ids_by_repository[repository].nil?
+          ids_by_repository[repository] = [item]
+        else
+          ids_by_repository[repository].push(item)
+        end
+      end
+
+      # JSON format documented here:
+      # https://docs.aws.amazon.com/cli/latest/reference/ecr/batch-delete-image.html
+      ids_by_repository.each do |repository, image_ids|
+        cmd = [
+          'aws', 'ecr', 'batch-delete-image',
+          '--repository-name', repository,
+          '--region', @registry.config.fetch('region'),
+          '--image-ids', image_ids.to_json,
+        ]
+
+        if dryrun
+          Logger.info("Would run: #{cmd}")
+        else
+          Shellrunner.run_call(*cmd)
+        end
+      end
     end
 
     private
@@ -54,6 +82,21 @@ module KubeDeployTools
 
     def create_repository(repository)
       Shellrunner.check_call('aws', 'ecr', 'create-repository', '--repository-name', repository, '--region', @registry.config.fetch('region'))
+    end
+
+    def split_full_image_id(image_id)
+      # Create syntax suitable for aws ecr subcommand.
+      # Example: 12345678.dkr.ecr.amazonaws.com/my_app:deadbeef-123
+      # splits into ('my_app', 'deadbeef-123') after verifying that the
+      # prefix is the expected one for this driver instance.
+      repo_with_prefix, tag = image_id.split(':', 2)
+      prefix, repository = repo_with_prefix.split('/', 2)
+
+      # Sanity check, as the resultant command line uses the region to specify
+      # the prefix implicitly.
+      raise "This driver can't delete images from #{prefix}, only #{@registry.prefix}" unless prefix == @registry.prefix
+
+      return repository, tag
     end
   end
 end

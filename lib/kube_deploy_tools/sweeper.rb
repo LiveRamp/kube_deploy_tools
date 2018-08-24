@@ -39,10 +39,13 @@ module KubeDeployTools
     def remove_images
       @configs.each do |config|
         artifactory_builds, built_artifacts_files = search_artifactory(config)
+
         # Need to fetch the other images before removing the files from artifactory
         images = fetch_built_artifacts_files(built_artifacts_files)
-        remove_from_gcp(images.fetch('gcp', []))
-        remove_from_ecr(images.fetch('aws', []))
+        @drivers.fetch('gcp').delete_images(images.fetch('gcp', []), @dryrun)
+        @drivers.fetch('aws').delete_images(images.fetch('aws', []), @dryrun)
+
+        # On success of all image deletions, now safe to trash the metadata.
         remove_from_artifactory(artifactory_builds)
       end
     end
@@ -201,32 +204,6 @@ module KubeDeployTools
             end
           end
         end
-      end
-    end
-
-    # Remove the expired container images from GCR
-    # Link: https://cloud.google.com/container-registry/docs/managing#deleting_images
-    def remove_from_gcp(image_ids)
-      # TODO(joshk): Avoid hardcoding registry name as 'gcp'
-      driver = @drivers.fetch('gcp')
-      image_ids.each do |id|
-        # Need the id path to be [HOSTNAME]/[PROJECT-ID]/[IMAGE]<:[TAG]|@[DIGEST]>
-        driver.delete_image(id, @dryrun)
-      end
-    end
-
-    # Remove the expired containers images from ECR
-    # Link: https://docs.aws.amazon.com/AmazonECR/latest/userguide/delete_image.html
-    def remove_from_ecr(image_ids)
-      driver = @drivers.fetch('aws')
-      prefix = @registries.fetch('aws').prefix
-      image_ids.each do |img|
-        # Need the image tag and repository, not full path of the image
-        val = img.partition "#{prefix}/"
-        repo_image = val.last.rpartition(':')
-        repository = repo_image.first
-        image = repo_image.last
-        aws_driver = driver.delete_image(repository, image, @dryrun)
       end
     end
 

@@ -16,7 +16,7 @@ module KubeDeployTools
        @registry.prefix]
     end
 
-    def delete_image(repository, image, dryrun)
+    def delete_image(image, dryrun)
       raise 'not implemented'
     end
 

@@ -33,6 +33,17 @@ module KubeDeployTools
         def unauthorize_command
           raise "#{self.class}#unauthorize_command needs explicit implementation"
         end
+
+        def delete_images(images, dryrun)
+          # Naive default implementation.
+          images.each do |image|
+            delete_image(image, dryrun)
+          end
+        end
+
+        def delete_image(image, dryrun)
+          raise "#{self.class}#delete_image needs explicit implementation"
+        end
       end
     end
   end
