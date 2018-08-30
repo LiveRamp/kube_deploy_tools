@@ -90,14 +90,10 @@ describe KubeDeployTools::PublishContainer do
       let(:emptyActivation) { '' }
 
       it 'works' do
-        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
-        expect(shellrunner).to receive(:run_call).with('gcloud', 'config', 'list','account','--format', "value(core.account)") do
-          [emptyActivation, nil, double(:status, success?: false)]
-        end
-
         ENV['GOOGLE_APPLICATION_CREDENTIALS'] = '/no/need/to/exist/kdt-example.json'
+
+        expect(shellrunner).to receive(:check_call).with('docker', 'tag', any_args).exactly(images.length).times
         expect(shellrunner).to receive(:run_call).with('gcloud', 'auth', 'activate-service-account', '--key-file', ENV['GOOGLE_APPLICATION_CREDENTIALS']).once
-        expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
         expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/kdt-example/project1:releaseTag').once
 
         publisher.publish
@@ -125,7 +121,6 @@ describe KubeDeployTools::PublishContainer do
         end
         # GCP
         expect(shellrunner).to receive(:check_call).with('docker', 'tag', 'my-registry/project1:latest', 'gcr.io/kdt-example/project1:releaseTag').once
-        expect(shellrunner).to receive(:check_call).with('gcloud', 'docker', '-a', print_cmd: false).once
         expect(shellrunner).to receive(:check_call).with('docker', 'push', '123456789.dkr.ecr.us-west-2.amazonaws.com/project1:releaseTag').exactly(images.length).times
         expect(shellrunner).to receive(:check_call).with('docker', 'push', 'gcr.io/kdt-example/project1:releaseTag').exactly(images.length).times
 

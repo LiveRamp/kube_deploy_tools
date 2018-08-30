@@ -3,13 +3,38 @@ require 'tmpdir'
 
 module KubeDeployTools
   class ImageRegistry::Driver::Gcp < ImageRegistry::Driver::Base
-    @gcloud_config_dir
-    def authorize_command
-      if check_if_activated[0].empty?
-        activation_result = activate_service_account
-        raise "Failed to activate service account" unless activation_result[2].success?
+    GCR_DOCKER_CONFIG = '{"credHelpers": {"gcr.io": "gcloud"}}'
+
+    def initialize(registry:)
+      super
+
+      @gcloud_config_dir = Dir.mktmpdir
+      @activated = false
+
+      # Always prepare a fake Docker config for pushing using the
+      # credential helper.
+      ENV['DOCKER_CONFIG'] = @gcloud_config_dir
+      File.open(File.join(@gcloud_config_dir, 'config.json'), 'w') do |f|
+        f.write(GCR_DOCKER_CONFIG)
       end
-      ['gcloud', 'docker', '-a']
+    end
+
+    def authorize
+      # Always prefer and activate a service account under a protected namespace if present.
+      if @activated
+        return
+      elsif ENV.member?('GOOGLE_APPLICATION_CREDENTIALS')
+        raise "Failed to activate service account" unless activate_service_account()[2].success?
+        @activated = true
+      else
+        user = current_user
+        if ! user.empty?
+          Logger.info "Skipping Google activation, using current user #{user}"
+          @activated = true
+        else
+          raise 'No usable Google authorization for pushing images; specify GOOGLE_APPLICATION_CREDENTIALS?'
+        end
+      end
     end
 
     # Delete temporary config dir for gcloud authentication
@@ -31,17 +56,17 @@ module KubeDeployTools
     private
     # activate gcloud with svc json keys on Jenkins
     def activate_service_account
-      keypath = ENV['GOOGLE_APPLICATION_CREDENTIALS']
-      raise "Failed to retrieve svc key" if keypath.nil?
-      # Authenticate gcloud using a tmp config dir
-      @gcloud_config_dir = Dir.mktmpdir
+      keypath = ENV.fetch('GOOGLE_APPLICATION_CREDENTIALS')
+      Logger.info("Authorizing using temp directory #{@gcloud_config_dir} and credentials #{keypath}")
+
       ENV['XDG_CONFIG_HOME'] = @gcloud_config_dir
       ENV['CLOUDSDK_CONFIG']= File.join(@gcloud_config_dir, 'gcloud')
+
       Shellrunner.run_call('gcloud', 'auth', 'activate-service-account', '--key-file', keypath)
     end
 
-    def check_if_activated
-      Shellrunner.run_call('gcloud', 'config', 'list', 'account', '--format', "value(core.account)")
+    def current_user
+      Shellrunner.run_call('gcloud', 'config', 'list', 'account', '--format', "value(core.account)")[0]
     end
   end
 end
