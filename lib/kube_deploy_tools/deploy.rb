@@ -100,7 +100,7 @@ module KubeDeployTools
     def read_resource_definition(filepath)
       file_content = File.read(filepath)
       YAML.load_stream(file_content) do |doc|
-        yield doc unless doc.empty?
+        yield doc if !doc.nil? && !doc.empty?
       end
     rescue Psych::SyntaxError => e
       debug_msg = <<~INFO
