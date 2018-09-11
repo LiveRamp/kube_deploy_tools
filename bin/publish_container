@@ -13,8 +13,6 @@
 # ***REMOVED***/image1:my-custom-tag.
 # Default values for every option are probably what you want to use most of the time.
 
-require 'erb'
-require 'yaml'
 require 'optparse'
 
 require 'kube_deploy_tools/publish_container'

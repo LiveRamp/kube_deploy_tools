@@ -3,7 +3,6 @@ require 'set'
 require 'kube_deploy_tools/publish_artifacts'
 
 MANIFEST_FILE='spec/resources/deploy.yml'
-OUTPUT_DIR='fake/kubernetes/'
 PROJECT='my-project'
 
 describe KubeDeployTools::PublishArtifacts do
@@ -12,12 +11,6 @@ describe KubeDeployTools::PublishArtifacts do
   it 'publishes artifacts according to deploy.yml' do
     KubeDeployTools::Logger.logger = logger
     KubeDeployTools::PROJECT = PROJECT
-
-    # Stub out artifacts
-    allow(File).to receive(:exist?).and_return(true)
-
-    # Stub out YAML load
-    allow(YAML).to receive(:load_file).and_return({})
 
     # Mock artifact upload
     uploads = Set.new
@@ -31,15 +24,6 @@ describe KubeDeployTools::PublishArtifacts do
       uploads.add(File.basename(path))
     end
 
-    KubeDeployTools::PublishArtifacts.new(
-      # This extra file happens to be a yml file, but any existent file
-      # can be put here. This is just convenient so we don't need to
-      # create an extra data fixture in the repo.
-      extra_files: [MANIFEST_FILE],
-      manifest: MANIFEST_FILE,
-      output_dir: OUTPUT_DIR,
-    ).publish
-
     # images.yaml, tarballs, and bare deploy.yml to test extra file
     # support
     expected_uploads = [
@@ -52,10 +36,26 @@ describe KubeDeployTools::PublishArtifacts do
       'manifests_pippio-production_default.tar.gz',
       'manifests_platforms-prod_default.tar.gz',
       'manifests_filtered-artifact_default.tar.gz',
-      'deploy.yml',
       'images.yaml',
     ]
-    expect(uploads).to contain_exactly(*expected_uploads)
+
+    Dir.mktmpdir do |dir|
+      expected_uploads.each do |f|
+        FileUtils.touch File.join(dir, f)
+      end
+
+      KubeDeployTools::PublishArtifacts.new(
+        # This extra file happens to be a yml file, but any existent file
+        # can be put here. This is just convenient so we don't need to
+        # create an extra data fixture in the repo.
+        extra_files: [MANIFEST_FILE],
+        manifest: MANIFEST_FILE,
+        output_dir: dir,
+      ).publish
+    end
+
+    all_uploads = expected_uploads + ['deploy.yml']
+    expect(uploads).to contain_exactly(*all_uploads)
   end
 end
 

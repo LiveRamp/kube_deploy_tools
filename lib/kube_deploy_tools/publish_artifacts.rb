@@ -3,23 +3,15 @@ require 'uri'
 require 'yaml'
 
 require 'kube_deploy_tools/built_artifacts_file'
+require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/object'
 
 module KubeDeployTools
   class PublishArtifacts
-    def initialize(
-      manifest:,
-      output_dir:,
-      extra_files:)
-      unless File.file?(manifest)
-        raise "Can't read deploy manifest: #{manifest}"
-      end
-      # XXX(joshk): Can't use YAML.load_file as it is mocked in spec test.
-      config = YAML.load(File.read(manifest))
-      @artifacts = config.fetch('artifacts', [])
-      @flavors = config.fetch('flavors', {})
+    def initialize(manifest:, output_dir:, extra_files:)
+      @config = DeployConfigFile.new(manifest)
       @output_dir = output_dir
       @extra_files = extra_files
 
@@ -38,10 +30,10 @@ module KubeDeployTools
     end
 
     def publish()
-      @artifacts.each do |c|
+      @config.artifacts.each do |c|
         name = c.fetch('name')
         # Allow deploy.yml to gate certain flavors to certain targets.
-        cluster_flavors = @flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
+        cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
         cluster_flavors.each do |flavor, _|
           tarball = KubeDeployTools.build_deploy_artifact_name(
             name: name,

@@ -21,33 +21,22 @@ module KubeDeployTools
   }.freeze
   class RenderDeploys
     def initialize(manifest, input_dir, output_dir, file_filters = [])
-
-      unless File.file?(manifest)
-        raise "Can't read deploy manifest: #{manifest}"
-      end
-
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
+
+      @config = DeployConfigFile.new(manifest)
+      @config.validate!
 
       @input_dir = input_dir
       @output_dir = output_dir
       FileUtils.mkdir_p @output_dir
 
-      @config = DeployConfigFile.new(manifest)
-      # TODO(joshk): Get rid of this version and use only DeployConfigFile instance
-      @manifest = YAML.load_file(manifest)
-      validate_manifest
-
       @file_filters = file_filters
     end
 
     def render
-      artifacts = @manifest.fetch('artifacts')
-      flavors = @manifest.fetch('flavors')
-
-      hooks = @manifest['hooks'] || [DEFAULT_HOOK_SCRIPT_LABEL]
       permutations = {}
-      artifacts.each do |c|
+      @config.artifacts.each do |c|
         artifact = c.fetch('name')
 
         # Get metadata for this target/environment pair from manifest
@@ -59,7 +48,7 @@ module KubeDeployTools
         cluster_flags.merge!(render_erb_flags(c.fetch('flags', {})))
 
         # Allow deploy.yml to gate certain flavors to certain targets.
-        cluster_flavors = flavors.reject { |key, value| !(c['flavors'].nil? or c['flavors'].include? key) }
+        cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
         cluster_flavors.each do |flavor, flavor_flags|
           full_flags = cluster_flags.clone
           full_flags.merge!(render_erb_flags(flavor_flags)) if flavor_flags
@@ -79,7 +68,7 @@ module KubeDeployTools
             rendered.flush
 
             # Run every hook sequentially. 'default' hook is special.
-            hooks.each do |hook|
+            @config.hooks.each do |hook|
               if hook == DEFAULT_HOOK_SCRIPT_LABEL
                 # TODO(joshk): render_deploys method should take a hash for testability
                 KubeDeployTools::RenderDeploysHook.render_deploys(rendered.path, @input_dir, flavor_dir, file_filters)
@@ -122,19 +111,6 @@ module KubeDeployTools
       end
 
       result
-    end
-
-    def validate_manifest
-      artifacts = @manifest.fetch('artifacts')
-      flavors = @manifest.fetch('flavors')
-
-      unless artifacts.size > 0
-        raise 'Must support deployment to at least one artifact'
-      end
-
-      unless flavors.size > 0
-        raise 'Must support at least one flavor (try "_default": {})'
-      end
     end
   end
 end
