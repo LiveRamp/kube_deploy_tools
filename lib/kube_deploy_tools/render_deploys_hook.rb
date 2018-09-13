@@ -71,7 +71,7 @@ module KubeDeployTools
 
     def self.get_valid_files(file_filters, input_dir)
       filtered_files = FileFilter.filter_files(filters: file_filters, files_path: input_dir)
-      filtered_files.select { |f| f =~ /\.y.ml[^\/]*$/ }
+      filtered_files.select { |f| f =~ /\.y.?ml[^\/]*$/ }
     end
   end
 end
