@@ -1,22 +1,27 @@
 
-# Setup
+- [Repository Setup](#repository-setup)
+  - [Install the Gem](#install-the-gem)
+  - [Create deploy.yml](#create-deployyml)
+  - [Create Kubernetes manifests in kubernetes/](#create-kubernetes-manifests-in-kubernetes)
+  - [Directory structure](#directory-structure)
+- [Jenkins Job Setup](#jenkins-job-setup)
+  - [Java Projects](#java-projects)
+    - [Jenkinsfiles Integration](#jenkinsfiles-integration)
+    - [Removing Deprecated pom.xml Integration](#removing-deprecated-pomxml-integration)
+    - [Further Java References](#further-java-references)
+  - [Non-Java projects](#non-java-projects)
+    - [Jenkins UI build steps](#jenkins-ui-build-steps)
+      - [(1) The Jenkins build should run on Docker-enabled Jenkins workers.](#1-the-jenkins-build-should-run-on-docker-enabled-jenkins-workers)
+      - [(2) Jenkins credentials are required for Github auth on `docker2` machines below.](#2-jenkins-credentials-are-required-for-github-auth-on-docker2-machines-below)
+      - [(3) Jenkins credentials are required to publish your project's images to AWS ECR](#3-jenkins-credentials-are-required-to-publish-your-projects-images-to-aws-ecr)
+
+# Repository Setup
 
 The instructions below describe how to set up kube_deploy_tools in any generic
 project build. Note that instructions are specified for Java projects where applicable.
 
 After setup, see [documentation/deploy.md](deploy.md) for deploying your
 project manually and setting up your Pentagon deploy.
-
-* [Install the Gem](#install-the-gem)
-* [Create deploy.yml](#create-deployyml)
-* [Create Kubernetes manifests in kubernetes/](#create-kubernetes-manifests-in-kubernetes)
-* [Directory structure](#directory-structure)
-* [Jenkins build script](#jenkins-build-script)
-* [Java projects](#java-projects)
-  + [Java single-module projects](#java-single-module-projects)
-  + [Java multi-module projects](#java-multi-module-projects)
-  + [How do the Maven targets work?](#how-do-the-maven-targets-work)
-* [Jenkins UI build steps](#jenkins-ui-build-steps)
 
 ## Install the Gem
 
@@ -111,21 +116,13 @@ my-project/
   .gitignore                    # the build/ directory is git ignored
 ```
 
-## Jenkins build script
+# Jenkins Job Setup
 
-Cross reference the KB page
-[Migrating Backend Applications to Kubernetes](https://support.***REMOVED***/display/CI/Migrating+Backend+Applications+to+Kubernetes)
-with `java_project_tools`, or `jpt`.
-
-Jenkins build steps are required
+Jenkins job steps are required
 1. to build, tag, and push all of your Docker images, and
 2. to render and push all Kubernetes manifests.
 
-For Java projects, see the Java projects section below for how to add these
-build tasks to your Maven build.
-
-For a generic, non-Java project, below are the additional commands required for your
-build.
+These KDT commands are required to run at the end of your Jenkins job.
 
 ```bash
 # In your project's Jenkins build script
@@ -140,159 +137,54 @@ bundle exec kdt render_deploys
 bundle exec kdt publish_artifacts
 ```
 
-See [documentation/deploy.md](deploy.md) for more on this topic.
+For Java projects, see the Jenkinsfile setup below, which will run the commands above.
 
-## Java projects
+For non-Java projects, include these KDT commands and see the non-Java project setup below.
 
-Skip down to the Jenkins build steps section below for non-Java projects.
+## Java Projects
 
-For single- and multi-module Java projects, a couple of further changes are
-necessary.
+### Jenkinsfiles Integration
+1. See steps in [MasterRepos/jenkins_pipelines](https://git.***REMOVED***/MasterRepos/jenkins_pipelines/blob/master/README.md) to add a Jenkinsfile to your repository
 
-For examples, see
-- the single-module project [taxonomy_service](https://git.***REMOVED***/MasterRepos/taxonomy_service/pull/157/files), or
-- the multi-module project [validator_service](https://git.***REMOVED***/MasterRepos/validator_service/compare/959b1e1bf54bd17760b2dac40d5c619d1bfa5a94...bff6f4b99bf0dcae961faca5551e5bc9a61f6ea9?diff=unified&expand=1&name=bff6f4b99bf0dcae961faca5551e5bc9a61f6ea9).
+Note: The project name in the KDT deploy will change from using the Jenkinsfile. The new name will be `project=MasterRepos/${repository}/${branch_name}`.
+This can be found at the top of the Jenkins job that was run for the desired build.
 
-### Java single-module projects
 
-For single-module projects, add the following flags to enable tasks to publish
-Docker images to ECR and Kubernetes manifests to Artifactory:
+Cross reference the KB page
+[Jenkinsfiles](https://liveramp.atlassian.net/wiki/spaces/CI/pages/138249012/Jenkinsfiles)
 
-```xml
-  <properties>
-    <skip.kdt.docker>false</skip.kdt.docker>
-    <skip.kdt.kubernetes>false</skip.kdt.kubernetes>
-    <docker.images>${project.artifactId}</docker.images>
-  </properties>
+### Removing Deprecated pom.xml Integration
+
+1. Run `bundle update` in the root directory of the project
+2. Follow the steps in [MasterRepos/jenkins_pipelines](https://git.***REMOVED***/MasterRepos/jenkins_pipelines/blob/master/README.md) to add a Jenkinsfile to your repository
+3. In all the pom.xmls within the project remove any occurence of the below:
+
+```diff
+-    <skip.kdt.docker>false</skip.kdt.docker>
+-    <skip.kdt.kubernetes>false</skip.kdt.kubernetes>
+-    <docker.images>${project.artifactId}</docker.images>
 ```
 
-The `<docker.images>` property is a list of space-separated image names. For
-single-module projects, as done above, the Docker images built usually includes
-only one that matches the name of the project artifact. If necessary,
-add any further Docker images in your project.
+4. If it is a multi-module project:
+   * In the root directory, run the following
+   ```bash
+     mv *_kubernetes/kubernetes .
+     mv *_kubernetes/Gemfile .
+     rm -rf *_kubernetes
+   ```
+   * In pom.xml remove any references to the `*_kubernetes` module
+   * Now the structure of the root directory and files should mimic that of a single module repository
+5. Run `bundle install` to verify
 
-Test this configuration by running the following:
-```bash
-mvn install
-mvn exec:exec@kdt
-bundle install
-bundle exec kdt render_deploys
-```
+### Further Java References
 
-### Java multi-module projects
-For multi-module projects, create a new submodule that runs last, as in the structure
-below.
+Cross reference the KB page
+[Migrating Backend Applications to Kubernetes](https://liveramp.atlassian.net/wiki/spaces/CI/pages/98096573/Migrating+Backend+Applications+to+Kubernetes)
+with `java_project_tools`, or `jpt`.
 
-```
-my_project/
-  my_project_daemon/
-    src/
-    pom.xml              # (3) set <skip.kdt.docker> property to false
-    Dockerfile
-  my_project_lib/
-    src/
-    pom.xml
-  my_project_server/
-    src/
-    pom.xml              # (3) set <skip.kdt.docker> property to false
-    Dockerfile
-  my_project_kubernetes/ # (1) create this new submodule, see below
-    Gemfile
-    deploy.yml
-    kubernetes/
-    build/kubernetes/
-    pom.xml              # (4) set <skip.kdt.kubernetes> and <docker.images> properties, see below
-  pom.xml
-  Gemfile                # (2) necessary for Pentagon, see below
-  .gitignore
-```
+## Non-Java projects
 
-(1) The Gemfile, deploy.yml, and kubernetes/ directory should be in the new
-Kubernetes submodule.
-
-(2) A Gemfile is required at the root of your project that references the
-new Kubernetes submodule's Gemfile:
-
-```ruby
-eval_gemfile File.join(File.dirname(__FILE__), "my_project_kubernetes/Gemfile")
-```
-
-(3) For each submodule with a Docker image (i.e. Dockerfile), set
-`<skip.kdt.docker>false</skip.kdt.docker>` to build the Docker image.
-In the example above, this property is set for `my_project_daemon` and
-`my_project_server`.
-
-(4) For the new Kubernetes submodule (`my_project_kubernetes` in the example above),
-add each submodule with a Docker image to the list of dependencies in
-`<dependencies>` and the space-separated list of Docker images in
-`<docker.images>`:
-
-
-```xml
-  <properties>
-    <skip.kdt.kubernetes>false</skip.kdt.kubernetes>
-    <docker.images>my_project_daemon my_project_server</docker.images>
-  </properties>
-
-  <dependencies>
-    <dependency>
-      <groupId>com.liveramp.my_project</groupId>
-      <artifactId>my_project_daemon</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.liveramp.my_project</groupId>
-      <artifactId>my_project_server</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-  </dependencies>
-```
-
-Test this configuration by running the following:
-```bash
-mvn install
-```
-
-```bash
-# for multi-module projects, run these commands from the Kubernetes submodule
-
-mvn exec:exec@kdt
-
-bundle install
-bundle exec kdt render_deploys
-```
-
-### How do the Maven targets work?
-
-The `<skip.kdt.docker>` and `<skip.kdt.kubernetes>` flags enable generating and
-pushing Docker and Kubernetes release artifacts on `clean deploy -Pjenkins`.
-
-In Jenkins master builds, this means pushing Docker images to ECR and pushing
-rendered Kubernetes manifests to Artifactory.
-
-In Jenkins PR builds, we recommend using the following mvn arguments:
-`clean deploy -Dsnapshot.version=1.0-${ghprbSourceBranch}-SNAPSHOT -Pjenkins`
-
-When working locally, use the plain `bundle` commands directly. For example:
-
-```bash
-
-bundle install
-
-bundle exec kdt render_deploys
-
-mvn install
-bundle exec kdt publish_container --registry=aws my_project_daemon
-```
-
-For reference, see
-[pom-common-core](https://git.***REMOVED***/MasterRepos/pom-common-core/blob/master/pom.xml)
-and
-[build_tools/.../kdt.sh](https://git.***REMOVED***/MasterRepos/build_tools/blob/master/src/main/resources/com/liveramp/build_tools/common/kdt.sh)
-for the Maven build tasks.
-
-## Jenkins UI build steps
+### Jenkins UI build steps
 Below are Jenkins build steps required for configuration in the Jenkins UI.
 
 For examples of Jenkins configurations, see below.
@@ -322,12 +214,3 @@ credentials. See above.
 `ARTIFACTORY_PASSWORD` as the Password Variable, and
 `jenkins_publisher/****** (***REMOVED***)` selected as the specific
 credentials. See above.
-
-#### (4) For Java projects on `docker2` machines, the Artifactory configuration below is
-required for pushing Java artifacts.
-![Jenkins Java Artifactory upload](java_jenkins_build.png)
-* Under Maven's build settings: Build > Advanced settings > Global settings.xml > Use
-  provided settings.xml file, select `***REMOVED***`.
-
-Otherwise you will get an error when mvn tries to publish artifacts to Artifactory.
-
