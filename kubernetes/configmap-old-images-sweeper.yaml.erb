@@ -33,6 +33,11 @@ data:
             retention: 14d
           - pattern: "*_branches_*"
             retention: 14d
-          # if it's not a PRs job, gets the default retention of 3 months
-          - pattern: "*"
-            retention: 3M
+          - pattern: "*/PR-*"
+            retention: 14d
+            # DEV-836/OPS-10268:
+            # For artifacts generated from PR Jenkins Jobs,
+            # we only run this scheduled sweeper as configured above.
+            # For artifacts generated from master Jenkins Jobs,
+            # builds will run `kdt sweeper` for that Job
+            # after the build succeeds.
