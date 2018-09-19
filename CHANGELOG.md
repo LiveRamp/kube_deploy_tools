@@ -1,7 +1,7 @@
 
 # Changelog
 
-## 2.0.x
+## 2.x
 
 ### Breaking Changes
 * For `kdt deploy`, `--context` is now a required argument.
