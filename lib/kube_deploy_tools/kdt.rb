@@ -18,6 +18,7 @@ module KubeDeployTools
 
     MAPPINGS = {
       'render_deploys'    => 'generate',
+      'publish_artifacts' => 'publish',
       'publish_container' => 'push',
       'sweeper'           => 'expire',
     }
