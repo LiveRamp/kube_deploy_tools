@@ -2,7 +2,11 @@
 # Default rendering hook. Uses built in `templater` to render out all files
 # underneath kubernetes/ directory, recursively.
 
+require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/render_deploys_hook'
+
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+KubeDeployTools::Logger.warn "This subcommand will be disappearing in kdt v3.0."
 
 def main(argv)
   config = argv[0]

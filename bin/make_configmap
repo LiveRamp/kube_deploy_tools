@@ -1,14 +1,19 @@
 #!/usr/bin/env ruby
 
+require 'yaml'
+
+require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/make_configmap'
 require 'kube_deploy_tools/make_configmap/options'
-require 'yaml'
 
 def options
   opts = KubeDeployTools::Options.new
   ops = opts.options
   ops
 end
+
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+KubeDeployTools::Logger.warn "This subcommand will be disappearing in kdt v3.0."
 
 ARGV << '--help' if ARGV.empty?
 make_configmap = KubeDeployTools::ConfigMap.new(options[:name], options[:from_file], options[:namespace], options[:labels])

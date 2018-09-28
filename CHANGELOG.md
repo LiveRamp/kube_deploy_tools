@@ -3,6 +3,18 @@
 
 ## 2.x
 
+### Major changes
+* `kdt publish_artifacts` renamed to `kdt publish`. The former subcommand will
+  be removed in 3.0, but continues to work for now.
+* `kdt publish_containers` renamed to `kdt push`. The former subcommand will
+  be removed in 3.0, but continues to work for now.
+* `kdt render_deploys` renamed to `kdt generate`. The former subcommand will
+  be removed in 3.0, but continues to work for now.
+* `kdt sweeper` renamed to `kdt expire`. The former subcommand will
+  be removed in 3.0, but continues to work for now.
+* `kdt templater`, `kdt render_deploys_hook`, and `kdt make_configmap` are
+  disappearing in 3.0 and have been marked as such. They remain for now.
+
 ### Breaking Changes
 * For `kdt deploy`, `--context` is now a required argument.
   * To view your contexts, see `kubectl config get-contexts`.

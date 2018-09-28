@@ -16,8 +16,12 @@
 # * 1 or more key-value pairs e.g. --set git_tag=123456 --set environment=local
 # * a YAML file e.g. --values production.yaml
 
+require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/templater'
 require 'kube_deploy_tools/templater/options'
+
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+KubeDeployTools::Logger.warn "This subcommand will be disappearing in kdt v3.0."
 
 def options
   parser = KubeDeployTools::Templater::Optparser.new
@@ -28,4 +32,3 @@ end
 
 templater = KubeDeployTools::Templater.new
 templater.template_to_file(options.template, options.values, options.output)
-
