@@ -1,7 +1,7 @@
 require 'kube_deploy_tools/render_deploys'
 
 INPUT_DIR='spec/resources/kubernetes/render-deploys-example/'
-MANIFEST_FILE="spec/resources/deploy.yml"
+MANIFEST_FILE="spec/resources/deploy.yaml"
 MANIFEST_FILE_NUM_CLUSTERS=9
 JOB_NAME="FAKE_PROJECT"
 BUILD_ID="12345"

@@ -7,7 +7,7 @@
   + [Include and exclude flags](#include-and-exclude-flags)
 * [Releasing a deploy artifact from Jenkins with Pentagon on Rampmaster](#releasing-a-deploy-artifact-from-jenkins-with-pentagon-on-rampmaster)
 * [Releasing manually](#releasing-manually)
-  + [Deploy Kubernetes manifests to your local minikube context](#deploy-kubernetes-manifests-to-your-local-minikube-context)
+  + [Deploy Kubernetes manifests to your local kubecontext](#deploy-kubernetes-manifests-to-your-local-kubecontext)
 
 ## Prerequisites
 Ensure that your Jenkins build is set up according to
@@ -29,7 +29,7 @@ This translates to:
 
 - running `docker build . -t local-registry/<container>` for all containers in
 your project
-- running `bundle exec kdt publish_container <container> --registry aws` for all
+- running `bundle exec kdt publish_container <container>` for all
 containers in your project
 - running `bundle exec kdt render_deploys`
 - uploading the deploy artifacts to Artifactory, as described in
@@ -45,15 +45,15 @@ well-known tag in a single deploy artifact
 
 To release the Kubernetes manifests of a deploy artifact uploaded to Artifactory
 by your Jenkins build, find the build name in Jenkins and specify the cluster
-target and environment as specified in your deploy.yml:
+target and environment as specified in your deploy.yaml:
 
 ```bash
 # Ensure that you have the same version of kube_deploy_tools in Gemfile.lock
 bundle install
 
 bundle exec kdt deploy \
-  --target <target in deploy.yml> \
-  --environment <environment in deploy.yml> \
+  --artifact <artifact in deploy.yaml> \
+  --context <Kubernetes context> \
   --project <project name of build in Jenkins> \
   --build <number of build in Jenkins or 'latest' to get latest build> \
   --dry-run false
@@ -64,8 +64,8 @@ to the AWS staging cluster:
 ```bash
 
 bundle exec kdt deploy \
-  --target us-east-1 \
-  --environment staging \
+  --artifact us-east-1-staging \
+  --context us-east-1-staging \
   --project kube_infra_master \
   --build 1234 \
   --dry-run false
@@ -86,13 +86,13 @@ to the AWS staging cluster:
 ```bash
 
 bundle exec kdt deploy \
-  --target us-east-1 \
-  --environment staging \
+  --artifact us-east-1-staging \
+  --context us-east-1-staging \
   --project kube_infra_master \
   --build 1234 \
   --dry-run false \
   --include '**/cluster-autoscaler/*' \
-  --include '**/datadog/*' \
+  --include-dir '/datadog' \
   --exclude '**/datadog/svc-dogstatsd.yaml'
 ```
 
@@ -114,8 +114,8 @@ instead of 'dry-run' because bash does not allow '-' in variables):
 
 ```bash
 please deploy \
-  target=colo-service \
-  environment=staging \
+  artifact=colo-service-staging \
+  context=colo-service-staging \
   build=61 \
   include=**/dir1/* \
   include=**/dir2/* \
@@ -139,7 +139,7 @@ bundle exec kdt deploy \
 ```
 
 
-### Deploy Kubernetes manifests to your local minikube context
+### Deploy Kubernetes manifests to your local kubecontext
 
 To deploy Kubernetes manifests that you rendered locally in your
 `build/kubernetes/` directory, use the `-f` flag:
@@ -152,10 +152,10 @@ To deploy Kubernetes manifests that you rendered locally in your
 
 bundle exec kdt render_deploys
 
-bundle exec kdt deploy --target local --environment staging \
+bundle exec kdt deploy --artifact local --context docker-for-mac \
   -f build/kubernetes/local/staging/default/
 
 # Or specify a context
-bundle exec kdt deploy --context minikube -f build/kubernetes/local/staging/default/
+bundle exec kdt deploy --context docker-for-mac -f build/kubernetes/local/staging/default/
 ```
 

@@ -10,7 +10,7 @@ module KubeDeployTools
       def initialize
         Artifactory.endpoint = KubeDeployTools::ARTIFACTORY_ENDPOINT
         self.extra_files = []
-        self.manifest_file = 'deploy.yml'
+        self.manifest_file = 'deploy.yaml'
         self.output_path = File.join('build', 'kubernetes')
       end
 

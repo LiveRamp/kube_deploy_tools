@@ -1,7 +1,6 @@
-default_flags:
-  pull_policy: IfNotPresent
+version: 2
 artifacts:
-  - name: local
+  - name: local-staging
     flags:
       target: local
       environment: staging
@@ -30,3 +29,6 @@ image_registries:
   - name: gcp
     driver: gcp
     prefix: ***REMOVED***
+hooks:
+  - default
+  - scripts/render_deploys_hook

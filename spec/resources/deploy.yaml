@@ -1,7 +1,9 @@
-# This deploy.yml is a testing fixture
+# This deploy.yaml is a testing fixture
+version: 2
 default_flags:
   food: bar
   baz: bing
+  pull_policy: IfNotPresent
 # Required flags: target, environment, flags
 artifacts:
   - name: local
@@ -10,56 +12,48 @@ artifacts:
       environment: staging
       cloud: local
       image_registry: local-registry
-      pull_policy: IfNotPresent
   - name: colo-service-prod
     flags:
       target: colo-service
       environment: prod
       cloud: colo
       image_registry: ''
-      pull_policy: IfNotPresent
   - name: colo-service-staging
     flags:
       target: colo-service
       environment: staging
       cloud: colo
       image_registry: ''
-      pull_policy: IfNotPresent
   - name: pippio-production
     flags:
       target: pippio-production
       environment: prod
       cloud: gcp
       image_registry: gcr.io/kdt-example
-      pull_policy: IfNotPresent
   - name: us-east-1-prod
     flags:
       target: us-east-1
       environment: prod
       cloud: aws
       image_registry: ''
-      pull_policy: IfNotPresent
   - name: us-east-1-staging
     flags:
       target: us-east-1
       environment: staging
       cloud: aws
       image_registry: ''
-      pull_policy: IfNotPresent
   - name: ingestion-prod
     flags:
       target: ingestion
       environment: prod
       cloud: gcp
       image_registry: gcr.io/kdt-example
-      pull_policy: IfNotPresent
   - name: platforms-prod
     flags:
       target: platforms
       environment: prod
       cloud: gcp
       image_registry: gcr.io/kdt-example
-      pull_policy: IfNotPresent
       feature_grafana: true
       feature_heapster: true
       feature_kube_state_metrics: true
@@ -77,7 +71,6 @@ artifacts:
       environment: staging
       cloud: aws
       image_registry: ''
-      pull_policy: IfNotPresent
 flavors:
   default:
     test_bool: true

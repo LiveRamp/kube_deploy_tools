@@ -1,0 +1,69 @@
+# This is an example deploy.yaml, which tells kube_deploy_tools what
+# deployment varieties exist for your project and any special parameters
+# to inject into template rendering for each one.
+
+version: 2
+
+# Please only include the Kubernetes clusters your project will deploy to.
+artifacts:
+  - name: local-staging
+    flags:
+      target: local
+      environment: staging
+      cloud: local
+      image_registry: local-registry
+  - name: colo-service-prod
+    flags:
+      target: colo-service
+      environment: prod
+      cloud: colo
+      image_registry: ***REMOVED***
+  - name: colo-service-staging
+    flags:
+      target: colo-service
+      environment: staging
+      cloud: colo
+      image_registry: ***REMOVED***
+  - name: dist-prod
+    flags:
+      target: dist
+      environment: prod
+      cloud: gcp
+      image_registry: ***REMOVED***
+    # Include only the nginx/ directory
+    include_dir:
+      - nginx/
+
+default_flags:
+  pull_policy: IfNotPresent
+
+image_registries:
+  - name: aws
+    driver: aws
+    prefix: ***REMOVED***
+    config:
+      region: us-west-2
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***
+
+# The flavors section can be specified globally or at the cluster level. It's
+# a freeform way to specify how you'd like to separate stages or kinds of
+# deployments. For example: blue-green or canary-stable methodology.
+flavors:
+  default: {}
+  # As an example, these flavors will define canary and stable tracks for every
+  # cluster type, making config['release_track'] set in each flavor context for
+  # use in template rendering.
+  #
+  # canary:
+  #   release_track: canary
+  # stable:
+  #   release_track: stable
+
+# Exclude the hooks section if you're not using a custom hook in your project.
+# The default will always be used.
+hooks:
+  - default
+  - scripts/render_deploys_hook
+

@@ -5,7 +5,7 @@ require 'tmpdir'
 require 'kube_deploy_tools/publish_container'
 
 BUILT_ARTIFACTS_PATH = 'build'
-MANIFEST_FILE = 'spec/resources/deploy.yml'
+MANIFEST_FILE = 'spec/resources/deploy.yaml'
 
 describe KubeDeployTools::PublishContainer do
   # Mock shellrunner

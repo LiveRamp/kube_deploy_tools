@@ -25,7 +25,6 @@ module KubeDeployTools
       @build_number = KubeDeployTools::BUILD_NUMBER
 
       @config = DeployConfigFile.new(manifest)
-      @config.validate!
 
       @input_dir = input_dir
       @output_dir = output_dir
@@ -47,7 +46,7 @@ module KubeDeployTools
         # Update and merge deploy flags for rendering
         cluster_flags.merge!(render_erb_flags(c.fetch('flags', {})))
 
-        # Allow deploy.yml to gate certain flavors to certain targets.
+        # Allow deploy.yaml to gate certain flavors to certain targets.
         cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
         cluster_flavors.each do |flavor, flavor_flags|
           full_flags = cluster_flags.clone

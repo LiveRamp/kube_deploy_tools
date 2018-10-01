@@ -6,7 +6,7 @@ module KubeDeployTools
       attr_accessor :manifest_file, :input_path, :output_path, :file_filters
 
       def initialize
-        self.manifest_file = 'deploy.yml'
+        self.manifest_file = 'deploy.yaml'
         self.input_path = File.join('kubernetes/')
         self.output_path = File.join('build', 'kubernetes')
         self.file_filters = []

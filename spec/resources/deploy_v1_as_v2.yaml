@@ -1,0 +1,40 @@
+# This is a corresponding text fixture
+# that represents the expected fixed configuration
+# from a v1 configuraiton
+version: 2
+artifacts:
+  - name: local-staging
+    flags:
+      target: local
+      environment: staging
+      cloud: local
+      image_registry: local-registry
+      pull_policy: IfNotPresent
+  - name: colo-service-prod
+    flags:
+      target: colo-service
+      environment: prod
+      cloud: colo
+      image_registry: ***REMOVED***
+      pull_policy: IfNotPresent
+  - name: colo-service-staging
+    flags:
+      target: colo-service
+      environment: staging
+      cloud: colo
+      image_registry: ***REMOVED***
+      pull_policy: IfNotPresent
+flavors:
+  default: {}
+image_registries:
+  - name: aws
+    driver: aws
+    prefix: ***REMOVED***
+    config:
+      region: us-west-2
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***
+hooks:
+  - default
+  - scripts/render_deploys_hook

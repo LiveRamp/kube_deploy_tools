@@ -1,0 +1,33 @@
+version: 2
+default_flags:
+  pull_policy: IfNotPresent
+artifacts:
+  - name: local
+    flags:
+      target: local
+      environment: staging
+      cloud: local
+      image_registry: local-registry
+  - name: colo-service-prod
+    flags:
+      target: colo-service
+      environment: prod
+      cloud: colo
+      image_registry: ***REMOVED***
+  - name: colo-service-staging
+    flags:
+      target: colo-service
+      environment: staging
+      cloud: colo
+      image_registry: ***REMOVED***
+flavors:
+  default: {}
+image_registries:
+  - name: aws
+    driver: aws
+    prefix: ***REMOVED***
+    config:
+      region: us-west-2
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***

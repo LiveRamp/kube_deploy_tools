@@ -41,7 +41,7 @@ module KubeDeployTools
     end
 
     def create_definition_tempfile
-      file = Tempfile.new(["#{@namespace}-#{@kind}-#{@name}", ".yml"])
+      file = Tempfile.new(["#{@namespace}-#{@kind}-#{@name}", ".yaml"])
       file.write(YAML.dump(@definition))
       file
     ensure

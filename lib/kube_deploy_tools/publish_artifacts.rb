@@ -32,7 +32,7 @@ module KubeDeployTools
     def publish()
       @config.artifacts.each do |c|
         name = c.fetch('name')
-        # Allow deploy.yml to gate certain flavors to certain targets.
+        # Allow deploy.yaml to gate certain flavors to certain targets.
         cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
         cluster_flavors.each do |flavor, _|
           tarball = KubeDeployTools.build_deploy_artifact_name(

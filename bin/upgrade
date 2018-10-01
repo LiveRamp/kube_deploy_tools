@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+require 'kube_deploy_tools/formatted_logger'
+require 'kube_deploy_tools/shellrunner'
+require 'kube_deploy_tools/deploy_config_file'
+
+KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
+KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
+
+options = {
+  :file => 'deploy.yml',
+}
+OptionParser.new do |opts|
+  opts.on('-f', '--file file', 'Config file path') do |file|
+    options[:file] = file
+  end
+end.parse!
+
+config_file_path = options[:file] || ARGV[0]
+
+KubeDeployTools::DeployConfigFile.new(config_file_path).upgrade!
