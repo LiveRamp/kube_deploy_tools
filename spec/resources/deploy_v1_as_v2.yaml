@@ -2,6 +2,8 @@
 # that represents the expected fixed configuration
 # from a v1 configuraiton
 version: 2
+default_flags:
+  pull_policy: IfNotPresent
 artifacts:
   - name: local-staging
     flags:
@@ -9,21 +11,25 @@ artifacts:
       environment: staging
       cloud: local
       image_registry: local-registry
-      pull_policy: IfNotPresent
+      pull_policy: Always
   - name: colo-service-prod
     flags:
       target: colo-service
       environment: prod
       cloud: colo
       image_registry: ***REMOVED***
-      pull_policy: IfNotPresent
   - name: colo-service-staging
     flags:
       target: colo-service
       environment: staging
       cloud: colo
       image_registry: ***REMOVED***
-      pull_policy: IfNotPresent
+  - name: us-east-1-prod
+    flags:
+      target: us-east-1
+      environment: prod
+      cloud: aws
+      image_registry: ***REMOVED***
 flavors:
   default: {}
 image_registries:

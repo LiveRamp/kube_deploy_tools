@@ -3,10 +3,14 @@ deploy:
   clusters:
     - target: local
       environment: staging
+      extra_flags:
+        pull_policy: Always
     - target: colo-service
       environment: prod
     - target: colo-service
       environment: staging
+    - target: us-east-1
+      environment: prod
   flavors:
     default: {}
   hooks:

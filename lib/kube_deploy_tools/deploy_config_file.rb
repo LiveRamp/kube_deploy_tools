@@ -79,9 +79,11 @@ module KubeDeployTools
           'prefix' => '***REMOVED***'
         }
       ])
-      @default_flags = parse_default_flags({})
+      @default_flags = parse_default_flags({
+        'pull_policy' => 'IfNotPresent',
+      })
       @artifacts = parse_artifacts(config.fetch('deploy').fetch('clusters', [])
-        .map { |c|
+        .map.with_index { |c, i|
           target = c.fetch('target')
           environment = c.fetch('environment')
           case target
@@ -91,21 +93,27 @@ module KubeDeployTools
           when 'colo-service'
             cloud = 'colo'
             image_registry = '***REMOVED***'
-          when 'aws'
+          when 'us-east-1', 'us-west-2', 'eu-west-1'
             cloud = 'aws'
             image_registry = '***REMOVED***'
           when 'gcp'
             cloud = 'gcp'
             image_registry = '***REMOVED***'
+          else
+            raise ArgumentError, "Expected a valid KDT 1.x .target for .deploy.clusters[#{i}].target, but got '#{target}'"
           end
+
           flags = c.fetch('extra_flags', {})
             .merge({
               'target' => target,
               'environment' => environment,
               'cloud' => cloud,
               'image_registry' => image_registry,
-              'pull_policy' => 'IfNotPresent',
             })
+
+          if flags.key?('pull_policy') && flags.fetch('pull_policy') == @default_flags.fetch('pull_policy')
+            flags.delete('pull_policy')
+          end
 
           artifact = {
             'name' => target + '-' + environment,
