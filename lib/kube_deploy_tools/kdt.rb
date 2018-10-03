@@ -9,6 +9,7 @@ module KubeDeployTools
       'generate' => 'Generates artifacts based on templates in kubernetes/ and your deploy.yaml.',
       'publish'  => 'Publishes generated artifacts to your artifact store.',
       'expire'   => 'Removes artifacts from your artifact store and images from registries, based on a time horizon.',
+      'upgrade'   => 'Upgrades a KDT 1.x deploy.yml to a KDT 2.x deploy.yaml',
 
       # Deprecated entrypoints (will go away soon)
       'make_configmap'      => 'DISAPPEARING. Creates a new ConfigMap, alternative to |kubectl create configmap|',
