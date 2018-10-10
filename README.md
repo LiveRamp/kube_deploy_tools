@@ -8,7 +8,7 @@ LiveRamp Kubernetes build and release tools for:
 
 # 2.x NOTICE
 You're viewing docs for v2.x. To view docs for v1.x, please see:
-https://git.***REMOVED***/OpsRepos/kube_deploy_tools/tree/release-1.5
+https://git.***REMOVED***/OpsRepos/kube_deploy_tools/tree/release-1.x
 
 # Setup
 
