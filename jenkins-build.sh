@@ -4,12 +4,14 @@ set -euo pipefail
 bundle install --with development --path=vendor/bundle
 bundle exec rake
 
+# Declarative pipeline sets $GIT_BRANCH to the short branch name. (e.g. master)
+# Classic jobs set $GIT_BRANCH to the full ref (e.g. origin/master)
 case "$GIT_BRANCH" in
-*/master)
+*/master|master)
   # Publish versioned gem
   bundle exec rake push
   ;;
-*/release-*)
+*/release-*|release-*)
   # Publish versioned gem
   bundle exec rake push
   ;;
