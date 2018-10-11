@@ -13,6 +13,9 @@ case "$GIT_BRANCH" in
   # Publish versioned gem
   bundle exec rake push
   ;;
+*)
+  echo "Not running a rake push step on $GIT_BRANCH"
+;;
 esac
 
 # Generate K8s manifests for Sweeper
