@@ -29,9 +29,9 @@ This translates to:
 
 - running `docker build . -t local-registry/<container>` for all containers in
 your project
-- running `bundle exec kdt publish_container <container>` for all
+- running `bundle exec kdt push <container>` for all
 containers in your project
-- running `bundle exec kdt render_deploys`
+- running `bundle exec kdt generate`
 - uploading the deploy artifacts to Artifactory, as described in
 [documentation/setup.md](setup.md).
 
@@ -130,7 +130,7 @@ bundle install
 # Build and tag all containers in your project
 # Run |bundle exec kdt publish_container| for all containers in your project
 
-bundle exec kdt render_deploys
+bundle exec kdt generate
 
 bundle exec kdt deploy \
   --context <Kubernetes context> \
@@ -150,7 +150,7 @@ To deploy Kubernetes manifests that you rendered locally in your
 # We recommend tagging containers with |latest| so you only have to
 # release the Deployments once, as described below.
 
-bundle exec kdt render_deploys
+bundle exec kdt generate
 
 bundle exec kdt deploy --artifact local --context docker-for-mac \
   -f build/kubernetes/local/staging/default/

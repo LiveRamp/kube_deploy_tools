@@ -146,11 +146,11 @@ These KDT commands are required to run at the end of your Jenkins job.
 # Build images
 docker build -t local-registry/<image> # for each Docker image in your project
 # Push images to image registry
-bundle exec kdt publish_container <images...> # for all Docker images built in your project
+bundle exec kdt push <images...> # for all Docker images built in your project
 # Render Kubernetes deploy artifacts
-bundle exec kdt render_deploys
+bundle exec kdt generate
 # Push Kubernetes deploy artifacts to Artifactory
-bundle exec kdt publish_artifacts
+bundle exec kdt publish
 ```
 
 For Java projects, see the Jenkinsfile setup below, which will run the commands above.

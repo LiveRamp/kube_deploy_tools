@@ -2,7 +2,7 @@
 
 ## kubernetes/ directory
 All .yaml and .yaml.erb files in `kubernetes/` are templated out into the
-`build/kubernetes/` directory with `bundle exec kdt render_deploys`.
+`build/kubernetes/` directory with `bundle exec kdt generate`.
 
 Kubernetes manifests can be in subdirectories of any depth in the
 `kubernetes/` directory for organization purposes.
@@ -75,9 +75,9 @@ should be templated out in your workloads like so:
           imagePullPolicy: <%= config["pull_policy"] %>
 ```
 
-The `image_tag` made available with `bundle exec kdt render_deploys`
+The `image_tag` made available with `bundle exec kdt generate`
 is the same image tag used to tag and push Docker images in
-`bundle exec kdt publish_container`.
+`bundle exec kdt push`.
 
 Both of these commands are intended to be used together.
 
@@ -89,19 +89,19 @@ that it's clear where the image came from.
 For local stacks, we recommend using `image_tag: latest` in your
 deploy.yml for convenience only.
 
-Similarly, `image_registry` is used by both `bundle exec kdt render_deploys`
-and `bundle exec kdt publish_container`, so it's important to template this out
+Similarly, `image_registry` is used by both `bundle exec kdt generate`
+and `bundle exec kdt push`, so it's important to template this out
 as well.
 
-## Using render_deploys
+## Using `kdt generate`
 
-`bundle exec kdt render_deploys` should be called in your Jenkins build,
+`bundle exec kdt generate` should be called in your Jenkins build,
 as described in [documentation/deploy.md](deploy.md).
 
 This renders all Kubernetes plain YAMLs and ERB templates, and bundles them into
 deploy artifacts.
 
-You'll in general be using `bundle exec kdt render_deploys` in the following
+You'll in general be using `bundle exec kdt generate` in the following
 circumstances:
 - to test your ERB templates;
 - to release to your local Minikube cluster.
@@ -111,4 +111,3 @@ artifacts rendered and pushed by Jenkins, unless you're doing a manual release,
 which would require re-tagging and re-pushing Docker images.
 
 See [documentation/deploy.md](deploy.md) for more.
-
