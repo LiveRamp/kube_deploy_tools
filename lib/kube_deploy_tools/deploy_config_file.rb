@@ -59,7 +59,7 @@ module KubeDeployTools
       config = @original_config
       @image_registries = parse_image_registries(config.fetch('image_registries', []))
       @default_flags = parse_default_flags(config.fetch('default_flags', {}))
-      @artifacts = parse_artifacts(config.fetch('artifacts', []), @default_flags)
+      @artifacts = parse_artifacts(config.fetch('artifacts', []))
       @flavors = parse_flavors(config.fetch('flavors', {}))
       @hooks = parse_hooks(config.fetch('hooks', ['default']))
     end
@@ -125,8 +125,7 @@ module KubeDeployTools
           }
 
           artifact
-        },
-        @default_flags
+        }
       )
       @flavors = parse_flavors(config.fetch('deploy', {}).fetch('flavors', {}))
       @hooks = parse_hooks(config.fetch('deploy', {}).fetch('hooks', ['default']))
@@ -148,8 +147,7 @@ module KubeDeployTools
         .to_h
     end
 
-    # .artifacts depends on .default_flags
-    def parse_artifacts(artifacts, default_flags)
+    def parse_artifacts(artifacts)
       check_and_err(artifacts.is_a?(Array), '.artifacts is not an Array')
 
       duplicates = select_duplicates(artifacts.map { |i| i.fetch('name') })
@@ -168,29 +166,6 @@ module KubeDeployTools
         check_and_err(
           artifact.key?('flags'),
           "Expected .artifacts.#{name}.flags key to exist, but .flags is missing"
-        )
-
-        # Check required flag values in .artifacts or .default_flags
-        flags = artifact.fetch('flags').merge(default_flags)
-        check_and_err(
-          flags.key?('target'),
-          "Expected .artifacts['#{name}'].flags.target key to exist, but .target is missing"
-        )
-        check_and_err(
-          flags.key?('environment'),
-          "Expected .artifacts['#{name}'].flags.environment key to exist, but .environment is missing"
-        )
-        check_and_err(
-          flags.key?('cloud'),
-          "Expected .artifacts['#{name}'].flags.cloud key to exist, but .cloud is missing"
-        )
-        check_and_err(
-          flags.key?('image_registry'),
-          "Expected .artifacts['#{name}'].flags.image_registry key to exist, but .image_registry is missing"
-        )
-        check_and_err(
-          flags.key?('pull_policy'),
-          "Expected .artifacts['#{name}'].flags.pull_policy key to exist, but .pull_policy is missing"
         )
       }
     end
