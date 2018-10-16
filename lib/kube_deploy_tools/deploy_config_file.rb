@@ -18,6 +18,7 @@ module KubeDeployTools
       if Pathname.new(filename).absolute?
         config = YAML.load_file(filename)
       else
+        original_dir = Dir.pwd
         changed_dir = false
         until Dir.pwd == '/'
           if File.exist? filename
@@ -29,7 +30,10 @@ module KubeDeployTools
           changed_dir = true
           Dir.chdir('..')
         end
-        raise "Could not locate file: #{filename} in any directory" if config.nil?
+        if config.nil?
+          Dir.chdir(original_dir)
+          raise "Could not locate file: #{filename} in any directory"
+        end
         if changed_dir
           Logger.warn "Changed directory to #{Dir.pwd} (location of #{filename})"
         end
@@ -154,8 +158,6 @@ module KubeDeployTools
         "Expected .artifacts names to be unique, but found duplicates: #{duplicates}"
       )
 
-      check_and_err(artifacts.size > 0, 'Must support at least one artifact')
-
       artifacts.each { |artifact, index|
         check_and_err(
           artifact.key?('name'),
@@ -201,7 +203,6 @@ module KubeDeployTools
 
     def parse_flavors(flavors)
       check_and_err(flavors.is_a?(Hash), '.flavors is not a Hash')
-      check_and_err(flavors.size > 0, 'Must support at least one flavor (try "default": {})')
 
       flavors
     end

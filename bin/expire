@@ -17,12 +17,24 @@ OptionParser.new do |opts|
   opts.on('-d', '--dryrun', 'Dryrun') do |d|
     options[:dryrun] = true
   end
-  opts.on('-f', '--file file', 'Config file path') do |file|
+  opts.on('-f', '--file=FILE', 'Config file path to sweep multiple Artifactory paths') do |file|
     options[:file] = file
+  end
+  opts.on('-a', '--artifactory-repo=ARTIFACTORY_REPO', 'Artifactory repo e.g. kubernetes-snaphot-local') do |a|
+    options[:artifactory_repo] = a
+  end
+  opts.on('-p', '--artifactory-pattern=ARTIFACTORY_PATTERN', 'Artifactory pattern') do |p|
+    options[:artifactory_pattern] = p
+  end
+  opts.on('-r', '--retention=RETENTION', 'Retention time in days or months with format "<days>d" or "<months>M". For example as 1d, 7d, 30d, 1M, 6M') do |r|
+    options[:retention] = r
   end
 end.parse!
 
 config_file_path = options[:file] || ARGV[0]
+artifactory_repo = options[:artifactory_repo] || 'kubernetes-snapshot-local'
+artifactory_pattern = options[:artifactory_pattern]
+retention = options[:retention]
 dryrun = options[:dryrun] || false
 
-KubeDeployTools::Sweeper.new(config_file_path, dryrun).remove_images
+KubeDeployTools::Sweeper.new(config_file_path, artifactory_repo, artifactory_pattern, retention, dryrun).remove_images

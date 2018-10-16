@@ -10,7 +10,7 @@
 # image1 image2 image3
 #
 # Will tag local-registry/image1:latest, local-registry/image2:latest etc. as
-# ***REMOVED***/image1:my-custom-tag.
+# 123456.dkr.ecr.us-west-2.amazonaws.com/image1:my-custom-tag.
 # Default values for every option are probably what you want to use most of the time.
 
 require 'optparse'

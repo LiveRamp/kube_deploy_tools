@@ -24,7 +24,7 @@ module KubeDeployTools
     end
 
     def template_to_file(template, values, maybeOutputFilepath = nil)
-      raise "Expected template to be an existing file, received '#{template}''" unless File.file?(template)
+      raise "Expected template to be an existing file, received '#{template}'" unless File.file?(template)
       raise "Expected output filepath to be a new filepath, received '#{maybeOutputFilepath}'" if maybeOutputFilepath.present? && (File.file?(maybeOutputFilepath) || File.directory?(maybeOutputFilepath))
 
       output = template(template, values)

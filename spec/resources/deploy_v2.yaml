@@ -11,24 +11,24 @@ artifacts:
       target: colo-service
       environment: prod
       cloud: colo
-      image_registry: ***REMOVED***
+      image_registry: 123456.dkr.ecr.us-west-2.amazonaws.com
   - name: colo-service-staging
     flags:
       target: colo-service
       environment: staging
       cloud: colo
-      image_registry: ***REMOVED***
+      image_registry: 123456.dkr.ecr.us-west-2.amazonaws.com
 flavors:
   default: {}
 image_registries:
   - name: aws
     driver: aws
-    prefix: ***REMOVED***
+    prefix: 123456.dkr.ecr.us-west-2.amazonaws.com
     config:
       region: us-west-2
   - name: gcp
     driver: gcp
-    prefix: ***REMOVED***
+    prefix: gcr.io/my-gcp-project
 hooks:
   - default
   - scripts/render_deploys_hook

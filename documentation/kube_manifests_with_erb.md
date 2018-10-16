@@ -45,7 +45,7 @@ deploy:
       environment: prod
       flags:
         cloud: gcp
-        image_registry: ***REMOVED***
+        image_registry: gcr.io/my-gcp-project
         pull_policy: IfNotPresent
         cloud_fs: s3://
   flavors:

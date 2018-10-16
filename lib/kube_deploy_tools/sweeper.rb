@@ -7,21 +7,23 @@ require 'set'
 require 'uri'
 require 'yaml'
 
+require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
 require 'kube_deploy_tools/image_registry/driver'
 require 'kube_deploy_tools/shellrunner'
 
-ARTIFACTORY_USERNAME = ENV.fetch('ARTIFACTORY_USERNAME')
-ARTIFACTORY_PASSWORD = ENV.fetch('ARTIFACTORY_PASSWORD')
-ARTIFACTORY_HOST = ENV.fetch('ARTIFACTORY_HOST')
 
 IMAGES_FILE = 'images.yaml'
 
 module KubeDeployTools
   class Sweeper
-    def initialize(config_file, dryrun)
+    def initialize(config_file, artifactory_repo, artifactory_pattern, retention, dryrun)
+      @artifactory_username = ENV.fetch('ARTIFACTORY_USERNAME')
+      @artifactory_password = ENV.fetch('ARTIFACTORY_PASSWORD')
+      @artifactory_host = ENV.fetch('ARTIFACTORY_HOST', KubeDeployTools::ARTIFACTORY_ENDPOINT)
+
       @config_file = config_file
       @dryrun = dryrun
 
@@ -32,8 +34,23 @@ module KubeDeployTools
         [registry.name, driver_class.new(registry: registry)]
       end.to_h
 
-      # Load file again for sweeper data
-      @configs = YAML.load_file(@config_file).fetch('sweeper')
+      if File.exists?(@config_file)
+        # Load file again for sweeper data
+        @configs = YAML.load_file(@config_file).fetch('sweeper')
+        KubeDeployTools::Logger.error("The config file '#{@config_file}' does not exist")
+      end
+
+      if ! artifactory_pattern.blank?
+        @configs = [
+          {
+            'repository' => artifactory_repo,
+            'prefixes' => [
+              'pattern' => artifactory_pattern,
+              'retention' => retention,
+            ]
+          }
+        ]
+      end
     end
 
     def remove_images
@@ -65,11 +82,11 @@ module KubeDeployTools
       prefixes = config.fetch('prefixes')
       to = (Time.now - largest_retention).to_i * 1000
 
-      uri = URI.parse("#{ARTIFACTORY_HOST}/api/search/creation")
+      uri = URI.parse("#{@artifactory_host}/api/search/creation")
       uri.query = "to=#{to}&from=0&repos=#{repo_name}"
       http = Net::HTTP.new(uri.host, uri.port)
       request = Net::HTTP::Get.new(uri)
-      request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
+      request.basic_auth @artifactory_username, @artifactory_password
       response = http.request(request)
       response_body = JSON.parse(response.body)
 
@@ -132,8 +149,8 @@ module KubeDeployTools
 
       built_artifacts_files.each do |image_uri|
         image_yaml = nil
-        # The download file is not at ARTIFACTORY_HOST/api/storage/<BUILD_INFO>
-        # so need to remove the 'api/storage' since at ARTIFACTORY_HOST/<BUILD_INFO>
+        # The download file is not at @artifactory_host/api/storage/<BUILD_INFO>
+        # so need to remove the 'api/storage' since at @artifactory_host/<BUILD_INFO>
         # Using open-uri reads
         image_uri = image_uri.sub('api/storage/', '')
         images_file = open(image_uri)
@@ -186,7 +203,7 @@ module KubeDeployTools
           else
             file_path = "/#{file}"
           end
-          remove_path = "#{ARTIFACTORY_HOST}/#{build_path}#{file_path}"
+          remove_path = "#{@artifactory_host}/#{build_path}#{file_path}"
 
           if @dryrun
             Logger.info("DRYRUN: Removing #{remove_path}")
@@ -194,7 +211,7 @@ module KubeDeployTools
             uri = URI.parse(remove_path)
             http = Net::HTTP.new(uri.host, uri.port)
             request = Net::HTTP::Delete.new(uri)
-            request.basic_auth ARTIFACTORY_USERNAME, ARTIFACTORY_PASSWORD
+            request.basic_auth @artifactory_username, @artifactory_password
             response = http.request(request)
 
             if response.code != '200' && response.code != '204'

@@ -1,0 +1,15 @@
+version: 2
+image_registries:
+  - name: aws
+    driver: aws
+    prefix: 123456.dkr.ecr.us-west-2.amazonaws.com
+    config:
+      region: us-west-2
+  - name: gcp
+    driver: gcp
+    prefix: gcr.io/my-gcp-project
+sweeper:
+  - repository: kubernetes-snapshot-local
+    prefixes:
+      - pattern: "fake_prefix"
+        retention: 1d
