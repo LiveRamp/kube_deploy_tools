@@ -55,7 +55,7 @@ describe KubeDeployTools::Sweeper do
           ],
         }
       ]
-      expect(sweeper.instance_variable_get(:@configs)).to eql(expected_configs)
+      expect(sweeper.instance_variable_get(:@sweeper_configs)).to eql(expected_configs)
       expect(logger).not_to have_received(:error).with(/This config file does not exist/)
     end
 
@@ -80,7 +80,7 @@ describe KubeDeployTools::Sweeper do
           ],
         }
       ]
-      expect(sweeper.instance_variable_get(:@configs)).to eql(expected_configs)
+      expect(sweeper.instance_variable_get(:@sweeper_configs)).to eql(expected_configs)
       expect(logger).not_to have_received(:error).with(/This config file does not exist/)
     end
   end

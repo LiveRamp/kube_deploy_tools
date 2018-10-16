@@ -27,22 +27,16 @@ module KubeDeployTools
       @config_file = config_file
       @dryrun = dryrun
 
-      # Load file once for registries & drivers
-      @registries = DeployConfigFile.new(config_file).image_registries
+      config = DeployConfigFile.new(config_file)
+      @registries = config.image_registries
       @drivers = @registries.map do |_, registry|
         driver_class = ImageRegistry::Driver::MAPPINGS.fetch(registry.driver)
         [registry.name, driver_class.new(registry: registry)]
       end.to_h
-
-      if @config_file && File.exists?(@config_file)
-        # Load file again for sweeper data
-        @configs = YAML.load_file(@config_file).fetch('sweeper')
-      else
-          KubeDeployTools::Logger.error("The config file '#{@config_file}' does not exist")
-      end
+      @sweeper_configs = config.sweeper
 
       if ! artifactory_pattern.blank?
-        @configs = [
+        @sweeper_configs = [
           {
             'repository' => artifactory_repo,
             'prefixes' => [
@@ -55,7 +49,7 @@ module KubeDeployTools
     end
 
     def remove_images
-      @configs.each do |config|
+      @sweeper_configs.each do |config|
         artifactory_builds, built_artifacts_files = search_artifactory(config)
 
         # Need to fetch the other images before removing the files from artifactory
