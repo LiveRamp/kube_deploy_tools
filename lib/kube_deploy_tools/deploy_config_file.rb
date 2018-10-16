@@ -6,6 +6,7 @@ require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
 
 DEPLOY_YAML = 'deploy.yaml'
+DEPLOY_YML_V1 = 'deploy.yml'
 
 module KubeDeployTools
   # Read-only model for the deploy.yaml configuration file.
@@ -13,15 +14,26 @@ module KubeDeployTools
     attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries
 
     def initialize(filename)
-      filename ||= DEPLOY_YAML
       config = nil
-      if Pathname.new(filename).absolute?
+      if !filename.nil? && Pathname.new(filename).absolute?
         config = YAML.load_file(filename)
       else
         original_dir = Dir.pwd
         changed_dir = false
         until Dir.pwd == '/'
-          if File.exist? filename
+          # Try looking for filename specified by user.
+          # If no filename was specified by the user, then look for
+          # deploy.yml or deploy.yaml.
+          if !filename.nil? && File.exist?(filename)
+            config = YAML.load_file(filename)
+            break
+          elsif filename.nil? && File.exist?(DEPLOY_YAML)
+            filename = DEPLOY_YAML
+            config = YAML.load_file(filename)
+            break
+          elsif filename.nil? && File.exist?(DEPLOY_YML_V1)
+            Logger.warn('Found deprecated v1 deploy.yml. Please run `kdt upgrade` to v2 deploy.yaml')
+            filename = DEPLOY_YML_V1
             config = YAML.load_file(filename)
             break
           end
@@ -218,7 +230,7 @@ module KubeDeployTools
       # Rename deploy.yml to deploy.yaml, if necessary
       dirname  = File.dirname(@filename)
       basename = File.basename(@filename)
-      if basename == 'deploy.yml'
+      if basename == DEPLOY_YML_V1
         Logger.info('Renaming deploy.yml => deploy.yaml')
         File.rename(@filename, "#{dirname}/#{DEPLOY_YAML}")
       end

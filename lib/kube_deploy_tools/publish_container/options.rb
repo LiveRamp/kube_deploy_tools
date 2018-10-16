@@ -10,7 +10,6 @@ module KubeDeployTools
 
       def initialize
         self.local_prefix = 'local-registry'
-        self.manifest_file = 'deploy.yaml'
         self.registries = Set.new
         self.tag = KubeDeployTools::tag_from_local_env
       end
