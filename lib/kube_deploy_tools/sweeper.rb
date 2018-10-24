@@ -34,10 +34,11 @@ module KubeDeployTools
         [registry.name, driver_class.new(registry: registry)]
       end.to_h
 
-      if File.exists?(@config_file)
+      if @config_file && File.exists?(@config_file)
         # Load file again for sweeper data
         @configs = YAML.load_file(@config_file).fetch('sweeper')
-        KubeDeployTools::Logger.error("The config file '#{@config_file}' does not exist")
+      else
+          KubeDeployTools::Logger.error("The config file '#{@config_file}' does not exist")
       end
 
       if ! artifactory_pattern.blank?
