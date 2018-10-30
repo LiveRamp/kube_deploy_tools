@@ -11,7 +11,7 @@ DEPLOY_YML_V1 = 'deploy.yml'
 module KubeDeployTools
   # Read-only model for the deploy.yaml configuration file.
   class DeployConfigFile
-    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :sweeper
+    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :expiration
 
     def initialize(filename)
       config = nil
@@ -74,7 +74,7 @@ module KubeDeployTools
       @artifacts = parse_artifacts(config.fetch('artifacts', []))
       @flavors = parse_flavors(config.fetch('flavors', {}))
       @hooks = parse_hooks(config.fetch('hooks', ['default']))
-      @sweeper = parse_sweeper(config.fetch('sweeper', []))
+      @expiration = parse_expiration(config.fetch('expiration', []))
     end
 
     # Fetches and parse a version 1 config as a version 2 config, with the
@@ -201,10 +201,10 @@ module KubeDeployTools
       hooks
     end
 
-    def parse_sweeper(sweeper)
-      check_and_err(sweeper.is_a?(Array), '.sweeper is not an Array')
+    def parse_expiration(expiration)
+      check_and_err(expiration.is_a?(Array), '.expiration is not an Array')
 
-      sweeper
+      expiration
     end
 
     # upgrade! converts the config to a YAML string in the format

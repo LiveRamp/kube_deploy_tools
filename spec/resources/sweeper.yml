@@ -8,7 +8,7 @@ image_registries:
   - name: gcp
     driver: gcp
     prefix: gcr.io/my-gcp-project
-sweeper:
+expiration:
   - repository: kubernetes-snapshot-local
     prefixes:
       - pattern: "fake_prefix"

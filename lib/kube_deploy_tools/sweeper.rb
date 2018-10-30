@@ -33,7 +33,7 @@ module KubeDeployTools
         driver_class = ImageRegistry::Driver::MAPPINGS.fetch(registry.driver)
         [registry.name, driver_class.new(registry: registry)]
       end.to_h
-      @sweeper_configs = config.sweeper
+      @sweeper_configs = config.expiration
 
       if ! artifactory_pattern.blank?
         @sweeper_configs = [
