@@ -49,7 +49,7 @@ module KubeDeployTools
         Logger.info("DRYRUN: delete gcp image #{image_id}")
       else
         # --quiet removes the user-input component
-        Shellrunner.run_call('gcloud', 'container', 'images', 'delete', '--quiet', image_id, '--force-delete-tags')
+        Shellrunner.check_call('gcloud', 'container', 'images', 'delete', '--quiet', image_id, '--force-delete-tags')
       end
     end
 

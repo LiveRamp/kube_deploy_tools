@@ -52,7 +52,7 @@ module KubeDeployTools
         if dryrun
           Logger.info("Would run: #{cmd}")
         else
-          Shellrunner.run_call(*cmd)
+          Shellrunner.check_call(*cmd)
         end
       end
     end
