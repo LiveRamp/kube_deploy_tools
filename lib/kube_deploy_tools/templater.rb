@@ -55,13 +55,9 @@ module KubeDeployTools
       @h.fetch(*args)
     end
 
-    # DEPRECATED: use method extra_flag instead
-    # get_or_nil will eventually be removed in a future version of kdt
-    def get_or_nil(k)
+    def extra_flag(k)
       @h[k]
     end
-
-    alias :extra_flag :get_or_nil
   end
 end
 

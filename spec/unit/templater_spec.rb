@@ -65,8 +65,6 @@ describe KubeDeployTools::Templater do
     it { expect( strict_hash[:foo] ).to eq 'bar' }
     it { expect{ strict_hash[:bar] }.to raise_error(/key not found/) }
     it { expect( strict_hash.fetch(:bar, 'foo') ).to eq 'foo' }
-    it { expect( strict_hash.get_or_nil(:foo)   ).to eq 'bar' }
-    it { expect( strict_hash.get_or_nil(:bar)   ).to eq nil }
     it { expect( strict_hash.extra_flag(:foo)   ).to eq 'bar' }
     it { expect( strict_hash.extra_flag(:bar)   ).to eq nil }
   end

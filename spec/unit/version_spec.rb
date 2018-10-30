@@ -26,11 +26,12 @@ describe KubeDeployTools do
   end
 
   it 'sets the version for a Jenkins non-master build' do
-    ENV['GIT_BRANCH'] = 'origin/my-pr-branch'
+    ENV['GIT_BRANCH'] = 'origin/my-pr-branch_with_long_name'
     ENV['BUILD_ID'] = '5678'
     actual = KubeDeployTools.version_xyz
 
     # Must be a valid Gem version
+    puts actual
     expect(Gem::Version.correct?(actual)).to be_truthy
     actual_gem_version = Gem::Version.new(actual)
 

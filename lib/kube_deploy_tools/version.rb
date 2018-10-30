@@ -5,8 +5,10 @@ module KubeDeployTools
     version_xyz = VERSION_XYZ
     prerelease_notation = '.dev'
     build_metadata_notation = ''
-    build_metadata_notation += ENV.has_key?('GIT_BRANCH') ? '.' + ENV.fetch('GIT_BRANCH').sub('origin/', '') : ''
+    build_metadata_notation += ENV.has_key?('GIT_BRANCH') ? '.' + ENV.fetch('GIT_BRANCH') : ''
     build_metadata_notation += ENV.has_key?('BUILD_ID') ? '.' + ENV.fetch('BUILD_ID') : ''
+    build_metadata_notation = build_metadata_notation.sub('origin/', '')
+    build_metadata_notation = build_metadata_notation.gsub('_', '-')
 
     branch = ENV.fetch('GIT_BRANCH', '').sub('origin/', '')
     if branch == 'master' || branch.start_with?('release')

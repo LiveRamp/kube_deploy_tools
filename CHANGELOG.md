@@ -120,7 +120,8 @@ artifacts:
       pull_policy: IfNotPresent
 ```
 
-* `deploy.yml` is deprecated in favor of `deploy.yaml`
+* `kdt render_deploys`: the ERB templater helper method `config.get_or_nil`
+has been completely deprecated in favor of `config.extra_flag`
 
 * kdt will now only surface the `kdt` binary as a singular entrypoint. This means
 that if you were previously invoking the kdt subcommands directly (eg.
