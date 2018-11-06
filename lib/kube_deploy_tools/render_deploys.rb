@@ -20,7 +20,7 @@ module KubeDeployTools
     'tag' => tag_from_local_env,
   }.freeze
   class RenderDeploys
-    def initialize(manifest, input_dir, output_dir, file_filters = [])
+    def initialize(manifest, input_dir, output_dir, file_filters: [], print_flags_only: false)
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
 
@@ -31,6 +31,8 @@ module KubeDeployTools
       FileUtils.mkdir_p @output_dir
 
       @file_filters = file_filters
+
+      @print_flags_only = print_flags_only
     end
 
     def render
@@ -51,6 +53,18 @@ module KubeDeployTools
         cluster_flavors.each do |flavor, flavor_flags|
           full_flags = cluster_flags.clone
           full_flags.merge!(render_erb_flags(flavor_flags)) if flavor_flags
+
+          # Print all flags for each artifact-flavor
+          puts "artifact '#{artifact}', flavor '#{flavor}'"
+          full_flags.
+            sort_by { |k, v| k }.
+            each do |k, v|
+              puts "config['#{k}'] = #{v}"
+            end
+          puts ""
+          # Skip rendering ERB templates and generating artifacts
+          # if printing flags only
+          next if @print_flags_only
 
           file_filters = FileFilter.filters_from_hash(c) + @file_filters
 

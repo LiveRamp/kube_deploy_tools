@@ -11,7 +11,14 @@ describe KubeDeployTools::RenderDeploys do
 
   before(:example) do
     KubeDeployTools::Shellrunner.shellrunner = shellrunner
-  end
+
+    # NOTE(jmodes): rspec mocks do not support child processes
+    # https://github.com/rspec/rspec-mocks/issues/59
+    # https://stackoverflow.com/a/6159391/1881379
+    allow_any_instance_of(Object).to receive(:fork) do |&block|
+      block.call
+    end
+end
 
   it "renders deploys for all clusters" do
     Dir.mktmpdir do |tmp_dir|
@@ -24,13 +31,6 @@ describe KubeDeployTools::RenderDeploys do
         INPUT_DIR,
         tmp_dir
       )
-
-      # NOTE(jmodes): rspec mocks do not support child processes
-      # https://github.com/rspec/rspec-mocks/issues/59
-      # https://stackoverflow.com/a/6159391/1881379
-      allow(app).to receive(:fork) do |&block|
-        block.call
-      end
 
       app.render
 
@@ -73,6 +73,26 @@ YAML
         expect(rendered_no_tag).to eq(expectation)
       end
       expect(shellrunner).to have_received(:check_call).with('tar', any_args).exactly(MANIFEST_FILE_NUM_CLUSTERS).times
+    end
+  end
+
+  it "doesn't render deploys for any clusters on print only" do
+    Dir.mktmpdir do |tmp_dir|
+      # Stub out ENV
+      ENV["JOB_NAME"] = JOB_NAME
+      ENV["BUILD_ID"] = BUILD_ID
+
+      app = KubeDeployTools::RenderDeploys.new(
+        MANIFEST_FILE,
+        INPUT_DIR,
+        tmp_dir,
+        print_flags_only: true
+      )
+
+      app.render
+
+      expect(Dir["#{tmp_dir}/*"].empty?).to be true
+      expect(shellrunner).not_to have_received(:check_call)
     end
   end
 end

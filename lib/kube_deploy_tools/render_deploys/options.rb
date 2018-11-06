@@ -3,7 +3,7 @@ require 'optparse'
 module KubeDeployTools
   class RenderDeploys::Optparser
     class Options
-      attr_accessor :manifest_file, :input_path, :output_path, :file_filters
+      attr_accessor :manifest_file, :input_path, :output_path, :file_filters, :print_flags_only
 
       def initialize
         self.input_path = File.join('kubernetes/')
@@ -22,6 +22,10 @@ module KubeDeployTools
 
         parser.on('-oPATH', '--output-path PATH', 'Path where rendered manifests should be written.') do |p|
           self.output_path = p
+        end
+
+        parser.on('-p', '--print', 'Print all available ERB config values only.') do |p|
+          self.print_flags_only = p
         end
 
         parser.on('--include INCLUDE', "Include glob pattern. Example: --include=**/* will include every file. Default is ''.") do |p|
