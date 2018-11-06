@@ -42,17 +42,22 @@ module KubeDeployTools
       # JSON format documented here:
       # https://docs.aws.amazon.com/cli/latest/reference/ecr/batch-delete-image.html
       ids_by_repository.each do |repository, image_ids|
-        cmd = [
-          'aws', 'ecr', 'batch-delete-image',
-          '--repository-name', repository,
-          '--region', @registry.config.fetch('region'),
-          '--image-ids', image_ids.to_json,
-        ]
+        # batch-delete-image has a threshold of 100 image_ids at a time
+        image_chunks = image_ids.each_slice(100).to_a
 
-        if dryrun
-          Logger.info("Would run: #{cmd}")
-        else
-          Shellrunner.check_call(*cmd)
+        image_chunks.each do |images|
+          cmd = [
+            'aws', 'ecr', 'batch-delete-image',
+            '--repository-name', repository,
+            '--region', @registry.config.fetch('region'),
+            '--image-ids', images.to_json,
+          ]
+
+          if dryrun
+            Logger.info("Would run: #{cmd}")
+          else
+            Shellrunner.check_call(*cmd)
+          end
         end
       end
     end
