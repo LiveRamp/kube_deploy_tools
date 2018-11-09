@@ -10,7 +10,7 @@ require 'kube_deploy_tools/image_registry/image'
 BUILT_ARTIFACTS_FILE = 'build/kubernetes/images.yaml'.freeze
 
 module KubeDeployTools
-  class PublishContainer
+  class Push
     def initialize(config, local_prefix, registries, images, tag)
       @config = config
       @local_prefix = local_prefix

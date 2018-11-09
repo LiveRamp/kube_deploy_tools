@@ -3,7 +3,7 @@ require 'optparse'
 require 'kube_deploy_tools/deploy_artifact'
 
 module KubeDeployTools
-  class PublishArtifacts::Optparser
+  class Publish::Optparser
     class Options
       attr_accessor :extra_files, :manifest_file, :output_path
 

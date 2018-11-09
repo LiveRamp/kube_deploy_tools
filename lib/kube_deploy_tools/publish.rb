@@ -9,7 +9,7 @@ require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/object'
 
 module KubeDeployTools
-  class PublishArtifacts
+  class Publish
     def initialize(manifest:, output_dir:, extra_files:)
       @config = DeployConfigFile.new(manifest)
       @output_dir = output_dir

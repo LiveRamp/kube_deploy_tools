@@ -19,7 +19,7 @@ module KubeDeployTools
     'image_tag' => tag_from_local_env,
     'tag' => tag_from_local_env,
   }.freeze
-  class RenderDeploys
+  class Generate
     def initialize(manifest, input_dir, output_dir, file_filters: [], print_flags_only: false)
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
@@ -35,7 +35,7 @@ module KubeDeployTools
       @print_flags_only = print_flags_only
     end
 
-    def render
+    def generate
       permutations = {}
       @config.artifacts.each do |c|
         artifact = c.fetch('name')
@@ -46,13 +46,13 @@ module KubeDeployTools
         cluster_flags.merge!(@config.default_flags)
 
         # Update and merge deploy flags for rendering
-        cluster_flags.merge!(render_erb_flags(c.fetch('flags', {})))
+        cluster_flags.merge!(generate_erb_flags(c.fetch('flags', {})))
 
         # Allow deploy.yaml to gate certain flavors to certain targets.
         cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
         cluster_flavors.each do |flavor, flavor_flags|
           full_flags = cluster_flags.clone
-          full_flags.merge!(render_erb_flags(flavor_flags)) if flavor_flags
+          full_flags.merge!(generate_erb_flags(flavor_flags)) if flavor_flags
 
           # Print all flags for each artifact-flavor
           puts "artifact '#{artifact}', flavor '#{flavor}'"
@@ -111,13 +111,13 @@ module KubeDeployTools
       raise 'rendering deploy configurations failed' if failure
     end
 
-    def render_erb_flags(flags)
+    def generate_erb_flags(flags)
       result = Hash.new
 
       flags.each do |key, template|
         if template.is_a?(String)
-          renderer = ERB.new(template)
-          result[key] = renderer.result
+          templater = ERB.new(template)
+          result[key] = templater.result
         else
           result[key] = template
         end

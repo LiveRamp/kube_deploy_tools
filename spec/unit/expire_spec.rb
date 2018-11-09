@@ -1,10 +1,10 @@
 require 'tempfile'
 
-require 'kube_deploy_tools/sweeper'
+require 'kube_deploy_tools/expire'
 
 SWEEPER_CONFIG='spec/resources/sweeper.yml'
 
-describe KubeDeployTools::Sweeper do
+describe KubeDeployTools::Expire do
   # Use a test spy for Logger
   let(:logger) { instance_double('logger', :error => {}) }
 
@@ -28,7 +28,7 @@ describe KubeDeployTools::Sweeper do
       dryrun = true
 
       expect do
-        sweeper = KubeDeployTools::Sweeper.new(
+        sweeper = KubeDeployTools::Expire.new(
           config_file_path,
           artifactory_repo,
           artifactory_pattern,
@@ -40,7 +40,7 @@ describe KubeDeployTools::Sweeper do
     it 'accepts a config file' do
       config_file_path = SWEEPER_CONFIG
       dryrun = true
-      sweeper = KubeDeployTools::Sweeper.new(
+      sweeper = KubeDeployTools::Expire.new(
         config_file_path,
         nil,
         nil,
@@ -65,7 +65,7 @@ describe KubeDeployTools::Sweeper do
       artifactory_pattern = 'fake/path/to/artifactory'
       retention = '14d'
       dryrun = true
-      sweeper = KubeDeployTools::Sweeper.new(
+      sweeper = KubeDeployTools::Expire.new(
         config_file_path,
         artifactory_repo,
         artifactory_pattern,

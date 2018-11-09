@@ -1,5 +1,5 @@
 module KubeDeployTools
-  class PublishContainer
+  class Push
     class Image
       attr_accessor :registry, :repository, :tag
       def initialize(registry, repository, tag)

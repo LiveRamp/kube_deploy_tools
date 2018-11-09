@@ -1,11 +1,11 @@
 require 'set'
 
-require 'kube_deploy_tools/publish_artifacts'
+require 'kube_deploy_tools/publish'
 
 MANIFEST_FILE='spec/resources/deploy.yaml'
 PROJECT='my-project'
 
-describe KubeDeployTools::PublishArtifacts do
+describe KubeDeployTools::Publish do
   let(:logger) { KubeDeployTools::FormattedLogger.build }
 
   it 'publishes artifacts according to deploy.yaml' do
@@ -44,7 +44,7 @@ describe KubeDeployTools::PublishArtifacts do
         FileUtils.touch File.join(dir, f)
       end
 
-      KubeDeployTools::PublishArtifacts.new(
+      KubeDeployTools::Publish.new(
         # This extra file happens to be a yaml file, but any existent file
         # can be put here. This is just convenient so we don't need to
         # create an extra data fixture in the repo.

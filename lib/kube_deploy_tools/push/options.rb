@@ -3,9 +3,9 @@ require 'set'
 require 'kube_deploy_tools/tag'
 
 module KubeDeployTools
-  class PublishContainer::Optparser
+  class Push::Optparser
 
-    class PublishContainerOptions
+    class PushOptions
       attr_accessor :local_prefix, :manifest_file, :registries, :images, :tag
 
       def initialize
@@ -27,7 +27,7 @@ module KubeDeployTools
           self.manifest_file = f
         end
 
-        parser.on('-rPREFIX', '--registry REGISTRY', 'The remote Docker registry to push to (can specify multiple times)') do |r|
+        parser.on('-rPREFIX', '--registry REGISTRY', 'The remote Docker registry to push to (can specify multiple times). If not specified, then will push to all registries in config.') do |r|
           self.registries.add r
         end
       end
@@ -35,7 +35,7 @@ module KubeDeployTools
     end
 
     def parse(args)
-      @options = PublishContainerOptions.new
+      @options = PushOptions.new
       OptionParser.new do |parser|
         @options.define_options(parser)
         parser.parse!(args)

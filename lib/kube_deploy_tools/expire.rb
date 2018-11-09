@@ -18,7 +18,7 @@ require 'kube_deploy_tools/shellrunner'
 IMAGES_FILE = 'images.yaml'
 
 module KubeDeployTools
-  class Sweeper
+  class Expire
     def initialize(config_file, artifactory_repo, artifactory_pattern, retention, dryrun)
       @artifactory_username = ENV.fetch('ARTIFACTORY_USERNAME')
       @artifactory_password = ENV.fetch('ARTIFACTORY_PASSWORD')

@@ -7,30 +7,30 @@ version: 2
 # Please only include the Kubernetes clusters your project will deploy to.
 artifacts:
   - name: local-staging
+    image_registry: local
     flags:
       target: local
       environment: staging
       cloud: local
-      image_registry: local-registry
   - name: colo-service-prod
+    image_registry: aws
     flags:
       target: colo-service
       environment: prod
       cloud: colo
-      image_registry: ***REMOVED***
   - name: colo-service-staging
+    image_registry: aws
     flags:
       target: colo-service
       environment: staging
       cloud: colo
-      image_registry: ***REMOVED***
   - name: dist-prod
+    image_registry: gcp
     flags:
       target: dist
       environment: prod
       cloud: gcp
-      image_registry: ***REMOVED***
-    # Include only the nginx/ directory
+    # Include only the kubernetes/nginx/ directory
     include_dir:
       - nginx/
 
@@ -40,12 +40,15 @@ default_flags:
 image_registries:
   - name: aws
     driver: aws
-    prefix: ***REMOVED***
+    prefix: 1234.dkr.ecr.us-west-2.amazonaws.com
     config:
       region: us-west-2
   - name: gcp
     driver: gcp
     prefix: ***REMOVED***
+  - name: local
+    driver: noop
+    prefix: local-registry
 
 # The flavors section can be specified globally or at the cluster level. It's
 # a freeform way to specify how you'd like to separate stages or kinds of

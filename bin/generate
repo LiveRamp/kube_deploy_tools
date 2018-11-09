@@ -6,22 +6,22 @@
 
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/shellrunner'
-require 'kube_deploy_tools/render_deploys'
-require 'kube_deploy_tools/render_deploys/options'
+require 'kube_deploy_tools/generate'
+require 'kube_deploy_tools/generate/options'
 
 def options
-  parser = KubeDeployTools::RenderDeploys::Optparser.new
+  parser = KubeDeployTools::Generate::Optparser.new
   parser.parse(ARGV)
 end
 
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 
-app = KubeDeployTools::RenderDeploys.new(
+app = KubeDeployTools::Generate.new(
   options.manifest_file,
   options.input_path,
   options.output_path,
   file_filters: options.file_filters,
   print_flags_only: options.print_flags_only
 )
-app.render
+app.generate

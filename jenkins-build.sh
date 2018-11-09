@@ -21,7 +21,7 @@ case "$GIT_BRANCH" in
 esac
 
 # Generate K8s manifests for Sweeper
-bundle exec kdt render_deploys
+bundle exec kdt generate
 # Generate container image for Sweeper and push
 bundle exec rake container:kube_deploy_tools
 # Versioned image
@@ -29,4 +29,4 @@ bundle exec rake container_push:kube_deploy_tools
 # Latest image
 bundle exec rake container_publish
 # Record keeping in Artifactory
-bundle exec kdt publish_artifacts
+bundle exec kdt publish

@@ -1,7 +1,7 @@
 require 'optparse'
 
 module KubeDeployTools
-  class RenderDeploys::Optparser
+  class Generate::Optparser
     class Options
       attr_accessor :manifest_file, :input_path, :output_path, :file_filters, :print_flags_only
 

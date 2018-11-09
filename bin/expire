@@ -5,7 +5,7 @@ require 'optparse'
 
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/shellrunner'
-require 'kube_deploy_tools/sweeper'
+require 'kube_deploy_tools/expire'
 
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
@@ -37,4 +37,4 @@ artifactory_pattern = options[:artifactory_pattern]
 retention = options[:retention]
 dryrun = options[:dryrun] || false
 
-KubeDeployTools::Sweeper.new(config_file_path, artifactory_repo, artifactory_pattern, retention, dryrun).remove_images
+KubeDeployTools::Expire.new(config_file_path, artifactory_repo, artifactory_pattern, retention, dryrun).remove_images

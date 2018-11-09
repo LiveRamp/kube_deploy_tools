@@ -3,7 +3,7 @@
 #
 # Example usage:
 #
-# publish_container \
+# push \
 # --registry aws \
 # --local-prefix local-registry/ \
 # --tag my-custom-tag \
@@ -15,15 +15,15 @@
 
 require 'optparse'
 
-require 'kube_deploy_tools/publish_container'
-require 'kube_deploy_tools/publish_container/options'
+require 'kube_deploy_tools/push'
+require 'kube_deploy_tools/push/options'
 
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/shellrunner'
 
 def options
   $options ||= begin
-    parser = KubeDeployTools::PublishContainer::Optparser.new
+    parser = KubeDeployTools::Push::Optparser.new
     parser.parse(ARGV)
   end
 end
@@ -38,7 +38,7 @@ def images
 
 Example usage:
 
-publish_container \
+push \
 --local-prefix local-registry/ \
 --tag my-custom-tag \
 image1 image2 image3
@@ -54,4 +54,4 @@ KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 config = KubeDeployTools::DeployConfigFile.new(options.manifest_file)
 
-KubeDeployTools::PublishContainer.new(config, options.local_prefix, options.registries, images, options.tag).publish
+KubeDeployTools::Push.new(config, options.local_prefix, options.registries, images, options.tag).publish

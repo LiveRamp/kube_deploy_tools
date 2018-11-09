@@ -2,12 +2,12 @@ require 'fileutils'
 require 'securerandom'
 require 'tmpdir'
 
-require 'kube_deploy_tools/publish_container'
+require 'kube_deploy_tools/push'
 
 BUILT_ARTIFACTS_PATH = 'build'
 MANIFEST_FILE = 'spec/resources/deploy.yaml'
 
-describe KubeDeployTools::PublishContainer do
+describe KubeDeployTools::Push do
   # Mock shellrunner
   let(:status) { double(:status, success?: true) }
   let(:stdoutput) { 'fake stdoutput' }
@@ -19,7 +19,7 @@ describe KubeDeployTools::PublishContainer do
 
   describe 'publish' do
     let(:publisher) do
-      KubeDeployTools::PublishContainer.new(
+      KubeDeployTools::Push.new(
         KubeDeployTools::DeployConfigFile.new(MANIFEST_FILE),
         'my-registry',
         remote_registry,
@@ -137,8 +137,8 @@ describe KubeDeployTools::PublishContainer do
         FileUtils.rm(file_name)
       end
 
-      image_a = KubeDeployTools::PublishContainer::Image.new('aws', 'test', 'a')
-      image_b = KubeDeployTools::PublishContainer::Image.new('aws', 'test', 'b')
+      image_a = KubeDeployTools::Push::Image.new('aws', 'test', 'a')
+      image_b = KubeDeployTools::Push::Image.new('aws', 'test', 'b')
       images_to_push = [image_a, image_b]
 
       # Need to create the file object since it is assumed the file exists
@@ -162,7 +162,7 @@ describe KubeDeployTools::PublishContainer do
         expect(config['images'].size).to eq(images_to_push.size)
         expect(old_build_id.nil?).to_not be_nil
 
-        image_to_add = [KubeDeployTools::PublishContainer::Image.new('aws', 'test', 'c')]
+        image_to_add = [KubeDeployTools::Push::Image.new('aws', 'test', 'c')]
         file_object = File.open(file_name, 'r+')
         publisher.send :update_built_artifacts, image_to_add, file_object
         file_object.close
