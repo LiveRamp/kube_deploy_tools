@@ -11,7 +11,7 @@ DEPLOY_YML_V1 = 'deploy.yml'
 module KubeDeployTools
   # Read-only model for the deploy.yaml configuration file.
   class DeployConfigFile
-    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :expiration
+    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :valid_image_registries, :expiration
 
     def initialize(filename)
       config = nil
@@ -71,7 +71,7 @@ module KubeDeployTools
       config = @original_config
       @image_registries = parse_image_registries(config.fetch('image_registries', []))
       @default_flags = parse_default_flags(config.fetch('default_flags', {}))
-      @artifacts = parse_artifacts(config.fetch('artifacts', []))
+      @artifacts = parse_artifacts(config.fetch('artifacts', []), @default_flags, @image_registries)
       @flavors = parse_flavors(config.fetch('flavors', {}))
       @hooks = parse_hooks(config.fetch('hooks', ['default']))
       @expiration = parse_expiration(config.fetch('expiration', []))
@@ -94,6 +94,11 @@ module KubeDeployTools
           'name' => 'gcp',
           'driver' => 'gcp',
           'prefix' => '***REMOVED***'
+        },
+        {
+          'name' => 'local',
+          'driver' => 'noop',
+          'prefix' => 'local-registry'
         }
       ])
       @default_flags = parse_default_flags({
@@ -106,16 +111,16 @@ module KubeDeployTools
           case target
           when 'local'
             cloud = 'local'
-            image_registry = 'local-registry'
+            image_registry = 'local'
           when 'colo-service'
             cloud = 'colo'
-            image_registry = '***REMOVED***'
+            image_registry = 'aws'
           when 'us-east-1', 'us-west-2', 'eu-west-1'
             cloud = 'aws'
-            image_registry = '***REMOVED***'
+            image_registry = 'aws'
           when 'gcp'
             cloud = 'gcp'
-            image_registry = '***REMOVED***'
+            image_registry = 'gcp'
           else
             raise ArgumentError, "Expected a valid KDT 1.x .target for .deploy.clusters[#{i}].target, but got '#{target}'"
           end
@@ -124,8 +129,7 @@ module KubeDeployTools
             .merge({
               'target' => target,
               'environment' => environment,
-              'cloud' => cloud,
-              'image_registry' => image_registry,
+              'cloud' => cloud
             })
 
           if flags.key?('pull_policy') && flags.fetch('pull_policy') == @default_flags.fetch('pull_policy')
@@ -134,11 +138,14 @@ module KubeDeployTools
 
           artifact = {
             'name' => target + '-' + environment,
+            'image_registry' => image_registry,
             'flags' => flags,
           }
 
           artifact
-        }
+        },
+        @default_flags,
+        @image_registries
       )
       @flavors = parse_flavors(config.fetch('deploy', {}).fetch('flavors', {}))
       @hooks = parse_hooks(config.fetch('deploy', {}).fetch('hooks', ['default']))
@@ -160,7 +167,16 @@ module KubeDeployTools
         .to_h
     end
 
-    def parse_artifacts(artifacts)
+    def map_image_registry(image_registries)
+      valid_image_registries = {}
+      image_registries.each do |reg_name, reg_info|
+        valid_image_registries[reg_name] = reg_info.prefix
+      end
+      valid_image_registries
+    end
+
+    # .artifacts depends on .default_flags
+    def parse_artifacts(artifacts, default_flags, image_registries)
       check_and_err(artifacts.is_a?(Array), '.artifacts is not an Array')
 
       duplicates = select_duplicates(artifacts.map { |i| i.fetch('name') })
@@ -169,16 +185,47 @@ module KubeDeployTools
         "Expected .artifacts names to be unique, but found duplicates: #{duplicates}"
       )
 
+      @valid_image_registries = map_image_registry(image_registries)
+
       artifacts.each { |artifact, index|
         check_and_err(
           artifact.key?('name'),
           "Expected .artifacts[#{index}].name key to exist, but .name is missing"
         )
         name = artifact.fetch('name')
+        check_and_err(
+          artifact.key?('image_registry'),
+          "Expected .artifacts['#{index}'].image_registry key to exist, but .image_registry is missing"
+        )
+
+        image_registry = artifact.fetch('image_registry')
+        check_and_err(
+          @valid_image_registries.key?(image_registry),
+          "#{image_registry} is not a valid Image Registry. Has to be one of #{@valid_image_registries.keys}"
+        )
 
         check_and_err(
           artifact.key?('flags'),
           "Expected .artifacts.#{name}.flags key to exist, but .flags is missing"
+        )
+
+        # Check required flag values in .artifacts or .default_flags
+        flags = artifact.fetch('flags').merge(default_flags)
+        check_and_err(
+          flags.key?('target'),
+          "Expected .artifacts['#{name}'].flags.target key to exist, but .target is missing"
+        )
+        check_and_err(
+          flags.key?('environment'),
+          "Expected .artifacts['#{name}'].flags.environment key to exist, but .environment is missing"
+        )
+        check_and_err(
+          flags.key?('cloud'),
+          "Expected .artifacts['#{name}'].flags.cloud key to exist, but .cloud is missing"
+        )
+        check_and_err(
+          flags.key?('pull_policy'),
+          "Expected .artifacts['#{name}'].flags.pull_policy key to exist, but .pull_policy is missing"
         )
       }
     end
@@ -223,12 +270,20 @@ module KubeDeployTools
           'artifacts' => @artifacts.map { |a|
             {
               'name' => a.fetch('name'),
+              'image_registry' => a.fetch('image_registry'),
               'flags' => a.fetch('flags', {})
             }
           },
           'flavors' => @flavors,
           'default_flags' => @default_flags,
           'hooks' => @hooks,
+          'image_registries' => @image_registries.map { |_, i|
+            {
+              'name' => i.name,
+              'driver' => i.driver,
+              'prefix' => i.prefix
+            }
+          }
         }
       end
 

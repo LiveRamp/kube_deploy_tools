@@ -10,6 +10,6 @@ spec:
     spec:
       containers:
       - name: other
-        image: other
+        image: <%= config["image_registry"] %>/kube_deploy_tools:<%= config["image_tag"] %>
         imagePullPolicy: <%= config["pull_policy"] %>
 

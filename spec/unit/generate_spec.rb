@@ -20,6 +20,21 @@ describe KubeDeployTools::Generate do
     end
 end
 
+  it 'renders correct image_registry in kubernetes yaml' do
+    Dir.mktmpdir do |tmp_dir|
+      app = KubeDeployTools::Generate.new(
+        MANIFEST_FILE,
+        INPUT_DIR,
+        tmp_dir
+      )
+      app.generate
+      expected = Dir["#{tmp_dir}/**/other.yaml"]
+      expected.select{ |f| f =~ /local/ }.each do |rendered|
+        expect(File.read(rendered)).to include("local-registry")
+      end
+    end
+  end
+
   it "renders deploys for all clusters" do
     Dir.mktmpdir do |tmp_dir|
       # Stub out ENV

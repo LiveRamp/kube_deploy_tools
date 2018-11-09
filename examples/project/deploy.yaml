@@ -30,7 +30,6 @@ artifacts:
       target: dist
       environment: prod
       cloud: gcp
-    # Include only the kubernetes/nginx/ directory
     include_dir:
       - nginx/
 
@@ -69,4 +68,3 @@ flavors:
 hooks:
   - default
   - scripts/render_deploys_hook
-

@@ -1,23 +1,23 @@
 version: 2
 artifacts:
   - name: local-staging
+    image_registry: local
     flags:
       target: local
       environment: staging
       cloud: local
-      image_registry: local-registry
   - name: colo-service-prod
+    image_registry: aws
     flags:
       target: colo-service
       environment: prod
       cloud: colo
-      image_registry: 123456.dkr.ecr.us-west-2.amazonaws.com
   - name: colo-service-staging
+    image_registry: aws
     flags:
       target: colo-service
       environment: staging
       cloud: colo
-      image_registry: 123456.dkr.ecr.us-west-2.amazonaws.com
 flavors:
   default: {}
 image_registries:
@@ -29,6 +29,9 @@ image_registries:
   - name: gcp
     driver: gcp
     prefix: gcr.io/my-gcp-project
+  - name: local
+    driver: noop
+    prefix: local-registry
 hooks:
   - default
   - scripts/render_deploys_hook

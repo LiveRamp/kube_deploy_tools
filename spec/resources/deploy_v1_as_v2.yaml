@@ -6,33 +6,36 @@ default_flags:
   pull_policy: IfNotPresent
 artifacts:
   - name: local-staging
+    image_registry: local
     flags:
       target: local
       environment: staging
       cloud: local
-      image_registry: local-registry
       pull_policy: Always
   - name: colo-service-prod
+    image_registry: aws
     flags:
       target: colo-service
       environment: prod
       cloud: colo
-      image_registry: ***REMOVED***
   - name: colo-service-staging
+    image_registry: aws
     flags:
       target: colo-service
       environment: staging
       cloud: colo
-      image_registry: ***REMOVED***
   - name: us-east-1-prod
+    image_registry: aws
     flags:
       target: us-east-1
       environment: prod
       cloud: aws
-      image_registry: ***REMOVED***
 flavors:
   default: {}
 image_registries:
+  - name: local
+    driver: noop
+    prefix: local-registry
   - name: aws
     driver: aws
     prefix: ***REMOVED***

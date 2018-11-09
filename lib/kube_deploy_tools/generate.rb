@@ -42,12 +42,16 @@ module KubeDeployTools
 
         # Get metadata for this target/environment pair from manifest
         cluster_flags = DEFAULT_FLAGS.dup
+
+        cluster_flags['image_registry'] = c.fetch('image_registry')
+
         # Merge in configured default flags
         cluster_flags.merge!(@config.default_flags)
 
         # Update and merge deploy flags for rendering
         cluster_flags.merge!(generate_erb_flags(c.fetch('flags', {})))
 
+        cluster_flags['image_registry'] = @config.valid_image_registries[cluster_flags['image_registry']]
         # Allow deploy.yaml to gate certain flavors to certain targets.
         cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
         cluster_flavors.each do |flavor, flavor_flags|

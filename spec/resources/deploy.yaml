@@ -7,53 +7,53 @@ default_flags:
 # Required flags: target, environment, flags
 artifacts:
   - name: local
+    image_registry: local
     flags:
       target: local
       environment: staging
       cloud: local
-      image_registry: local-registry
   - name: colo-service-prod
+    image_registry: artifactory
     flags:
       target: colo-service
       environment: prod
       cloud: colo
-      image_registry: ''
   - name: colo-service-staging
+    image_registry: artifactory
     flags:
       target: colo-service
       environment: staging
       cloud: colo
-      image_registry: ''
   - name: pippio-production
+    image_registry: gcp
     flags:
       target: pippio-production
       environment: prod
       cloud: gcp
-      image_registry: gcr.io/kdt-example
   - name: us-east-1-prod
+    image_registry: aws
     flags:
       target: us-east-1
       environment: prod
       cloud: aws
-      image_registry: ''
   - name: us-east-1-staging
+    image_registry: aws
     flags:
       target: us-east-1
       environment: staging
       cloud: aws
-      image_registry: ''
   - name: ingestion-prod
+    image_registry: gcp
     flags:
       target: ingestion
       environment: prod
       cloud: gcp
-      image_registry: gcr.io/kdt-example
   - name: platforms-prod
+    image_registry: gcp
     flags:
       target: platforms
       environment: prod
       cloud: gcp
-      image_registry: gcr.io/kdt-example
       feature_grafana: true
       feature_heapster: true
       feature_kube_state_metrics: true
@@ -64,13 +64,13 @@ artifacts:
       kubernetes_major_version: '1'
       kubernetes_minor_version: '8'
   - name: filtered-artifact
+    image_registry: aws
     include_dir:
       - nginx/
     flags:
       target: us-east-1
       environment: staging
       cloud: aws
-      image_registry: ''
 flavors:
   default:
     test_bool: true
