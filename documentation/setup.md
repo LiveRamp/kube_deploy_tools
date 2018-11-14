@@ -49,7 +49,7 @@ Install KDT by adding a new `Gemfile` or updating your existing `Gemfile`:
 source 'https://gemserver.***REMOVED***'
 
 group :kdt do
-  gem 'kube_deploy_tools', '~> 2.0'
+  gem 'kube_deploy_tools', '~> 2'
 end
 ```
 
