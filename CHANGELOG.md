@@ -44,7 +44,6 @@
   fix.
 
 ### Breaking Changes
-<<<<<<< HEAD
 * For `kdt deploy`, `--context` is now a required argument.
   * To view your contexts, see `kubectl config get-contexts`.
 * For `kdt publish_container`, in `deploy.yaml`,
@@ -219,7 +218,7 @@ has been completely deprecated in favor of `config.extra_flag`
   ```bash
   # old pseudo command
   docker tag local-registry/my-app upstream-registry/my-app:<$GIT_BRANCH + $GIT_SHA + $JENKINS_BUILD_ID>
-  
+
   # new pseudo command
   docker tag local-registry/my-app upstream-registry/my-app:<$GIT_SHA + $JENKINS_BUILD_ID>
   ```
