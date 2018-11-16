@@ -24,6 +24,10 @@ should be run somewhere in your build.
 
 ## Java Projects
 
+### DISCLAIMER
+
+Jenkinsfiles as a way of building and deploying code is still being developed as of (November 15, 2018). It is not currently a supported tool within the KDT and LiveRamp ecosystem. If you are curious about it's use cases or current state, come and join the #dev-ci Slack channel.
+
 ### Jenkinsfiles Configuration
 1. See steps in [MasterRepos/jenkins_pipelines](https://git.***REMOVED***/MasterRepos/jenkins_pipelines/blob/master/README.md) to add a Jenkinsfile to your repository
 
