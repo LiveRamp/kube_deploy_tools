@@ -164,7 +164,7 @@ KDT by running the example below locally:
 ```bash
 # To build and push your image to an image registry specified in
 # your deploy.yaml, run
-docker build -t local-registry/my-image
+docker build -t local-registry/my-image .
 bundle exec kdt push my-image --registry=gcp
 
 # To generate Kubernetes manifests from your templates under kubernetes/
