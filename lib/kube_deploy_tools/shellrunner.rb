@@ -19,7 +19,7 @@ module KubeDeployTools
     def check_call(*cmd, **opts)
       out, err, status = run_call(*cmd, **opts)
       if !status.success?
-        raise "!!! Command failed: #{Shellwords.join(cmd)}"
+        raise "Command failed: #{Shellwords.join(cmd)} with the following error: #{err}"
       end
       out
     end
