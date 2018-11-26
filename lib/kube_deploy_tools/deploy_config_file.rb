@@ -187,7 +187,7 @@ module KubeDeployTools
 
       @valid_image_registries = map_image_registry(image_registries)
 
-      artifacts.each { |artifact, index|
+      artifacts.each_with_index { |artifact, index|
         check_and_err(
           artifact.key?('name'),
           "Expected .artifacts[#{index}].name key to exist, but .name is missing"
@@ -195,7 +195,7 @@ module KubeDeployTools
         name = artifact.fetch('name')
         check_and_err(
           artifact.key?('image_registry'),
-          "Expected .artifacts['#{index}'].image_registry key to exist, but .image_registry is missing"
+          "Expected .artifacts[#{index}].image_registry key to exist, but .image_registry is missing"
         )
 
         image_registry = artifact.fetch('image_registry')
