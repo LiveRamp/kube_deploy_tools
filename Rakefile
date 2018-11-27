@@ -6,15 +6,28 @@ require 'rspec/core/rake_task'
 
 require 'kube_deploy_tools/version'
 
+GEMSERVER = 'https://gemserver.***REMOVED***'
+
 task :default => [:test, :build]
 
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = Dir.glob('spec/**/*_spec.rb')
 end
 
+# Push gem to our gem server
 Gem::Tasks.new do |tasks|
-  tasks.push.host = 'https://gemserver.***REMOVED***'
+  tasks.push.host = GEMSERVER
 end
+
+# Check if the gem version exists already before pushing the gem
+task :check_gem_version_exists do
+  check_gem_version_exists = "gem fetch kube_deploy_tools --source #{GEMSERVER} --version #{KubeDeployTools::version_xyz} | grep -q Downloaded"
+  system(check_gem_version_exists)
+  if $? == 0
+    raise "Found gem kube_deploy_tools published to #{GEMSERVER} at version #{KubeDeployTools::version_xyz}. Don't forget to bump the version in lib/kube_deploy_tools/version.rb!"
+  end
+end
+task :push => :check_gem_version_exists
 
 containers_path = 'containers'
 
