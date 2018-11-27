@@ -42,20 +42,7 @@ Below are installation steps for KDT along with default configuration.
 
 # Installation
 
-Install KDT by adding a new `Gemfile` or updating your existing `Gemfile`:
-
-`Gemfile`:
-```ruby
-source 'https://gemserver.***REMOVED***'
-
-group :kdt do
-  gem 'kube_deploy_tools', '~> 2'
-end
-```
-
-```bash
-bundle install --with kdt --without default development test
-```
+See [Install section](../README.md).
 
 # Configuration
 
@@ -176,4 +163,3 @@ bundle exec kdt generate
 
 Please see [documentation/liveramp_jenkins.md](liveramp_jenkins.md) for adding
 credentials to your Jenkins build.
-

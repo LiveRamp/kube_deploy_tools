@@ -1,6 +1,62 @@
 # kube_deploy_tools
 
-What is kube_deploy_tools, aka KDT or kdt?
+kube_deploy_tools (kdt) is a tool to simplify kubernetes manifest generation
+and deployment.
+
+kdt is not specific to ruby projects; it can be used with any project that
+deploys to kubernetes.   
+
+# Getting Started
+
+## Install
+Start by adding a new `Gemfile` at the root of your project (or updating your existing `Gemfile`):
+
+```ruby
+source 'https://gemserver.***REMOVED***'
+
+group :kdt do
+  gem 'kube_deploy_tools', '~> 2'
+end
+```
+
+and then installing with [bundler](https://bundler.io/):
+
+```bash
+bundle install
+```
+
+## Configure
+
+Once kdt is installed, you will need to configure it. This is done by adding
+a new file named `deploy.yaml` at the root of your project. A minimal
+`deploy.yaml` is shown below:
+
+```yaml
+version: 2                        # version of kdt to be used
+default_flags:
+  pull_policy: IfNotPresent
+artifacts:
+  - name: prod
+    image_registry: gcp
+    flags:
+      target: dist
+      environment: prod
+      cloud: gcp
+image_registries:                 # define image registries used here
+  - name: gcp                     # deploy to gcr
+    driver: gcp
+    prefix: ***REMOVED***
+```
+
+Now that kdt is installed and configured for your project, see how you can
+add your kubernetes manifests in [documentation/setup.md](documentation/setup.md).
+
+# Usage
+
+To use kube_deploy_tools in your project, see
+[documentation/usage.md](documentation/usage.md).
+
+# Why KDT?
 
 KDT is helpful for tying together the following steps in a deployment chain, as described below. Note that the bash and `kdt` commands are closer to *pseudocode* and provided as examples only.
 
@@ -50,16 +106,6 @@ kdt deploy ...
 # 2.x NOTICE
 You're viewing docs for v2.x. To view docs for v1.x, please see:
 https://git.***REMOVED***/OpsRepos/kube_deploy_tools/tree/release-1.x
-
-# Setup
-
-To enable kube_deploy_tools in your project, see
-[documentation/setup.md](documentation/setup.md).
-
-# Usage
-
-To use kube_deploy_tools in your project, see
-[documentation/usage.md](documentation/usage.md).
 
 # Changes
 
