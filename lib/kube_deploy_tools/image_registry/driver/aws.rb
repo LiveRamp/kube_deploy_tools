@@ -13,7 +13,7 @@ module KubeDeployTools
       super(h)
 
       check_and_err(
-        @registry.config.has_key?('region'),
+        @registry.config&.has_key?('region'),
         "Expected .image_registries['#{@name}'] to have .config.region to be set "\
         "for the AWS image registry driver, but .config.region is not set "\
         "e.g. .config.region = 'us-west-2'"
