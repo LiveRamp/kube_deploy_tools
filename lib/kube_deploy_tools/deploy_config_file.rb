@@ -2,6 +2,7 @@ require 'pathname'
 require 'set'
 require 'yaml'
 
+require 'kube_deploy_tools/deploy_config_file/util'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
 
@@ -12,6 +13,8 @@ module KubeDeployTools
   # Read-only model for the deploy.yaml configuration file.
   class DeployConfigFile
     attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :valid_image_registries, :expiration
+
+    include DeployConfigFileUtil
 
     def initialize(filename)
       config = nil
@@ -278,11 +281,15 @@ module KubeDeployTools
           'default_flags' => @default_flags,
           'hooks' => @hooks,
           'image_registries' => @image_registries.map { |_, i|
-            {
+            image_registry = {
               'name' => i.name,
               'driver' => i.driver,
-              'prefix' => i.prefix
+              'prefix' => i.prefix,
             }
+
+            image_registry['config'] = i.config if !i.config.nil?
+
+            image_registry
           }
         }
       end
@@ -300,20 +307,6 @@ module KubeDeployTools
 
     def select_duplicates(array)
       array.select { |n| array.count(n) > 1 }.uniq
-    end
-
-    def check_and_err(condition, error)
-      if ! condition
-        Logger.error("Error in configuration #{@filename}")
-        raise ArgumentError, error
-      end
-    end
-
-    def check_and_warn(condition, warning)
-      if ! condition
-        Logger.warn("Warning in configuration #{@filename}")
-        Logger.warn(warning)
-      end
     end
   end
 end

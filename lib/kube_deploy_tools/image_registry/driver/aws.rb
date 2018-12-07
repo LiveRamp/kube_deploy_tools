@@ -2,10 +2,24 @@ require 'json'
 
 require_relative 'base'
 require_relative '../image'
+require 'kube_deploy_tools/deploy_config_file/util'
 require 'kube_deploy_tools/shellrunner'
 
 module KubeDeployTools
   class ImageRegistry::Driver::Aws < ImageRegistry::Driver::Base
+    include DeployConfigFileUtil
+
+    def initialize(h)
+      super(h)
+
+      check_and_err(
+        @registry.config.has_key?('region'),
+        "Expected .image_registries['#{@name}'] to have .config.region to be set "\
+        "for the AWS image registry driver, but .config.region is not set "\
+        "e.g. .config.region = 'us-west-2'"
+      )
+    end
+
     def push_image(image)
       create_repository(image.repository) unless repository_exists?(image.repository)
       super(image)

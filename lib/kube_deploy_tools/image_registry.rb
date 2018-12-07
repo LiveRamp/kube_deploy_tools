@@ -10,5 +10,12 @@ module KubeDeployTools
       @prefix = h['prefix']
       @config = h['config']
     end
+
+    def ==(o)
+      @name == o.name
+      @driver == o.driver
+      @prefix == o.prefix
+      @config == o.config
+    end
   end
 end

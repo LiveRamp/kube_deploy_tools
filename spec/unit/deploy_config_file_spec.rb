@@ -101,6 +101,7 @@ describe KubeDeployTools::DeployConfigFile do
         expect(actual.artifacts).to eq(expected.artifacts)
         expect(actual.flavors).to eq(expected.flavors)
         expect(actual.hooks).to match_array(expected.hooks)
+        expect(actual.image_registries).to match_array(expected.image_registries)
       end
     end
   end
