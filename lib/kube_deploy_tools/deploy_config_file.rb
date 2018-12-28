@@ -211,25 +211,6 @@ module KubeDeployTools
           artifact.key?('flags'),
           "Expected .artifacts.#{name}.flags key to exist, but .flags is missing"
         )
-
-        # Check required flag values in .artifacts or .default_flags
-        flags = artifact.fetch('flags').merge(default_flags)
-        check_and_err(
-          flags.key?('target'),
-          "Expected .artifacts['#{name}'].flags.target key to exist, but .target is missing"
-        )
-        check_and_err(
-          flags.key?('environment'),
-          "Expected .artifacts['#{name}'].flags.environment key to exist, but .environment is missing"
-        )
-        check_and_err(
-          flags.key?('cloud'),
-          "Expected .artifacts['#{name}'].flags.cloud key to exist, but .cloud is missing"
-        )
-        check_and_err(
-          flags.key?('pull_policy'),
-          "Expected .artifacts['#{name}'].flags.pull_policy key to exist, but .pull_policy is missing"
-        )
       }
     end
 
