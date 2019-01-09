@@ -12,10 +12,13 @@ deploys to kubernetes.
 Start by adding a new `Gemfile` at the root of your project (or updating your existing `Gemfile`):
 
 ```ruby
-source 'https://gemserver.***REMOVED***'
+source 'https://***REMOVED***' do
+end
 
-group :kdt do
-  gem 'kube_deploy_tools', '~> 2'
+source 'https://***REMOVED***' do
+  group :kdt do
+    gem 'kube_deploy_tools', '~> 2.0'
+  end
 end
 ```
 
