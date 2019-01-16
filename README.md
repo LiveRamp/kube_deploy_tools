@@ -45,6 +45,8 @@ artifacts:
       target: dist
       environment: prod
       cloud: gcp
+flavors:
+  default: {}
 image_registries:                 # define image registries used here
   - name: gcp                     # deploy to gcr
     driver: gcp
