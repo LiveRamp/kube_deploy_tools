@@ -10,8 +10,8 @@ require 'kube_deploy_tools/deploy/options'
 require 'kube_deploy_tools/templater'
 require 'kube_deploy_tools/templater/options'
 
-require 'kube_deploy_tools/render_deploys'
-require 'kube_deploy_tools/render_deploys/options'
+require 'kube_deploy_tools/generate'
+require 'kube_deploy_tools/generate/options'
 
 module KubeDeployTools
 end
