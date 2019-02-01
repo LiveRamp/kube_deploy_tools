@@ -17,6 +17,9 @@ module KubeDeployTools
     elsif ENV.has_key?('GIT_BRANCH') && ENV.has_key?('BUILD_ID')
       # Jenkins non-master builds
       version_xyz += prerelease_notation + build_metadata_notation
+    elsif File.exist?('/proc/1/cgroup') && File.open('/proc/1/cgroup').grep(/docker/).any?
+      # Docker builds
+      return version_xyz
     else
       # non-Jenkins
       version_xyz += prerelease_notation

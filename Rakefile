@@ -6,7 +6,7 @@ require 'rspec/core/rake_task'
 
 require 'kube_deploy_tools/version'
 
-GEMSERVER = 'https://gemserver.***REMOVED***'
+GEMSERVER = 'https://***REMOVED***'
 
 task :default => [:test, :build]
 
@@ -66,5 +66,13 @@ end
 
 desc "Push Docker image for kube_deploy_tools at current version"
 task :container_publish => [:"container:kube_deploy_tools"] do
-  Rake.application.invoke_task("container_push:kube_deploy_tools[#{KubeDeployTools::version_xyz}]")
+  major, minor, patch = KubeDeployTools::version_xyz.split('.')
+  [
+    "#{major}.#{minor}.#{patch}",
+    "#{major}.#{minor}",
+    "#{major}"
+  ].each do |version|
+    Rake::Task["container_push:kube_deploy_tools"].invoke(version)
+    Rake::Task["container_push:kube_deploy_tools"].reenable
+  end
 end
