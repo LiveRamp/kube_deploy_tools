@@ -20,9 +20,7 @@ case "$GIT_BRANCH" in
 ;;
 esac
 
-# Generate K8s manifests for Sweeper
-bundle exec kdt generate
-# Generate container image for Sweeper and push
+# Generate container image
 bundle exec rake container:kube_deploy_tools
 # Versioned image
 bundle exec rake container_push:kube_deploy_tools

@@ -9,13 +9,13 @@ artifacts:
       environment: staging
       cloud: local
   - name: colo-service-prod
-    image_registry: aws
+    image_registry: gcp
     flags:
       target: colo-service
       environment: prod
       cloud: colo
   - name: colo-service-staging
-    image_registry: aws
+    image_registry: gcp
     flags:
       target: colo-service
       environment: staging
@@ -26,11 +26,6 @@ image_registries:
   - name: local
     driver: noop
     prefix: local-registry
-  - name: aws
-    driver: aws
-    prefix: ***REMOVED***
-    config:
-      region: us-west-2
   - name: gcp
     driver: gcp
     prefix: ***REMOVED***

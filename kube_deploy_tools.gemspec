@@ -12,6 +12,7 @@ Gem::Specification.new do |gem|
   gem.authors  = ['ops']
   gem.email    = 'ops@***REMOVED***'
   gem.homepage = 'http://git.***REMOVED***/OpsRepos/kube_deploy_tools'
+  gem.license  = 'MIT'
 
   gem.required_ruby_version = '>= 2.3'
 
