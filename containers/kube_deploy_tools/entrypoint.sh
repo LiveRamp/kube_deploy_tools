@@ -25,6 +25,16 @@ if [ ${LOCAL_UID} != 0 ]; then
   drop_privileges_command='su-exec kdt'
 fi
 
+# If set, symlink kubectl version based on environment variable
+if [[ -n "$KUBECTL_VERSION" ]]; then
+  if ! [ -e /usr/local/bin/kubernetes/versions/${KUBECTL_VERSION}/kubectl ]; then
+    echo -e "Environment variable, KUBECTL_VERSION, specifed an unsupported kubectl version: ${KUBECTL_VERSION}\n\nSupported versions:"
+    ls /usr/local/bin/kubernetes/versions/ | sort -t. -k 2n,2 -k 3n,3
+    exit 1
+  fi
+  ln -sf /usr/local/bin/kubernetes/versions/${KUBECTL_VERSION}/kubectl /usr/local/bin/kubectl
+fi
+
 # Authenticate to gcloud as local user
 if [[ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
   echo "WARNING: no Google Credentials set, gcloud commands might fail"

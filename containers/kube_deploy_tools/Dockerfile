@@ -59,12 +59,13 @@ RUN mkdir -p "${GOOGLE_SDK_LOCATION}" && \
 ENV KUBECTL_LATEST_VERSION="v1.11.7"
 RUN AVAILABLE_KUBECTL_VERSIONS="v1.7.2 v1.9.6 v1.10.12 ${KUBECTL_LATEST_VERSION}" && \
   for VERSION in ${AVAILABLE_KUBECTL_VERSIONS}; do \
-    curl -fSL --create-dirs -o /usr/local/bin/kubernetes/versions/${VERSION}/kubectl \
+    MAJOR_MINOR_VERSION=${VERSION%.*} && \
+    curl -fSL --create-dirs -o /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl \
       https://storage.googleapis.com/kubernetes-release/release/${VERSION}/bin/linux/amd64/kubectl && \
-    chmod +x /usr/local/bin/kubernetes/versions/${VERSION}/kubectl && \
-    ln -s /usr/local/bin/kubernetes/versions/${VERSION}/kubectl /usr/local/bin/kubectl${VERSION}; \
+    chmod +x /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl && \
+    ln -s /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl /usr/local/bin/kubectl${MAJOR_MINOR_VERSION}; \
   done && \
-  ln -s /usr/local/bin/kubernetes/versions/${KUBECTL_LATEST_VERSION}/kubectl /usr/local/bin/kubectl
+  ln -s /usr/local/bin/kubernetes/versions/${KUBECTL_LATEST_VERSION%.*}/kubectl /usr/local/bin/kubectl
 
 # Install kube_deploy_tools
 COPY --from=build /opt/kube_deploy_tools/pkg /opt/kube_deploy_tools
