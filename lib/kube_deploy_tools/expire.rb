@@ -54,8 +54,11 @@ module KubeDeployTools
 
         # Need to fetch the other images before removing the files from artifactory
         images = fetch_built_artifacts_files(built_artifacts_files)
-        @drivers.fetch('gcp').delete_images(images.fetch('gcp', []), @dryrun)
-        @drivers.fetch('aws').delete_images(images.fetch('aws', []), @dryrun)
+        @drivers.each do |name, driver|
+          driver.authorize unless @dryrun
+          driver.delete_images(images.fetch(name, []), @dryrun)
+          driver.unauthorize unless @dryrun
+        end
 
         # On success of all image deletions, now safe to trash the metadata.
         remove_from_artifactory(artifactory_builds)
@@ -65,67 +68,56 @@ module KubeDeployTools
     # Find the containers that are past their expiry time
     # on artifactory
     def search_artifactory(config)
-      largest_retention = 0
-      config.fetch('prefixes').each do |config|
-        this_retention = human_duration_in_seconds(config['retention'])
-        if this_retention > largest_retention
-          largest_retention = this_retention
-        end
-      end
-
-      repo_name = config.fetch('repository')
-      prefixes = config.fetch('prefixes')
-      to = (Time.now - largest_retention).to_i * 1000
-
-      uri = URI.parse("#{@artifactory_host}/api/search/creation")
-      uri.query = "to=#{to}&from=0&repos=#{repo_name}"
-      http = Net::HTTP.new(uri.host, uri.port)
-      request = Net::HTTP::Get.new(uri)
-      request.basic_auth @artifactory_username, @artifactory_password
-      response = http.request(request)
-      response_body = JSON.parse(response.body)
-
       #{{"job"=>prefix, "build"=>build, "repository"=>repository}=>{ files=>[], "created"=>created}}
       images_to_remove = {}
       built_artifacts_files = []
-      if response.code != '200'
-        KubeDeployTools::Logger.error("Error in fetching #{repo_name} search results #{response.code}: #{response.body}")
-        return images_to_remove, built_artifacts_files
-      else
-        response_body['results'].each do |res|
-          uri_result = res['uri']
-          uri_split = uri_result.split('/')
 
-          # The uri has the structure of:
-          # {host}/api/storage/{repo_name}/{prefix}/{build}/{file}
-          prefix_index = uri_split.find_index(repo_name) + 1
-          prefix = uri_split[prefix_index]
-          build = uri_split[prefix_index + 1]
-          file = uri_split[prefix_index + 2]
+      repo_name = config.fetch('repository')
 
-          created = DateTime.strptime(res['created'][0 .. 10], '%Y-%m-%d').to_time
-          config.fetch('prefixes', []).each do |item|
-            pattern = item.fetch('pattern')
-            retention = human_duration_in_seconds(item.fetch('retention'))
-            horizon = Time.now - retention
+      uri = URI.parse("#{@artifactory_host}/api/search/aql")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = (uri.scheme == 'https')
 
-            if not File.fnmatch?(pattern, prefix)
-              Logger.debug "skip #{prefix} build #{build} did not match #{pattern}"
-            elsif created > horizon
-              Logger.debug "skip #{prefix} build #{build} horizon #{horizon} created #{created}"
+      config.fetch('prefixes').each do |config|
+        request = Net::HTTP::Post.new(uri)
+        request.basic_auth @artifactory_username, @artifactory_password
+        request.content_type = "text/plain"
+
+        # this is using the AQL api
+        # https://www.jfrog.com/confluence/display/RTF/Artifactory+REST+API#ArtifactoryRESTAPI-ArtifactoryQueryLanguage(AQL)
+        # AQL docs: https://www.jfrog.com/confluence/display/RTF/Artifactory+Query+Language
+        request.body = <<~POST_BODY
+        items.find(
+            {"repo":{"$eq":"#{repo_name}"}},
+            {"path":{"$match":"#{config['pattern']}"}},
+            {"created":{"$before":"#{format_retention(config['retention'])}"}}
+        ).include("name", "created", "path", "repo")
+        POST_BODY
+
+        response = http.request(request)
+        response_body = JSON.parse(response.body)
+
+        if response.code != '200'
+          KubeDeployTools::Logger.error("Error in fetching #{repo_name} search results #{response.code}: #{response.body}")
+          next
+        else
+          response_body['results'].each do |res|
+            prefix, _, build = res['path'].rpartition('/')
+            file = res['name']
+            uri_result = "#{@artifactory_host}/api/storage/#{repo_name}/#{prefix}/#{build}/#{file}"
+            created = DateTime.strptime(res['created'][0 .. 10], '%Y-%m-%d').to_time
+
+            # Pull out the images.yaml files for reading
+            if file.eql? IMAGES_FILE
+              built_artifacts_files.push(uri_result)
+            end
+
+            key = {'job' => prefix, 'build' => build, 'repository' => repo_name}
+            Logger.debug "remove #{key} created #{created}"
+            if images_to_remove.has_key?(key)
+              images_to_remove[key]['files'].push(file)
             else
-              # Pull out the images.yaml files for reading
-              if file.eql? IMAGES_FILE
-                built_artifacts_files.push(uri_result)
-              end
-
-              key = {'job' => prefix, 'build' => build, 'repository' => repo_name}
-              Logger.debug "remove #{key} horizon #{horizon} created #{created}"
-              if images_to_remove.has_key?(key)
-                images_to_remove[key]['files'].push(file)
-              else
-                images_to_remove[key] = {'files' => [file], 'created' => created}
-              end
+              images_to_remove[key] = {'files' => [file], 'created' => created}
             end
           end
         end
@@ -205,6 +197,7 @@ module KubeDeployTools
           else
             uri = URI.parse(remove_path)
             http = Net::HTTP.new(uri.host, uri.port)
+            http.use_ssl = (uri.scheme == 'https')
             request = Net::HTTP::Delete.new(uri)
             request.basic_auth @artifactory_username, @artifactory_password
             response = http.request(request)
@@ -219,19 +212,10 @@ module KubeDeployTools
       end
     end
 
-    # Function to convert the config times of format "<>M" or "<>d"
-    # to seconds
-    def human_duration_in_seconds(time)
-      if time.index("d") != nil
-        time = time[0...time.index("d")].to_i
-      elsif time.index("M") != nil
-        # Converting the string to days of retention and averaging
-        # 30 days in a month
-        time = time[0...time.index("M")].to_i * 30
-      else
-        raise "Invalid retention value, unexpected input #{time}"
-      end
-      return time * 60 * 60 * 24
+    # To support old style retention format (ex. 1M -> 1mo)
+    def format_retention(retention)
+      retention.gsub /[M,m]$/, 'mo'
     end
+
   end
 end

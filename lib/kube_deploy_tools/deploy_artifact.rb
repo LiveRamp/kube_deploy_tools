@@ -11,7 +11,7 @@ module KubeDeployTools
   PROJECT = ENV['JOB_NAME'] || File.basename(`git config remote.origin.url`.chomp, '.git')
   BUILD_NUMBER = ENV.fetch('BUILD_ID', 'dev')
 
-  ARTIFACTORY_ENDPOINT = "http://***REMOVED***/artifactory"
+  ARTIFACTORY_ENDPOINT = "https://***REMOVED***/artifactory"
   ARTIFACTORY_REPO = "kubernetes-snapshot-local"
 
   def self.build_deploy_artifact_name(name:, flavor:)

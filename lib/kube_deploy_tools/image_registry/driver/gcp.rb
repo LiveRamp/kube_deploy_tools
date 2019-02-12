@@ -49,7 +49,15 @@ module KubeDeployTools
         Logger.info("DRYRUN: delete gcp image #{image_id}")
       else
         # --quiet removes the user-input component
-        Shellrunner.check_call('gcloud', 'container', 'images', 'delete', '--quiet', image_id, '--force-delete-tags')
+        _, err, status = Shellrunner.run_call('gcloud', 'container', 'images', 'delete', '--quiet', image_id, '--force-delete-tags')
+        if !status.success?
+          # gcloud gives a deceptive error msg when the image does not exist
+          if err.include?('is not a valid name')
+            Logger.warn("Image #{image_id} does not exist, skipping")
+          else
+            raise "gcloud image deletion failed!"
+          end
+        end
       end
     end
 
