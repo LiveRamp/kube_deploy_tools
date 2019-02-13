@@ -42,10 +42,12 @@ RUN apk add --no-cache \
 
 # Install gcloud
 # From https://github.com/GoogleCloudPlatform/cloud-sdk-docker/blob/master/alpine/Dockerfile
+ENV CLOUD_SDK_VERSION=233.0.0
+ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
 ENV GOOGLE_SDK_LOCATION /opt
 ENV PATH ${GOOGLE_SDK_LOCATION}/google-cloud-sdk/bin:${PATH}
 RUN mkdir -p "${GOOGLE_SDK_LOCATION}" && \
-  curl -fSL https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz | \
+  curl -fSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${CLOUD_SDK_VERSION}-linux-x86_64.tar.gz | \
   tar -C "${GOOGLE_SDK_LOCATION}" -xzf - && \
   ln -s /lib /lib64 && \
   gcloud config set core/disable_usage_reporting true && \
