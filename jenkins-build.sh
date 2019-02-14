@@ -24,7 +24,16 @@ esac
 bundle exec rake container:kube_deploy_tools
 # Versioned image
 bundle exec rake container_push:kube_deploy_tools
-# Latest image
-bundle exec rake container_publish
+
+case "$GIT_BRANCH" in
+*/master|master)
+  # Latest image
+  bundle exec rake container_publish
+  ;;
+*)
+  echo "Not running a container publishing step on $GIT_BRANCH"
+;;
+esac
+
 # Record keeping in Artifactory
 bundle exec kdt publish
