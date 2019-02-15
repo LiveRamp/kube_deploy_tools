@@ -5,7 +5,8 @@ module KubeDeployTools
     attr_accessor :definition,
       :kind,
       :name,
-      :namespace
+      :namespace,
+      :annotations
 
     def self.build(filepath: nil, definition:, kubectl:)
       opts = { filepath: filepath, definition: definition, kubectl: kubectl }
@@ -30,6 +31,7 @@ module KubeDeployTools
       @namespace = definition.dig('metadata', 'namespace')
       @name = definition.dig('metadata', 'name')
       @kind = definition['kind']
+      @annotations = definition.dig('metadata', 'annotations')
     end
 
     def filepath

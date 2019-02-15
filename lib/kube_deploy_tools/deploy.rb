@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+require 'json'
 require 'set'
 require 'yaml'
 require 'kube_deploy_tools/errors'
@@ -11,19 +14,23 @@ require 'kube_deploy_tools/file_filter'
 # in order.
 # e.g. Namespaces will be deployed before Services and ConfigMaps, which
 # are namespaced resources that may depend on deploying Namespaces first.
-PREDEPLOY_RESOURCES = [
-  "Namespace",
-  "StorageClass",
-  "ServiceAccount",
-  "ClusterRole",
-  "Role",
-  "ClusterRoleBinding",
-  "RoleBinding",
-  "CustomResourceDefinition",
-  "ThirdPartyResource",
-  "ConfigMap",
-  "Service",
-]
+PREDEPLOY_RESOURCES = %w[
+  Namespace
+  StorageClass
+  ServiceAccount
+  ClusterRole
+  Role
+  ClusterRoleBinding
+  RoleBinding
+  CustomResourceDefinition
+  ThirdPartyResource
+  ConfigMap
+  Service
+].freeze
+
+# TODO (aaron): make these configurable
+DEPLOY_LOG = 'projects/***REMOVED***/logs/deploys'
+DEPLOY_PROJECT = '***REMOVED***'
 
 module KubeDeployTools
   class Deploy
@@ -32,65 +39,87 @@ module KubeDeployTools
       namespace: nil,
       input_path:,
       glob_files: []
-      )
+    )
       @kubectl = kubectl
       @namespace = namespace
       @input_path = input_path
       @glob_files = glob_files
+      @annotations = {}
     end
 
-    def run(dry_run: true)
+    def do_deploy(dry_run)
+      success = false
       Logger.reset
-      Logger.phase_heading("Initializing deploy")
-      if dry_run == true
-        Logger.warn("Running in dry-run mode")
-      end
+      Logger.phase_heading('Initializing deploy')
+      Logger.warn('Running in dry-run mode') if dry_run
 
-      if ! @namespace.nil? && @namespace != 'default'
+      if !@namespace.nil? && @namespace != 'default'
         Logger.warn("Deploying to non-default Namespace: #{@namespace}")
       end
 
       resources = read_resources(FileFilter.filter_files(filters: @glob_files, files_path: @input_path))
 
-      Logger.phase_heading("Checking initial resource statuses")
+      Logger.phase_heading('Checking initial resource statuses')
       KubernetesDeploy::Concurrency.split_across_threads(resources, &:sync)
 
-      Logger.phase_heading("Checking deployment replicas match")
+      Logger.phase_heading('Checking deployment replicas match')
       deployments = resources
-        .select { |resource| resource.definition["kind"] == 'Deployment' }
+                    .select { |resource| resource.definition['kind'] == 'Deployment' }
       KubernetesDeploy::Concurrency.split_across_threads(deployments, &:warn_replicas_mismatch)
 
-      Logger.phase_heading("Deploying all resources")
+      Logger.phase_heading('Deploying all resources')
       # Deploy predeploy resources first, in order.
       # Then deploy the remaining resources in any order.
       deploy_resources = resources
-        .sort { |a,b|
-          # NOTE(jmodes): we want the comparison below, but with a nil check
-          # PREDEPLOY_RESOURCES.index(a.definition["kind"]) <=> PREDEPLOY_RESOURCES.index(b.definition["kind"])
-          # https://stackoverflow.com/a/808721
-          idx_a = PREDEPLOY_RESOURCES.index(a.definition["kind"])
-          idx_b = PREDEPLOY_RESOURCES.index(b.definition["kind"])
-          idx_a && idx_b ? idx_a <=> idx_b : idx_a ? -1 : 1
-        }
+                         .sort do |a, b|
+        # NOTE(jmodes): we want the comparison below, but with a nil check
+        # PREDEPLOY_RESOURCES.index(a.definition["kind"]) <=> PREDEPLOY_RESOURCES.index(b.definition["kind"])
+        # https://stackoverflow.com/a/808721
+        idx_a = PREDEPLOY_RESOURCES.index(a.definition['kind'])
+        idx_b = PREDEPLOY_RESOURCES.index(b.definition['kind'])
+        idx_a && idx_b ? idx_a <=> idx_b : idx_a ? -1 : 1
+      end
 
       kubectl_apply(deploy_resources, dry_run: dry_run)
 
       success = true
     ensure
       Logger.print_summary(success)
-      status = success ? "success" : "failed"
       success
     end
 
-    def read_resources(filtered_files = Dir[ File.join(@input_path, '**', '*') ])
+    def run(dry_run: true, send_report: true)
+      do_deploy(dry_run)
+      if !dry_run && send_report
+        notify(project_info.to_json)
+      end
+    end
+
+    def project_info
+      # send a notification about the deployed code
+      {
+        'git_commit': @annotations['git_commit'],
+        'git_project': @annotations['git_project'],
+        'kubernetes-cluster': kubectl_cluster_server,
+        'kubernetes-cluster-name': kubectl_cluster_name,
+        'time': DateTime.now,
+        'user': current_user
+      }
+    end
+
+    def read_resources(filtered_files = Dir[File.join(@input_path, '**', '*')])
       resources = []
       filtered_files.each do |filepath|
-        next unless filepath.end_with?(".yml", ".yaml")
+        next unless filepath.end_with?('.yml', '.yaml')
         read_resource_definition(filepath) do |resource_definition|
           resource = KubeDeployTools::KubernetesResource.build(
             definition: resource_definition,
-            kubectl: @kubectl,
+            kubectl: @kubectl
           )
+          if resource.annotations
+            @annotations['git_commit'] ||= resource.annotations['git_commit']
+            @annotations['git_project'] ||= resource.annotations['git_project']
+          end
           resources << resource
         end
       end
@@ -116,7 +145,7 @@ module KubeDeployTools
     def kubectl_apply(resources, dry_run: true)
       resources.each do |resource|
         args = ['apply', '-f', resource.filepath, "--dry-run=#{dry_run}"]
-        out, err, status = @kubectl.run(*args)
+        out, _, status = @kubectl.run(*args)
         if !status.success?
           raise FatalDeploymentError, "Failed to apply resource '#{resource.filepath}'"
         else
@@ -125,16 +154,46 @@ module KubeDeployTools
       end
     end
 
+    def kubectl_cluster_name
+      args = ['config', 'view', '--minify', '--output=jsonpath={..clusters[0].name}']
+      name, _, status = @kubectl.run(*args)
+      unless status.success?
+        raise FatalDeploymentError, 'Failed to determine cluster name'
+      end
+      name
+    end
+
+    def kubectl_cluster_server
+      args = ['config', 'view', '--minify', '--output=jsonpath={..cluster.server}']
+      server, _, status = @kubectl.run(*args)
+      unless status.success?
+        raise FatalDeploymentError, 'Failed to determine cluster server'
+      end
+      server
+    end
+
     def self.kube_namespace(context:, kubeconfig: nil)
       args = [
-      'kubectl', 'config', 'view', '--minify', "--output=jsonpath={..namespace}",
-      "--context=#{context}",
+        'kubectl', 'config', 'view', '--minify', '--output=jsonpath={..namespace}',
+        "--context=#{context}"
       ]
       args.push("--kubeconfig=#{kubeconfig}") if kubeconfig.present?
-      namespace, _, _ = Shellrunner.check_call(*args)
+      namespace, = Shellrunner.check_call(*args)
       namespace = 'default' if namespace.to_s.empty?
 
       namespace
+    end
+
+    def current_user
+      Shellrunner.run_call('gcloud', 'config', 'list', 'account', '--format', 'value(core.account)')[0]
+    end
+
+    def notify(message)
+      args = [
+        'gcloud', 'logging', 'write', "--project=#{DEPLOY_PROJECT}",
+        '--payload-type=json', DEPLOY_LOG, message
+      ]
+      Shellrunner.check_call(*args)
     end
   end
 end

@@ -20,6 +20,7 @@ build_number = '12345'
 
 describe KubeDeployTools::Deploy do
   let(:logger) { KubeDeployTools::FormattedLogger.build(context: CONTEXT) }
+  let(:shellrunner) { instance_double("shellrunner", :check_call => nil) }
 
   # Mock kubectl
   let(:status) { double(:status, success?: true) }
@@ -30,6 +31,11 @@ describe KubeDeployTools::Deploy do
   before(:example) do
     allow_any_instance_of(KubeDeployTools::Deployment).to receive(:sync)
     KubeDeployTools::Logger.logger = logger
+    KubeDeployTools::Shellrunner.shellrunner = shellrunner
+
+    allow(shellrunner).to receive(:run_call).with('gcloud', 'config', 'list', 'account', '--format', "value(core.account)") do
+      ['bill@***REMOVED***', '', double("status", success?: true)]
+    end
   end
 
   it "fails to read invalid YAML files" do
@@ -51,12 +57,15 @@ describe KubeDeployTools::Deploy do
     expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
   end
 
+  # Mock shellrunner
+  let(:status) { double(:status, success?: true) }
   it "reads YAML files with multiple resources" do
     deploy = KubeDeployTools::Deploy.new(
       input_path: KUBERNETES_MANIFESTS_COMBINED_NGINX,
       kubectl: kubectl,
     )
     resources = deploy.read_resources
+
     expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
     expect(resources.find { |resource| resource.definition["kind"] == "Service" }).to_not be_nil
     expect(resources.find { |resource| resource.definition["kind"] == "Namespace" }).to_not be_nil
@@ -66,7 +75,9 @@ describe KubeDeployTools::Deploy do
     # Services are deployed before Deployments
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered
-    deploy.run
+
+    expect(deploy).to receive(:notify).with(any_args)
+    deploy.run(dry_run: false)
   end
 
   it "predeploys resources" do
@@ -75,6 +86,7 @@ describe KubeDeployTools::Deploy do
       kubectl: kubectl,
     )
     resources = deploy.read_resources
+
     expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
     expect(resources.find { |resource| resource.definition["kind"] == "Service" }).to_not be_nil
     expect(resources.find { |resource| resource.definition["kind"] == "Namespace" }).to_not be_nil
@@ -109,6 +121,42 @@ describe KubeDeployTools::Deploy do
       expect(KubeDeployTools::Shellrunner.shellrunner).to receive(:check_call).with(any_args, "--kubeconfig=#{kubeconfig}").once
       KubeDeployTools::Deploy.kube_namespace(context: 'fake-context', kubeconfig: kubeconfig)
     end
+
+    it 'gets the project info from a YAML with git annotations' do
+      deploy = KubeDeployTools::Deploy.new(
+        input_path: KUBERNETES_MANIFESTS_COMBINED_NGINX,
+        kubectl: kubectl,
+      )
+      deploy.read_resources
+      project_info = deploy.project_info
+
+      expect(project_info[:git_commit]).to eq('deadbeefdeadbeef')
+      expect(project_info[:git_project]).to eq('git@git.***REMOVED***:MasterRepos/rspec_tests.git')
+      expect(project_info[:time]).to be_a(DateTime)
+      expect(project_info[:user]).to eq('bill@***REMOVED***')
+      expect(project_info[:'kubernetes-cluster']).to eq('kubectl bogus output')
+      expect(project_info[:'kubernetes-cluster-name']).to eq('kubectl bogus output')
+    end
+
+    it 'gets the project info from a YAML without git annotations' do
+      deploy = KubeDeployTools::Deploy.new(
+        input_path: KUBERNETES_MANIFESTS_TEST_NGINX,
+        kubectl: kubectl,
+      )
+      deploy.read_resources
+      project_info = deploy.project_info
+
+      expect(project_info[:git_commit]).to be_nil
+      expect(project_info[:git_project]).to be_nil
+      expect(project_info[:time]).to be_a(DateTime)
+      expect(project_info[:user]).to eq('bill@***REMOVED***')
+      expect(project_info[:'kubernetes-cluster']).to eq('kubectl bogus output')
+      expect(project_info[:'kubernetes-cluster-name']).to eq('kubectl bogus output')
+    end
+
+    it 'notifies centralized logging' do
+      allow(shellrunner).to receive(:run_call).with('gcloud', 'logging', 'write', anything, '--payload-type=json', anything, anything)
+    end
   end
 end
 
@@ -122,10 +170,14 @@ describe KubeDeployTools::Deploy::Optparser do
     options = parse(
       artifact: artifact,
       build: build_number,
-      context: CONTEXT)
+      context: CONTEXT,
+      'dry-run': 'false',
+      'send-report': 'false')
     expect(options.artifact).to match(artifact)
     expect(options.build_number).to match(build_number)
     expect(options.context).to match(CONTEXT)
+    expect(options.dry_run).to be(false)
+    expect(options.send_report).to be(false)
 
     from_files = 'bogus/path/'
     options = parse('from-files': from_files,
@@ -135,4 +187,3 @@ describe KubeDeployTools::Deploy::Optparser do
   end
 
 end
-

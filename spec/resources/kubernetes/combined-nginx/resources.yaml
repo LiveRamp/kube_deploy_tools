@@ -5,6 +5,9 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: test
+  annotations:
+    git_commit: deadbeefdeadbeef
+    git_project: git@git.***REMOVED***:MasterRepos/rspec_tests.git
 ---
 
 apiVersion: apps/v1beta1
@@ -12,6 +15,9 @@ kind: Deployment
 metadata:
   namespace: default
   name: test-nginx
+  annotations:
+    git_commit: deadbeefdeadbeef
+    git_project: git@git.***REMOVED***:MasterRepos/rspec_tests.git
 spec:
   replicas: 0
   template:
@@ -31,6 +37,9 @@ metadata:
   name: test-nginx
   labels:
     app: test-nginx
+  annotations:
+    git_commit: deadbeefdeadbeef
+    git_project: git@git.***REMOVED***:MasterRepos/rspec_tests.git
 spec:
   ports:
   - port: 80
@@ -38,5 +47,3 @@ spec:
     protocol: TCP
   selector:
     app: test-nginx
-
-

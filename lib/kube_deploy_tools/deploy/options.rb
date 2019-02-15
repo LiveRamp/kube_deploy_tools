@@ -15,6 +15,7 @@ module KubeDeployTools
         :artifact,
         :build_number,
         :dry_run,
+        :send_report,
         :glob_files,
         :pre_apply_hook
 
@@ -22,6 +23,7 @@ module KubeDeployTools
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
         self.flavor = 'default'
         self.dry_run = true
+        self.send_report = true
         self.glob_files = []
 
         Artifactory.endpoint = KubeDeployTools::ARTIFACTORY_ENDPOINT
@@ -56,7 +58,7 @@ module KubeDeployTools
           self.build_number = p
         end
 
-        parser.on('--dry-run DRY_RUN', "If true, will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: #{dry_run}.") do |p|
+        parser.on('--dry-run DRY_RUN', TrueClass, "If true, will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: #{dry_run}.") do |p|
           self.dry_run = p
         end
 
@@ -78,6 +80,10 @@ module KubeDeployTools
 
         parser.on("--pre-apply-hook CMD", "Shell command to run with the output directory before applying files") do |p|
           self.pre_apply_hook = p
+        end
+
+        parser.on('--send-report SEND_REPORT', TrueClass, "If true, records data about the deploy to a centralized log. Default is #{send_report}") do |p|
+          self.send_report = p
         end
 
         # Artifactory configuration is configurable by environment variables

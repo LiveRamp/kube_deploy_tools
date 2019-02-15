@@ -54,6 +54,7 @@ module KubeDeployTools
         begin
           if File.file?(output_file)
             data = YAML.load_file(output_file)
+
             # XXX(joshk): Non-exhaustive list.
             must_have_ns = [
               'ConfigMap', 'CronJob', 'DaemonSet', 'Deployment', 'Endpoints', 'HorizontalPodAutoscaler',
@@ -62,6 +63,20 @@ module KubeDeployTools
             if must_have_ns.member?(data.fetch('kind'))
               raise "Rendered Kubernetes template missing a .metadata.namespace: #{yml}" if data.fetch('metadata', {}).fetch('namespace', '').empty?
             end
+            # annotation added to each manifest
+            if config['git_commit']
+              if data['metadata'].key?('annotations')
+                data['metadata']['annotations']['git_commit'] = config['git_commit']
+              else
+                data['metadata']['annotations'] = { 'git_commit' => config['git_commit'] }
+              end
+            end
+
+            if config['git_project']
+              data['metadata']['annotations']['git_project'] = config['git_project']
+            end
+
+            File.open(output_file, 'w') { |f| YAML.dump(data, f) }
           end
         rescue => e
           raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"

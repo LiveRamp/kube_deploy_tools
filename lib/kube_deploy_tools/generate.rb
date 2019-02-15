@@ -35,6 +35,16 @@ module KubeDeployTools
       @print_flags_only = print_flags_only
     end
 
+    def git_commit
+      commit_sha = Shellrunner.check_call(*%w(git rev-parse HEAD))
+      commit_sha ? commit_sha.strip : ''
+    end
+
+    def git_project
+      project_url = Shellrunner.check_call(*%w(git config --get remote.origin.url))
+      project_url ? project_url.strip : ''
+    end
+
     def generate
       permutations = {}
       @config.artifacts.each do |c|
@@ -57,6 +67,11 @@ module KubeDeployTools
         cluster_flavors.each do |flavor, flavor_flags|
           full_flags = cluster_flags.clone
           full_flags.merge!(generate_erb_flags(flavor_flags)) if flavor_flags
+          # Project information used to identify source of various manifests
+          full_flags.merge!({
+            'git_commit' => git_commit,
+            'git_project' => git_project
+          })
 
           # Print all flags for each artifact-flavor
           puts "artifact '#{artifact}', flavor '#{flavor}'"

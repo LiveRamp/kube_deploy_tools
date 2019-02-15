@@ -5,11 +5,15 @@ MANIFEST_FILE="spec/resources/deploy.yaml"
 MANIFEST_FILE_NUM_CLUSTERS=9
 JOB_NAME="FAKE_PROJECT"
 BUILD_ID="12345"
+GIT_COMMIT='123456789deadbeef123456789deadbeef'
+GIT_PROJECT='git@git.***REMOVED***:MasterRepos/kube_deploy_tools_spec_test.git'
 
 describe KubeDeployTools::Generate do
+  let(:logger) { KubeDeployTools::FormattedLogger.build }
   let(:shellrunner) { instance_double("shellrunner", :check_call => nil) }
 
   before(:example) do
+    KubeDeployTools::Logger.logger = logger
     KubeDeployTools::Shellrunner.shellrunner = shellrunner
 
     # NOTE(jmodes): rspec mocks do not support child processes
@@ -18,7 +22,15 @@ describe KubeDeployTools::Generate do
     allow_any_instance_of(Object).to receive(:fork) do |&block|
       block.call
     end
-end
+
+    allow(shellrunner).to receive(:check_call).with(*%w(git rev-parse HEAD)) do
+      GIT_COMMIT
+    end
+
+    allow(shellrunner).to receive(:check_call).with(*%w(git config --get remote.origin.url)) do
+      GIT_PROJECT
+    end
+  end
 
   it 'renders correct image_registry in kubernetes yaml' do
     Dir.mktmpdir do |tmp_dir|
@@ -50,7 +62,7 @@ end
       app.generate
 
       expectation = <<-YAML
-
+---
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -59,6 +71,9 @@ metadata:
   labels:
     from_default_flag: bing
     tag: REMOVED
+  annotations:
+    git_commit: #{GIT_COMMIT}
+    git_project: #{GIT_PROJECT}
 spec:
   replicas: 0
   template:
@@ -70,7 +85,6 @@ spec:
         ports:
         - name: web
           containerPort: 80
-
 YAML
 
       clusters = %w(local pippio-production platforms-prod ingestion-prod us-east-1-prod us-east-1-staging colo-service-prod colo-service-staging)
@@ -107,8 +121,6 @@ YAML
       app.generate
 
       expect(Dir["#{tmp_dir}/*"].empty?).to be true
-      expect(shellrunner).not_to have_received(:check_call)
     end
   end
 end
-

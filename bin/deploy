@@ -11,9 +11,7 @@ require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
 
 def options
-  parser = KubeDeployTools::Deploy::Optparser.new
-  ops = parser.parse(ARGV)
-  ops
+  @options ||= KubeDeployTools::Deploy::Optparser.new.parse(ARGV)
 end
 
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
@@ -48,10 +46,10 @@ Dir.mktmpdir { |tmpdir|
     kubectl: kubectl,
     namespace: namespace,
     input_path: deploy_artifact_path,
-    glob_files: options.glob_files,
+    glob_files: options.glob_files
   )
   deploy.run(
     dry_run: options.dry_run,
+    send_report: options.send_report
   )
 }
-

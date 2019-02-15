@@ -1,6 +1,6 @@
 module KubeDeployTools
   # NOTE(jmodes): Bump patch
-  VERSION_XYZ = '2.1.14'
+  VERSION_XYZ = '2.1.15'
   def self.version_xyz
     version_xyz = VERSION_XYZ
     prerelease_notation = '.dev'
