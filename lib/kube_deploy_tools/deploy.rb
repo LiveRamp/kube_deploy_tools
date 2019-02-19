@@ -28,7 +28,7 @@ PREDEPLOY_RESOURCES = %w[
   Service
 ].freeze
 
-# TODO (aaron): make these configurable
+# TODO: (aaron): make these configurable
 DEPLOY_LOG = 'projects/***REMOVED***/logs/deploys'
 DEPLOY_PROJECT = '***REMOVED***'
 
@@ -89,10 +89,8 @@ module KubeDeployTools
     end
 
     def run(dry_run: true, send_report: true)
+      notify(project_info.merge({'type':'deploy'}).to_json) if !dry_run && send_report
       do_deploy(dry_run)
-      if !dry_run && send_report
-        notify(project_info.to_json)
-      end
     end
 
     def project_info
