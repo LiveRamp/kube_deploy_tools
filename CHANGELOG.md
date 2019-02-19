@@ -155,6 +155,18 @@ artifacts:
 * `kdt render_deploys`: the ERB templater helper method `config.get_or_nil`
 has been completely deprecated in favor of `config.extra_flag`
 
+### Capfile Changes
+For deployments in pentagon that used kdt 1.x, you will need to change the Capfile to allow deployment using kdt 2:
+
+* References to `target`, `environment` and `flavors` must be removed
+* `artifact` and `context` parameter must be specified:
+    - `artifact` is the artifact defined in `deploy.yaml` that you want to deploy
+    - `context` is a reference to the kubernetes cluster that you can target. For colo prod, set it to `rapleaf@prod.service`
+
+[Example] of such a change.
+
+[Example]: https://git.***REMOVED***/MasterRepos/pentagon/pull/1130/files
+
 #### `kdt`
 
 * kdt will now only surface the `kdt` binary as a singular entrypoint. This means
