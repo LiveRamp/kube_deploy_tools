@@ -47,7 +47,11 @@ module KubeDeployTools
         end
         if config.nil?
           Dir.chdir(original_dir)
-          raise "Could not locate file: #{filename} in any directory"
+          if ! filename.nil?
+            raise "Could not locate file: config file '#{filename}' in any directory"
+          else
+            raise "Could not locate file: config file '#{DEPLOY_YAML}' nor '#{DEPLOY_YML_V1}' in any directory"
+          end
         end
         if changed_dir
           Logger.warn "Changed directory to #{Dir.pwd} (location of #{filename})"
