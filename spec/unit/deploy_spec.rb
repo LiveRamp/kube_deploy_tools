@@ -127,7 +127,6 @@ describe KubeDeployTools::Deploy do
         input_path: KUBERNETES_MANIFESTS_COMBINED_NGINX,
         kubectl: kubectl,
       )
-      deploy.read_resources
       project_info = deploy.project_info
 
       expect(project_info[:git_commit]).to eq('deadbeefdeadbeef')
@@ -143,7 +142,6 @@ describe KubeDeployTools::Deploy do
         input_path: KUBERNETES_MANIFESTS_TEST_NGINX,
         kubectl: kubectl,
       )
-      deploy.read_resources
       project_info = deploy.project_info
 
       expect(project_info[:git_commit]).to be_nil
