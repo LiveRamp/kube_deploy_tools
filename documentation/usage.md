@@ -6,26 +6,26 @@ All KDT commands are intended to be used together, so configuration in
 
 <!-- TOC -->
 
-- [`kdt push`](#kdt-push)
-  - [Usage](#usage)
-  - [Configuration](#configuration)
-    - [Example](#example)
-    - [Fields](#fields)
-    - [CLI Flags](#cli-flags)
-- [`kdt generate`](#kdt-generate)
-  - [Usage](#usage-1)
-  - [Configuration](#configuration-1)
-    - [Example](#example-1)
-    - [Fields](#fields-1)
-    - [CLI Flags](#cli-flags-1)
-- [`kdt publish`](#kdt-publish)
-  - [Usage](#usage-2)
-    - [Fields](#fields-2)
-    - [CLI Flags](#cli-flags-2)
-- [`kdt deploy`](#kdt-deploy)
-  - [Usage](#usage-3)
-  - [Configuration](#configuration-2)
-    - [CLI Flags](#cli-flags-3)
+* [`kdt push`](#kdt-push)
+  * [Usage](#usage)
+  * [Configuration](#configuration)
+    * [Example](#example)
+    * [Fields](#fields)
+    * [CLI Flags](#cli-flags)
+* [`kdt generate`](#kdt-generate)
+  * [Usage](#usage-1)
+  * [Configuration](#configuration-1)
+    * [Example](#example-1)
+    * [Fields](#fields-1)
+    * [CLI Flags](#cli-flags-1)
+* [`kdt publish`](#kdt-publish)
+  * [Usage](#usage-2)
+    * [Fields](#fields-2)
+    * [CLI Flags](#cli-flags-2)
+* [`kdt deploy`](#kdt-deploy)
+  * [Usage](#usage-3)
+  * [Configuration](#configuration-2)
+    * [CLI Flags](#cli-flags-3)
 
 <!-- /TOC -->
 
@@ -136,6 +136,14 @@ iteration.
 default_flags:
   pull_policy: IfNotPresent
 artifacts:
+  - name: my-prod-artifact
+    image_registry: gcp
+    flags:
+      cloud: gcp
+      environment: prod
+      my_app_data_location: s3://my-app-data/
+    include_dir:
+      - nginx/
   - name: local
     image_registry: local
     flags:
@@ -144,13 +152,7 @@ artifacts:
       # Recommended override for the default image_tag variable
       image_tag: latest
       my_app_data_location: /etc/data/
-  - name: my-prod-artifact
-    image_registry: gcp
-    flags:
-      cloud: gcp
-      environment: prod
-      my_app_data_location: s3://my-app-data/
-    include_dir:
+    exclude_dir:
       - nginx/
 flavors:
   default: {}
@@ -169,7 +171,11 @@ flavors:
 * `.artifacts[].flags` is a map of key-values available as ERB hash values available
   for all manifests in the specified artifact. These override any key-values
   merged from `.default_flags`.
-* `.artifacts[].include_dir` is an optional field to only
+* `.artifacts[].include_dir` is an optional array to only include the specified
+  template directories in the artifact. If not specified, all directories are included.
+* `.artifacts[].exclude_dir` is an optional array to add exclusions for template
+  directories in the artifact. If inclusions and exclusions are explicitly set,
+  then inclusions are added first, and then exclusions are filtered last.
 
 ### CLI Flags
 
