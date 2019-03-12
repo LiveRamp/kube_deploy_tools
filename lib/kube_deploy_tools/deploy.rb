@@ -28,7 +28,7 @@ PREDEPLOY_RESOURCES = %w[
   Service
 ].freeze
 
-# TODO (aaron): make these configurable
+# TODO: (aaron): make these configurable
 DEPLOY_LOG = 'projects/***REMOVED***/logs/deploys'
 DEPLOY_PROJECT = '***REMOVED***'
 
@@ -44,7 +44,9 @@ module KubeDeployTools
       @namespace = namespace
       @input_path = input_path
       @glob_files = glob_files
-      @annotations = {}
+      @filtered_files = FileFilter
+                        .filter_files(filters: @glob_files, files_path: @input_path)
+                        .select{ |f| f.end_with?('.yml', '.yaml') }
     end
 
     def do_deploy(dry_run)
@@ -57,7 +59,7 @@ module KubeDeployTools
         Logger.warn("Deploying to non-default Namespace: #{@namespace}")
       end
 
-      resources = read_resources(FileFilter.filter_files(filters: @glob_files, files_path: @input_path))
+      resources = read_resources(@filtered_files)
 
       Logger.phase_heading('Checking initial resource statuses')
       KubernetesDeploy::Concurrency.split_across_threads(resources, &:sync)
@@ -89,17 +91,16 @@ module KubeDeployTools
     end
 
     def run(dry_run: true, send_report: true)
+      notify(project_info.merge({'type':'deploy'}).to_json) if !dry_run && send_report
       do_deploy(dry_run)
-      if !dry_run && send_report
-        notify(project_info.to_json)
-      end
     end
 
     def project_info
+      git_commit, git_project = git_annotations
       # send a notification about the deployed code
       {
-        'git_commit': @annotations['git_commit'],
-        'git_project': @annotations['git_project'],
+        'git_commit': git_commit,
+        'git_project': git_project,
         'kubernetes-cluster': kubectl_cluster_server,
         'kubernetes-cluster-name': kubectl_cluster_name,
         'time': DateTime.now,
@@ -110,20 +111,31 @@ module KubeDeployTools
     def read_resources(filtered_files = Dir[File.join(@input_path, '**', '*')])
       resources = []
       filtered_files.each do |filepath|
-        next unless filepath.end_with?('.yml', '.yaml')
-        read_resource_definition(filepath) do |resource_definition|
-          resource = KubeDeployTools::KubernetesResource.build(
-            definition: resource_definition,
-            kubectl: @kubectl
-          )
-          if resource.annotations
-            @annotations['git_commit'] ||= resource.annotations['git_commit']
-            @annotations['git_project'] ||= resource.annotations['git_project']
-          end
+        resource_definition(filepath) do |resource|
           resources << resource
         end
       end
       resources
+    end
+
+    def resource_definition(filepath)
+      read_resource_definition(filepath) do |resource_definition|
+        yield KubeDeployTools::KubernetesResource.build(
+          definition: resource_definition,
+          kubectl: @kubectl
+        )
+      end
+    end
+
+    def git_annotations
+      resource_definition(@filtered_files.first) do |resource|
+        if resource.annotations
+          git_commit  = resource.annotations['git_commit']
+          git_project = resource.annotations['git_project']
+          return [git_commit, git_project]
+        end
+      end
+      [nil, nil]
     end
 
     def read_resource_definition(filepath)
