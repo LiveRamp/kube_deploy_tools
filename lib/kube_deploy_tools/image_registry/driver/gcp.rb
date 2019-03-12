@@ -3,7 +3,18 @@ require 'tmpdir'
 
 module KubeDeployTools
   class ImageRegistry::Driver::Gcp < ImageRegistry::Driver::Base
-    GCR_DOCKER_CONFIG = '{"credHelpers": {"gcr.io": "gcloud"}}'
+    GCR_DOCKER_CONFIG = <<-EOH
+{
+  "credHelpers": {
+    "us.gcr.io": "gcloud",
+    "staging-k8s.gcr.io": "gcloud",
+    "asia.gcr.io": "gcloud",
+    "gcr.io": "gcloud",
+    "marketplace.gcr.io": "gcloud",
+    "eu.gcr.io": "gcloud"
+  }
+}
+EOH
 
     def initialize(registry:)
       super
