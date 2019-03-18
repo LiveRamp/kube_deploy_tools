@@ -53,30 +53,31 @@ module KubeDeployTools
         #   that .metadata.namespace is present.
         begin
           if File.file?(output_file)
-            data = YAML.load_file(output_file)
+            yaml = []
+            YAML.load_stream(File.read(output_file)) { |doc| yaml << doc }
+            yaml.each do |data|
+              # XXX(joshk): Non-exhaustive list.
+              must_have_ns = [
+                'ConfigMap', 'CronJob', 'DaemonSet', 'Deployment', 'Endpoints', 'HorizontalPodAutoscaler',
+                'Ingress', 'PersistentVolumeClaim', 'PodDisruptionBudget', 'ServiceAccount', 'Secret', 'Service'
+              ]
+              if must_have_ns.member?(data.fetch('kind'))
+                raise "Rendered Kubernetes template missing a .metadata.namespace: #{yml}" if data.fetch('metadata', {}).fetch('namespace', '').empty?
+              end
+              # annotation added to each manifest
+              if config['git_commit']
+                if data['metadata'].key?('annotations')
+                  data['metadata']['annotations']['git_commit'] = config['git_commit']
+                else
+                  data['metadata']['annotations'] = { 'git_commit' => config['git_commit'] }
+                end
+              end
 
-            # XXX(joshk): Non-exhaustive list.
-            must_have_ns = [
-              'ConfigMap', 'CronJob', 'DaemonSet', 'Deployment', 'Endpoints', 'HorizontalPodAutoscaler',
-              'Ingress', 'PersistentVolumeClaim', 'PodDisruptionBudget', 'ServiceAccount', 'Secret', 'Service'
-            ]
-            if must_have_ns.member?(data.fetch('kind'))
-              raise "Rendered Kubernetes template missing a .metadata.namespace: #{yml}" if data.fetch('metadata', {}).fetch('namespace', '').empty?
-            end
-            # annotation added to each manifest
-            if config['git_commit']
-              if data['metadata'].key?('annotations')
-                data['metadata']['annotations']['git_commit'] = config['git_commit']
-              else
-                data['metadata']['annotations'] = { 'git_commit' => config['git_commit'] }
+              if config['git_project']
+                data['metadata']['annotations']['git_project'] = config['git_project']
               end
             end
-
-            if config['git_project']
-              data['metadata']['annotations']['git_project'] = config['git_project']
-            end
-
-            File.open(output_file, 'w') { |f| YAML.dump(data, f) }
+            File.open(output_file, 'w') { |f| f << YAML.dump_stream(*yaml) }
           end
         rescue => e
           raise "Failed to YAML validate #{output_file} (generated from #{yml}): #{e}"

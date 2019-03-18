@@ -1,3 +1,5 @@
+require 'tempfile'
+
 require 'kube_deploy_tools/generate'
 
 INPUT_DIR='spec/resources/kubernetes/render-deploys-example/'
@@ -44,6 +46,72 @@ describe KubeDeployTools::Generate do
       expected.select{ |f| f =~ /local/ }.each do |rendered|
         expect(File.read(rendered)).to include("local-registry")
       end
+    end
+  end
+
+  it 'can render multiple YAML documents in a single file' do
+    manifest = Tempfile.new("deploy.yaml")
+    manifest.write <<-YAML
+version: 2
+default_flags:
+  pull_policy: IfNotPresent
+artifacts:
+  - name: local
+    image_registry: local
+    flags:
+      target: local
+      environment: staging
+      cloud: local
+flavors:
+  default: {}
+image_registries:
+  - name: local
+    driver: noop
+    prefix: local-registry
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***
+YAML
+    manifest.close
+    input_dir = Dir.mktmpdir
+    template = Tempfile.new(["statefulset-nginx", ".yaml.erb"], input_dir)
+    template.write <<-YAML
+<%- num_pods_per_node=3 -%>
+<%- num_pods_per_node.times do |x| -%>
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  namespace: default
+  name: test-nginx-<%= x %>
+spec: {}
+<%- end -%>
+YAML
+
+    template.close
+    tmp_dir = Dir.mktmpdir
+    begin
+      app = KubeDeployTools::Generate.new(
+        manifest,
+        input_dir,
+        tmp_dir
+      )
+      app.generate
+      expected = Dir["#{tmp_dir}/**/statefulset-nginx*.yaml"]
+      expect(expected.length).to eq(1)
+      expected.each do |rendered|
+        expect(File.read(rendered)).to include("test-nginx-0")
+        expect(File.read(rendered)).to include("test-nginx-1")
+        expect(File.read(rendered)).to include("test-nginx-2")
+        docs = 0
+        YAML.load_stream(File.read(rendered)) { |doc| docs += 1 }
+        expect(docs).to eq(3)
+      end
+    ensure
+      FileUtils.remove_entry input_dir
+      FileUtils.remove_entry tmp_dir
+      manifest.close
+      manifest.unlink
     end
   end
 
