@@ -86,6 +86,9 @@ metadata:
   name: test-nginx-<%= x %>
 spec: {}
 <%- end -%>
+---
+# empty
+---
 YAML
 
     template.close
@@ -103,9 +106,8 @@ YAML
         expect(File.read(rendered)).to include("test-nginx-0")
         expect(File.read(rendered)).to include("test-nginx-1")
         expect(File.read(rendered)).to include("test-nginx-2")
-        docs = 0
-        YAML.load_stream(File.read(rendered)) { |doc| docs += 1 }
-        expect(docs).to eq(3)
+        expect(YAML.load_stream(File.read(rendered)).length).to eq(3)
+        expect(File.read(rendered)).not_to include("empty")
       end
     ensure
       FileUtils.remove_entry input_dir

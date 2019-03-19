@@ -55,7 +55,9 @@ module KubeDeployTools
           if File.file?(output_file)
             yaml = []
             YAML.load_stream(File.read(output_file)) { |doc| yaml << doc }
-            yaml.each do |data|
+            yaml = yaml.
+              compact.
+              map do |data|
               # XXX(joshk): Non-exhaustive list.
               must_have_ns = [
                 'ConfigMap', 'CronJob', 'DaemonSet', 'Deployment', 'Endpoints', 'HorizontalPodAutoscaler',
@@ -76,6 +78,8 @@ module KubeDeployTools
               if config['git_project']
                 data['metadata']['annotations']['git_project'] = config['git_project']
               end
+
+              data
             end
             File.open(output_file, 'w') { |f| f << YAML.dump_stream(*yaml) }
           end
