@@ -72,14 +72,8 @@ module KubeDeployTools
       Logger.phase_heading('Deploying all resources')
       # Deploy predeploy resources first, in order.
       # Then deploy the remaining resources in any order.
-      deploy_resources = resources
-                         .sort do |a, b|
-        # NOTE(jmodes): we want the comparison below, but with a nil check
-        # PREDEPLOY_RESOURCES.index(a.definition["kind"]) <=> PREDEPLOY_RESOURCES.index(b.definition["kind"])
-        # https://stackoverflow.com/a/808721
-        idx_a = PREDEPLOY_RESOURCES.index(a.definition['kind'])
-        idx_b = PREDEPLOY_RESOURCES.index(b.definition['kind'])
-        idx_a && idx_b ? idx_a <=> idx_b : idx_a ? -1 : 1
+      deploy_resources = resources.sort_by do |r|
+        PREDEPLOY_RESOURCES.index(r.definition['kind']) || PREDEPLOY_RESOURCES.length
       end
 
       kubectl_apply(deploy_resources, dry_run: dry_run)
