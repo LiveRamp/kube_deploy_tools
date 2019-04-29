@@ -26,6 +26,8 @@ All KDT commands are intended to be used together, so configuration in
   * [Usage](#usage-3)
   * [Configuration](#configuration-2)
     * [CLI Flags](#cli-flags-3)
+      * [`--project`](#--project)
+      * [`--build`](#--build)
 
 <!-- /TOC -->
 
@@ -215,4 +217,54 @@ bundle exec kdt deploy \
 
 ### CLI Flags
 
-TODO
+```bash
+$ bundle exec kdt deploy --help
+Usage: deploy [options]
+    -f, --from-files FILEPATH        Filename, directory, or artifact URL that contains the Kubernetes manifests to apply
+        --kubeconfig FILEPATH        Path to the kubconfig file to use for kubectl requests
+        --context CONTEXT            The kubeconfig context to use
+        --project PROJECT            The project to deploy. Default is 'kube_deploy_tools'.
+        --flavor FLAVOR              The flavor to deploy. Default is 'default'
+        --artifact ARTIFACT          The artifact name to deploy
+        --build BUILD                The Jenkins build number to deploy. Use --build=latest to deploy the artifact for the last Jenkins build number.
+        --dry-run DRY_RUN            If true, will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: true.
+        --include INCLUDE            Include glob pattern. Example: --include=**/* will include every file. Default is ''.
+        --exclude EXCLUDE            Exclude glob pattern. Example: --exclude=**/gazette/* will exclude every file in gazette folder. Default is ''.
+        --include-dir INCLUDE        Recursively include all files in a directory and its subdirectories. Example: --include-dir=gazette/ (equivalent of --include=**/gazette/**/*)
+        --exclude-dir EXCLUDE        Recursively exclude all files in a directory and its subdirectories. Example: --exclude-dir=gazette/ (equivalent of --exclude=**/gazette/**/*)
+        --pre-apply-hook CMD         Shell command to run with the output directory before applying files
+        --send-report SEND_REPORT    If true, records data about the deploy to a centralized log. Default is true
+        --url URL                    Artifactory URL
+```
+
+#### `--project`
+
+The `--project` corresponds to the Jenkins Job name that publishes your
+artifacts.
+
+For legacy Jenkins Jobs, this would be the name of your Jenkins Job.
+
+For Jenkins Pipeline Jobs, this would be the full name of your Jenkins Job,
+which is in the format `<organization>/<job>/<branch>`.
+
+For example:
+```bash
+--project=my_app                      # corresponds to your app's Jenkins Job for the master branch
+--project=my_app_prs                  # corresponds to your app's Jenkins Job for PR branches
+--project=LiveRamp/my_app/master      # corresponds to your app's Jenkins Pipeline Job for the master branch
+--project=LiveRamp/my_app/my_branch   # corresponds to your app's Jenkins Pipeline Job for the branch named my_branch
+```
+
+#### `--build`
+
+The `--build` corresponds to the specific Jenkins Job build that published your
+artifacts.
+
+Use `--build=latest` to find the published artifacts from your most recent
+build.
+
+For example:
+```bash
+--project=my_app --build=latest
+--project=LiveRamp/my_app/my_branch --build=latest
+```
