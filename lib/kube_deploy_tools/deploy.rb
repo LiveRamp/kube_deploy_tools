@@ -3,6 +3,7 @@
 require 'json'
 require 'set'
 require 'yaml'
+require 'date'
 require 'kube_deploy_tools/errors'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/kubernetes_resource'
