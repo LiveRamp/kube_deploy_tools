@@ -4,7 +4,13 @@ require 'kube_deploy_tools/kdt'
 
 kdt = KubeDeployTools::Kdt.new(__dir__, ARGV)
 
-if ARGV.empty?
+def show_help?
+  return true if ARGV.empty?
+  return true if ARGV.size == 1 && %w(--help help).include?(ARGV.first.strip)
+  false
+end
+
+if show_help?
   kdt.display_bins
 else
   kdt.execute!
