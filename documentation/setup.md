@@ -158,8 +158,3 @@ bundle exec kdt push my-image --registry=gcp
 # to build/kubernetes/, run
 bundle exec kdt generate
 ```
-
-# Continuous Integration Setup in Jenkins
-
-Please see [documentation/liveramp_jenkins.md](liveramp_jenkins.md) for adding
-credentials to your Jenkins build.
