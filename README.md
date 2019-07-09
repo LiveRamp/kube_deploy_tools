@@ -41,12 +41,9 @@ default_flags:
 artifacts:
   - name: prod
     image_registry: gcp
-    flags:
-      target: dist
-      environment: prod
-      cloud: gcp
+    flags: {}                     # define flags specific to this artifact accessible at generate-time
 flavors:
-  default: {}
+  default: {}                     # define flags specific to this flavor accessible at generate-time
 image_registries:                 # define image registries used here
   - name: gcp                     # deploy to gcr
     driver: gcp
