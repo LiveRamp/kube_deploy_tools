@@ -3,25 +3,33 @@
 
 <!-- TOC -->
 
-- [Changelog](#changelog)
-  - [2.x](#2x)
-    - [Upgrade Guide](#upgrade-guide)
-    - [Non-breaking deprecation warnings](#non-breaking-deprecation-warnings)
-    - [Breaking Changes](#breaking-changes)
-      - [`kdt`](#kdt)
-      - [`kdt toolbox`](#kdt-toolbox)
-      - [`kdt push`](#kdt-push)
-      - [`kdt generate`](#kdt-generate)
-      - [`kdt publish`](#kdt-publish)
-      - [`kdt deploy`](#kdt-deploy)
-  - [1.4.x](#14x)
-    - [Breaking Changes](#breaking-changes-1)
-  - [1.3.x](#13x)
-    - [Breaking Changes](#breaking-changes-2)
-    - [New Features](#new-features)
-    - [New Fixes](#new-fixes)
+* [2.2.0](#220)
+  * [New Features](#new-features)
+* [2.x](#2x)
+  * [Upgrade Guide](#upgrade-guide)
+  * [Non-breaking deprecation warnings](#non-breaking-deprecation-warnings)
+  * [Breaking Changes](#breaking-changes)
+  * [Capfile Changes](#capfile-changes)
+    * [`kdt`](#kdt)
+    * [`kdt toolbox`](#kdt-toolbox)
+    * [`kdt push`](#kdt-push)
+    * [`kdt generate`](#kdt-generate)
+    * [`kdt publish`](#kdt-publish)
+    * [`kdt deploy`](#kdt-deploy)
+* [1.4.x](#14x)
+  * [Breaking Changes](#breaking-changes-1)
+* [1.3.x](#13x)
+  * [Breaking Changes](#breaking-changes-2)
+  * [New Features](#new-features-1)
+  * [New Fixes](#new-fixes)
 
 <!-- /TOC -->
+
+## 2.2.0
+
+### New Features
+* `kdt deploy` will retry `kubectl apply -f` on failure due to failures from
+  GKE API rate limits
 
 ## 2.x
 

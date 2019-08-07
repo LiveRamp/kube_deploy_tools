@@ -1,5 +1,6 @@
 require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
+require 'kube_deploy_tools/errors'
 
 KUBERNETES_MANIFESTS_INVALID_NGINX="spec/resources/kubernetes/invalid-nginx/"
 KUBERNETES_MANIFESTS_TEST_NGINX="spec/resources/kubernetes/test-nginx/"
@@ -79,6 +80,52 @@ describe KubeDeployTools::Deploy do
     expect(deploy).to receive(:notify).with(any_args)
     deploy.run(dry_run: false)
   end
+
+  it "retries kubectl apply 3 times" do
+    status_fail = double(:status, success?: false)
+    allow(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Namespace'), any_args).and_return(
+      [stdoutput, nil, status_fail],
+      [stdoutput, nil, status_fail],
+      [stdoutput, nil, status],
+    )
+
+    allow(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).and_return(
+      [stdoutput, nil, status_fail],
+      [stdoutput, nil, status_fail],
+      [stdoutput, nil, status],
+    )
+
+    # Fail on last manifest
+    allow(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).and_return(
+      [stdoutput, nil, status_fail],
+    )
+
+    deploy = KubeDeployTools::Deploy.new(
+      input_path: KUBERNETES_MANIFESTS_COMBINED_NGINX,
+      kubectl: kubectl,
+      backoff: 0,
+    )
+    resources = deploy.read_resources
+
+    expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Service" }).to_not be_nil
+    expect(resources.find { |resource| resource.definition["kind"] == "Namespace" }).to_not be_nil
+
+    # Namespaces are deployed before Services
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Namespace'), any_args).ordered.exactly(3).times
+
+    # Services are deployed before Deployments
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered.exactly(3).times
+    expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered.exactly(3).times
+
+    expect(deploy).to receive(:notify).with(any_args)
+
+    # Ultimately deploy should fail
+    expect {
+      deploy.run(dry_run: false)
+    }.to raise_error(KubeDeployTools::FatalDeploymentError)
+  end
+
 
   it "predeploys resources" do
     deploy = KubeDeployTools::Deploy.new(
