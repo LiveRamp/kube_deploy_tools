@@ -46,7 +46,9 @@ Dir.mktmpdir { |tmpdir|
     kubectl: kubectl,
     namespace: namespace,
     input_path: deploy_artifact_path,
-    glob_files: options.glob_files
+    glob_files: options.glob_files,
+    max_retries: options.max_retries,
+    retry_delay: options.retry_delay
   )
   deploy.run(
     dry_run: options.dry_run,

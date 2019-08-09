@@ -40,7 +40,8 @@ module KubeDeployTools
       namespace: nil,
       input_path:,
       glob_files: [],
-      backoff: 2
+      max_retries: 3,
+      retry_delay: 1
     )
       @kubectl = kubectl
       @namespace = namespace
@@ -48,8 +49,9 @@ module KubeDeployTools
       @glob_files = glob_files
       @filtered_files = FileFilter
                         .filter_files(filters: @glob_files, files_path: @input_path)
-                        .select{ |f| f.end_with?('.yml', '.yaml') }
-      @backoff = backoff
+                        .select { |f| f.end_with?('.yml', '.yaml') }
+      @max_retries = max_retries.to_i
+      @retry_delay = retry_delay.to_i
     end
 
     def do_deploy(dry_run)
@@ -153,15 +155,14 @@ module KubeDeployTools
 
     def kubectl_apply(resources, dry_run: true)
       resources.each do |resource|
-        tries = 3
-        tries.times do |try|
+        @max_retries.times do |try|
           args = ['apply', '-f', resource.filepath, "--dry-run=#{dry_run}"]
           out, _, status = @kubectl.run(*args)
           if status.success?
             Logger.info(out)
             break
-          elsif try < tries - 1
-            sleep(@backoff ** tries)
+          elsif try < @max_retries - 1
+            sleep(@retry_delay)
             next
           end
           raise FatalDeploymentError, "Failed to apply resource '#{resource.filepath}'"

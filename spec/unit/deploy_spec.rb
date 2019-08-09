@@ -103,7 +103,8 @@ describe KubeDeployTools::Deploy do
     deploy = KubeDeployTools::Deploy.new(
       input_path: KUBERNETES_MANIFESTS_COMBINED_NGINX,
       kubectl: kubectl,
-      backoff: 0,
+      max_retries: 3,
+      retry_delay: 1
     )
     resources = deploy.read_resources
 

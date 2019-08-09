@@ -17,7 +17,9 @@ module KubeDeployTools
         :dry_run,
         :send_report,
         :glob_files,
-        :pre_apply_hook
+        :pre_apply_hook,
+        :max_retries,
+        :retry_delay
 
       def initialize
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
@@ -84,6 +86,14 @@ module KubeDeployTools
 
         parser.on('--send-report SEND_REPORT', TrueClass, "If true, records data about the deploy to a centralized log. Default is #{send_report}") do |p|
           self.send_report = p
+        end
+
+        parser.on('--retry NUM', 'Maximum number of times to retry') do |p|
+          self.max_retries = p
+        end
+
+        parser.on('--retry-delay NUM', 'Delay in seconds between retries') do |p|
+          self.retry_delay = p
         end
 
         # Artifactory configuration is configurable by environment variables
