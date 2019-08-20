@@ -50,7 +50,7 @@ module KubeDeployTools
       @filtered_files = FileFilter
                         .filter_files(filters: @glob_files, files_path: @input_path)
                         .select { |f| f.end_with?('.yml', '.yaml') }
-      @max_retries = max_retries.to_i
+      @max_retries = max_retries.nil? ? 3 : max_retries.to_i
       @retry_delay = retry_delay.to_i
     end
 
