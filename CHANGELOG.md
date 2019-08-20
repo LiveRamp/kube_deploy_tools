@@ -25,6 +25,13 @@
 
 <!-- /TOC -->
 
+## 2.2.2
+
+###
+
+### Bug Fixes
+* The `kdt deploy` command previously defaulted to zero retries without manually specifying the `max_retries` flag
+
 ## 2.2.0
 
 ### New Features
