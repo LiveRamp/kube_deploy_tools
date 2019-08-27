@@ -7,7 +7,6 @@
   - [`deploy.yaml`](#deployyaml)
   - [kubernetes/](#kubernetes)
 - [Usage](#usage)
-- [Continuous Integration Setup in Jenkins](#continuous-integration-setup-in-jenkins)
 
 <!-- /TOC -->
 
