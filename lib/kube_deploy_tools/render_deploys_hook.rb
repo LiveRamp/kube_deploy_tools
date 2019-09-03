@@ -67,18 +67,16 @@ module KubeDeployTools
                 raise "Rendered Kubernetes template missing a .metadata.namespace: #{yml}" if data.fetch('metadata', {}).fetch('namespace', '').empty?
               end
               # annotation added to each manifest
+              annotations = data['metadata']['annotations'] || {}
               if config['git_commit']
-                if data['metadata'].key?('annotations')
-                  data['metadata']['annotations']['git_commit'] = config['git_commit']
-                else
-                  data['metadata']['annotations'] = { 'git_commit' => config['git_commit'] }
-                end
+                annotations['git_commit'] = config['git_commit']
               end
 
               if config['git_project']
-                data['metadata']['annotations']['git_project'] = config['git_project']
+                annotations['git_project'] = config['git_project']
               end
 
+              data['metadata']['annotations'] = annotations
               data
             end
             File.open(output_file, 'w') { |f| f << YAML.dump_stream(*yaml) }

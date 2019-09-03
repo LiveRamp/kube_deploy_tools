@@ -25,6 +25,13 @@
 
 <!-- /TOC -->
 
+## 2.2.3
+
+### Bug Fixes
+* The `kdt generate` command failed to add `git_project` and `git_commit` annotations in the edge case where
+  a Kubernetes resource had an `annotations` key, but the value was nil instead of an empty hash / map.
+  It now works in both cases.
+
 ## 2.2.2
 
 ###
