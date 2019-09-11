@@ -38,11 +38,11 @@ module KubeDeployTools
 
         if yml.end_with? TEMPLATING_SUFFIX
           # File needs to be templated with templater.
-          Logger.info("Generating #{output_file} from #{yml}")
+          Logger.debug("Generating #{output_file} from #{yml}")
           t.template_to_file(yml, config, output_file)
         else
           # File is not templatable, and is copied verbatim.
-          Logger.info("Copying #{output_file} from #{yml}")
+          Logger.debug("Copying #{output_file} from #{yml}")
           FileUtils.mkdir_p output_dir
           FileUtils.copy(yml, output_file)
         end
