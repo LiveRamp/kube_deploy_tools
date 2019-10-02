@@ -3,31 +3,11 @@ require 'tmpdir'
 
 module KubeDeployTools
   class ImageRegistry::Driver::Gcp < ImageRegistry::Driver::Base
-    GCR_DOCKER_CONFIG = <<-EOH
-{
-  "credHelpers": {
-    "us.gcr.io": "gcloud",
-    "staging-k8s.gcr.io": "gcloud",
-    "asia.gcr.io": "gcloud",
-    "gcr.io": "gcloud",
-    "marketplace.gcr.io": "gcloud",
-    "eu.gcr.io": "gcloud"
-  }
-}
-EOH
-
     def initialize(registry:)
       super
 
       @gcloud_config_dir = Dir.mktmpdir
       @activated = false
-
-      # Always prepare a fake Docker config for pushing using the
-      # credential helper.
-      ENV['DOCKER_CONFIG'] = @gcloud_config_dir
-      File.open(File.join(@gcloud_config_dir, 'config.json'), 'w') do |f|
-        f.write(GCR_DOCKER_CONFIG)
-      end
     end
 
     def authorize
