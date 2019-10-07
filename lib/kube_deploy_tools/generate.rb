@@ -74,9 +74,13 @@ module KubeDeployTools
           })
 
           # Print all flags for each artifact-flavor
-          Logger.info "generating artifact '#{artifact}', flavor '#{flavor}'..."
-          Logger.debug "artifact config: #{full_flags.sort_by { |k, v| k }}"
-
+          puts "artifact '#{artifact}', flavor '#{flavor}'"
+          full_flags.
+            sort_by { |k, v| k }.
+            each do |k, v|
+              puts "config['#{k}'] = #{v}"
+            end
+          puts ""
           # Skip rendering ERB templates and generating artifacts
           # if printing flags only
           next if @print_flags_only
