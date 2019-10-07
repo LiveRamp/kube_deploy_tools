@@ -25,6 +25,13 @@
 
 <!-- /TOC -->
 
+## 2.2.4
+
+### Bug Fixes
+* The `kdt` Docker image needed to tolerate when the gid used by the Docker
+  socket was already used by a group that was inside the container image
+  itself.
+
 ## 2.2.3
 
 ### Bug Fixes
