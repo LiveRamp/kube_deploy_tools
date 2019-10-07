@@ -25,7 +25,7 @@ module KubeDeployTools
     end
 
     def run_call(*cmd, **opts)
-      print_cmd = opts.fetch(:print_cmd, true)
+      print_cmd = opts.fetch(:print_cmd, false)
       if print_cmd
         Logger.info(Shellwords.join(cmd))
       else
