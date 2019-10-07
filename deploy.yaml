@@ -1,25 +1,7 @@
 version: 2
 default_flags:
   pull_policy: IfNotPresent
-artifacts:
-  - name: local
-    image_registry: local
-    flags:
-      target: local
-      environment: staging
-      cloud: local
-  - name: colo-service-prod
-    image_registry: gcp
-    flags:
-      target: colo-service
-      environment: prod
-      cloud: colo
-  - name: colo-service-staging
-    image_registry: gcp
-    flags:
-      target: colo-service
-      environment: staging
-      cloud: colo
+artifacts: []
 flavors:
   default: {}
 image_registries:

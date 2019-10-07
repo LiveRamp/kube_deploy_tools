@@ -18,8 +18,16 @@ if [ ${LOCAL_UID} != 0 ]; then
   DOCKER_HOST="/var/run/docker.sock"
   if [[ -S ${DOCKER_HOST} ]]; then
     DOCKER_GID=$(stat -c '%g' ${DOCKER_HOST})
-    addgroup -g ${DOCKER_GID} docker
-    addgroup kdt docker
+    if ! getent group "${DOCKER_GID}" >/dev/null; then
+      # The gid is not used, so create a new group called 'docker'
+      DOCKER_GROUP_NAME=docker
+      addgroup -g "${DOCKER_GID}" "${DOCKER_GROUP_NAME}"
+    else
+      # The gid is used, so use the existing one
+      # This is mainly because addgroup doesn't support looking up by gid. Grr.
+      DOCKER_GROUP_NAME=$(getent group "${DOCKER_GID}" | cut -d: -f1)
+    fi
+    addgroup kdt "${DOCKER_GROUP_NAME}"
   fi
 
   drop_privileges_command='su-exec kdt'
