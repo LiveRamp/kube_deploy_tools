@@ -27,7 +27,7 @@ jobs:
           bundle install --jobs 4 --retry 3
           bundle exec rake test
       - name: build docker image
-        run: docker build -t local-registry/kube_deploy_tools ./containers/kube_deploy_tools
+        run: docker build -t local-registry/kube_deploy_tools .
       - name: build release gem
         run: gem build kube_deploy_tools.gemspec
       ### BELOW: ONLY RUN WHEN MASTER IS PUSHED ###
