@@ -48,6 +48,7 @@ jobs:
 
           VERSION=${GITHUB_REF##*/v}
           VERSION_X=${VERSION%%.*}
+          gcloud auth configure-docker
           bundle exec kdt push --tag="$VERSION" kube_deploy_tools
           bundle exec kdt push --tag="$VERSION_X" kube_deploy_tools
         env:
