@@ -1,14 +1,13 @@
-FROM ruby:2.3-alpine as build
+FROM ruby:2.6-alpine as build
 
 WORKDIR /opt/kube_deploy_tools
-COPY Gemfile Rakefile kube_deploy_tools.gemspec README* LICENSE* /opt/kube_deploy_tools/
-COPY bin /opt/kube_deploy_tools/bin
-COPY lib /opt/kube_deploy_tools/lib
+COPY . /opt/kube_deploy_tools/
 
+RUN apk add --no-cache git
 RUN bundle install
 RUN bundle exec rake
 
-FROM ruby:2.3-alpine
+FROM ruby:2.6-alpine
 
 RUN apk add --no-cache \
     bash \
@@ -70,11 +69,11 @@ RUN AVAILABLE_KUBECTL_VERSIONS="v1.7.2 v1.9.6 v1.10.12 ${KUBECTL_LATEST_VERSION}
   ln -s /usr/local/bin/kubernetes/versions/${KUBECTL_LATEST_VERSION%.*}/kubectl /usr/local/bin/kubectl
 
 # Install kube_deploy_tools
-COPY --from=build /opt/kube_deploy_tools/pkg /opt/kube_deploy_tools
-RUN gem install /opt/kube_deploy_tools/*.gem
+COPY --from=build /opt/kube_deploy_tools/*.gem /opt/kube_deploy_tools/install.gem
+RUN gem install /opt/kube_deploy_tools/install.gem
 
 WORKDIR /app
 
-COPY containers/kube_deploy_tools/entrypoint.sh /opt/bin/entrypoint.sh
+COPY entrypoint /opt/bin/entrypoint
 
-ENTRYPOINT ["/opt/bin/entrypoint.sh"]
+ENTRYPOINT ["/opt/bin/entrypoint"]

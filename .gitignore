@@ -1,3 +1,4 @@
+*.gem
 .*.sw*
 .bundle/
 .bundle-gems/
