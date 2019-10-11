@@ -1,6 +1,6 @@
 name: ci
 
-on: [push, pull_request]
+on: push
 
 jobs:
   ci:
@@ -12,11 +12,18 @@ jobs:
           ruby-version: 2.6.x
       - name: Check out source code
         uses: actions/checkout@v1
-      - name: Unit tests
+      - name: generate lib/kube_deploy_tools/version_auto.rb for release
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           export VERSION=${GITHUB_REF##*/}
+          cat >lib/kube_deploy_tools/version_auto.rb <<EOF
+          module KubeDeployTools
+            VERSION_XYZ = '${VERSION}'
+          end
+          EOF
+      - name: Unit tests
+        run: |
           gem install bundler
-          rake generate_auto_version
           bundle install --jobs 4 --retry 3
           bundle exec rake test
       - name: push kube_deploy_tools:latest
@@ -48,6 +55,6 @@ jobs:
         run: |
           export VERSION=${GITHUB_REF##*/v}
           echo ":github: Bearer ${{ secrets.GITHUB_TOKEN }}" >> ~/.gem/credentials
-          gem push --key github --host https://rubygems.pkg.github.com/LiveRamp kube_deploy_tools-1.0.0.gem
+          gem push --key github --host https://rubygems.pkg.github.com/LiveRamp kube_deploy_tools-${VERSION}.gem
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
