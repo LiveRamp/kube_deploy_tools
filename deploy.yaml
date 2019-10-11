@@ -5,9 +5,6 @@ artifacts: []
 flavors:
   default: {}
 image_registries:
-  - name: local
-    driver: noop
-    prefix: local-registry
   - name: gcp
     driver: gcp
     prefix: ***REMOVED***
