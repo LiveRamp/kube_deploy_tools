@@ -21,6 +21,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rake', '~> 12.0'
   gem.add_development_dependency 'rspec', '~> 3.0'
   gem.add_development_dependency 'rspec_junit_formatter', '~> 0.4.1'
+  gem.add_development_dependency 'rubygems-tasks', '~> 0.2'
 
   # ensure the gem is built out of versioned files
   gem.files = Dir['{bin,lib}/**/*', 'README*', 'LICENSE*']

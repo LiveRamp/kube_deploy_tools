@@ -21,15 +21,13 @@ jobs:
             VERSION_XYZ = '${VERSION}'
           end
           EOF
-      - name: Unit tests
+      - name: run unit tests and create gem
         run: |
           gem install bundler
           bundle install --jobs 4 --retry 3
-          bundle exec rake test
+          bundle exec rake
       - name: build docker image
         run: docker build -t local-registry/kube_deploy_tools .
-      - name: build release gem
-        run: gem build kube_deploy_tools.gemspec
       ### BELOW: ONLY RUN WHEN MASTER IS PUSHED ###
       - name: push kube_deploy_tools:latest
         if: github.branch == 'refs/heads/master'

@@ -2,6 +2,7 @@ require 'base64'
 require 'fileutils'
 require 'rake'
 require 'rspec/core/rake_task'
+require 'rubygems/tasks'
 
 task :default => [:test, :build]
 
