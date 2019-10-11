@@ -39,14 +39,16 @@ jobs:
       - name: build release gem
         run: gem build kube_deploy_tools.gemspec
       ### BELOW: ONLY RUN WHEN A TAG IS PUSHED ###
-      - name: push tagged docker container image to gcr
+      - name: push tagged docker container images to gcr
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          export VERSION=${GITHUB_REF##*/}
+          export VERSION_XYZ=${GITHUB_REF##*/v}
+          export VERSION_X=${VERSION_XYZ%%.*}
           export GOOGLE_APPLICATION_CREDENTIALS=$(mktemp)
           trap "rm -f ${GOOGLE_APPLICATION_CREDENTIALS}" EXIT
           echo -n "${GOOGLE_APPLICATION_CREDENTIALS_TEXT}" >"$GOOGLE_APPLICATION_CREDENTIALS"
-          bundle exec kdt push --tag="$VERSION"
+          bundle exec kdt push --tag="$VERSION" kube_deploy_tools
+          bundle exec kdt push --tag="$VERSION_X" kube_deploy_tools
         env:
           # keyfile for svc-jenkins service account
           GOOGLE_APPLICATION_CREDENTIALS_TEXT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TEXT }}
