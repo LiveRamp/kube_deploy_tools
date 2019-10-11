@@ -18,7 +18,7 @@ jobs:
           export VERSION=${GITHUB_REF##*/v}
           cat >lib/kube_deploy_tools/version.rb <<EOF
           module KubeDeployTools
-            VERSION_XYZ = '${VERSION}'
+            VERSION = '${VERSION}'
           end
           EOF
       - name: run unit tests and create gem
