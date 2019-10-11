@@ -14,7 +14,9 @@ jobs:
         uses: actions/checkout@v1
       - name: Unit tests
         run: |
+          export VERSION=${GITHUB_REF##*/}
           gem install bundler
+          rake generate_auto_version
           bundle install --jobs 4 --retry 3
           bundle exec rake test
       - name: push kube_deploy_tools:latest

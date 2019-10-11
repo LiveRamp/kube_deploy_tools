@@ -9,7 +9,7 @@ require 'kube_deploy_tools/version'
 
 GEMSERVER = 'https://***REMOVED***'
 GEM_CREDENTIALS = ENV['HOME'] + '/.gem/credentials'
-VERSION = ENV.fetch('VERSION')
+VERSION = ENV.fetch('VERSION', '3.0.0.dev')
 
 task :default => [:test, :build]
 task :push => [:generate_auto_version, :check_gem_version_exists, :create_artifactory_credentials]
