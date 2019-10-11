@@ -21,11 +21,13 @@ jobs:
             VERSION = '${VERSION}'
           end
           EOF
-      - name: run unit tests and create gem
+      - name: run unit tests
         run: |
           gem install bundler
           bundle install --jobs 4 --retry 3
-          bundle exec rake
+          bundle exec rake test
+      - name: build gem
+        run: bundle exec rake build
       - name: build docker image
         run: docker build -t local-registry/kube_deploy_tools .
       ### BELOW: ONLY RUN WHEN MASTER IS PUSHED ###
@@ -40,11 +42,12 @@ jobs:
       - name: push tagged docker container images to gcr
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          export VERSION_XYZ=${GITHUB_REF##*/v}
-          export VERSION_X=${VERSION_XYZ%%.*}
           export GOOGLE_APPLICATION_CREDENTIALS=$(mktemp)
           trap "rm -f ${GOOGLE_APPLICATION_CREDENTIALS}" EXIT
           echo -n "${GOOGLE_APPLICATION_CREDENTIALS_TEXT}" >"$GOOGLE_APPLICATION_CREDENTIALS"
+
+          VERSION=${GITHUB_REF##*/v}
+          VERSION_X=${VERSION%%.*}
           bundle exec kdt push --tag="$VERSION" kube_deploy_tools
           bundle exec kdt push --tag="$VERSION_X" kube_deploy_tools
         env:
