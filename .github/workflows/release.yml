@@ -1,16 +1,57 @@
 name: add-release-notes
 
-on:
+on: [push, pull_request]
   push:
     # branches to consider in the event; optional, defaults to all
     branches:
       - master
+    tags:
+      - v.*
 
 jobs:
-  update_draft_release:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
+      - name: Set up Ruby 2.6
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6.x
+      - name: Check out source code
+        uses: actions/checkout@v1
+      - name: Unit tests
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+          bundle exec rake test
+      - name: push kube_deploy_tools:latest
+        if: github.branch == 'refs/heads/master'
+        run: |
+          # Generate container image
+          docker build -t local-registry/kube_deploy_tools ./containers/kube_deploy_tools
+          bundle exec kdt push --tag=latest kube_deploy_tools
       - uses: toolmantim/release-drafter@v5.2.0
+        if: github.branch == 'refs/heads/master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: build release gem
+        run: gem build kube_deploy_tools.gemspec
+      ### BELOW: ONLY RUN WHEN A TAG IS PUSHED ###
+      - name: push tagged docker container image to gcr
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          export VERSION=${GITHUB_REF##*/}
+          export GOOGLE_APPLICATION_CREDENTIALS=$(mktemp)
+          trap "rm -f ${GOOGLE_APPLICATION_CREDENTIALS}" EXIT
+          echo -n "${GOOGLE_APPLICATION_CREDENTIALS_TEXT}" >"$GOOGLE_APPLICATION_CREDENTIALS"
+          bundle exec kdt push --tag="$VERSION"
+        env:
+          # keyfile for svc-jenkins service account
+          GOOGLE_APPLICATION_CREDENTIALS_TEXT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TEXT }}
+      - name: push tagged gem to github packages
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          export VERSION=${GITHUB_REF##*/v}
+          echo ":github: Bearer ${{ secrets.GITHUB_TOKEN }}" >> ~/.gem/credentials
+          gem push --key github --host https://rubygems.pkg.github.com/LiveRamp kube_deploy_tools-1.0.0.gem
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
