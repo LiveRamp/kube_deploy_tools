@@ -5,8 +5,8 @@ COPY Gemfile Rakefile kube_deploy_tools.gemspec README* LICENSE* /opt/kube_deplo
 COPY bin /opt/kube_deploy_tools/bin
 COPY lib /opt/kube_deploy_tools/lib
 
-RUN bundle install && \
-  bundle exec rake build
+RUN bundle install
+RUN bundle exec rake
 
 FROM ruby:2.3-alpine
 
