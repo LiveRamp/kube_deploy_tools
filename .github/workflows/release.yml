@@ -12,11 +12,11 @@ jobs:
           ruby-version: 2.6.x
       - name: Check out source code
         uses: actions/checkout@v1
-      - name: generate lib/kube_deploy_tools/version_auto.rb for release
+      - name: generate lib/kube_deploy_tools/version.rb for release
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           export VERSION=${GITHUB_REF##*/v}
-          cat >lib/kube_deploy_tools/version_auto.rb <<EOF
+          cat >lib/kube_deploy_tools/version.rb <<EOF
           module KubeDeployTools
             VERSION_XYZ = '${VERSION}'
           end
