@@ -1,12 +1,6 @@
-name: add-release-notes
+name: ci
 
 on: [push, pull_request]
-  push:
-    # branches to consider in the event; optional, defaults to all
-    branches:
-      - master
-    tags:
-      - v.*
 
 jobs:
   ci:
