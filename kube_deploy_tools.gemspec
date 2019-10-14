@@ -3,7 +3,7 @@ require File.expand_path(File.join('lib', 'kube_deploy_tools', 'version.rb'))
 
 Gem::Specification.new do |gem|
   gem.name    = 'kube_deploy_tools'
-  gem.version = "#{KubeDeployTools::version_xyz}"
+  gem.version = KubeDeployTools::VERSION
   gem.date    = Date.today.to_s
 
   gem.summary = "Kubernetes Deploy Tools"
@@ -11,7 +11,7 @@ Gem::Specification.new do |gem|
 
   gem.authors  = ['ops']
   gem.email    = 'ops@***REMOVED***'
-  gem.homepage = 'http://git.***REMOVED***/OpsRepos/kube_deploy_tools'
+  gem.homepage = 'https://github.com/LiveRamp/kube_deploy_tools'
   gem.license  = 'MIT'
 
   gem.required_ruby_version = '>= 2.3'
@@ -21,7 +21,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rake', '~> 12.0'
   gem.add_development_dependency 'rspec', '~> 3.0'
   gem.add_development_dependency 'rspec_junit_formatter', '~> 0.4.1'
-  gem.add_development_dependency 'rubygems-tasks', '~> 0.2'
 
   # ensure the gem is built out of versioned files
   gem.files = Dir['{bin,lib}/**/*', 'README*', 'LICENSE*']
