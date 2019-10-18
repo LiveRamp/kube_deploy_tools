@@ -25,6 +25,7 @@ module KubeDeployTools
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
         self.flavor = 'default'
         self.dry_run = true
+        self.change_cause = ''
         self.send_report = true
         self.glob_files = []
 
@@ -62,6 +63,10 @@ module KubeDeployTools
 
         parser.on('--dry-run DRY_RUN', TrueClass, "If true, will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: #{dry_run}.") do |p|
           self.dry_run = p
+        end
+
+        parser.on('--change-cause CHANGE_CAUSE', 'A change-cause message to annotate all Kubernetes deployment with. Note: Only applicable for deployments.') do |p|
+          self.change_cause = p
         end
 
         parser.on('--include INCLUDE', "Include glob pattern. Example: --include=**/* will include every file. Default is ''.") do |p|
