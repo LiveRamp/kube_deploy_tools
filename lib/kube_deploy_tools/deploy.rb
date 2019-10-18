@@ -170,6 +170,16 @@ module KubeDeployTools
       end
     end
 
+    def kubectl_annotate_change(resource, change_cause, dry_run: true)
+      args = ['annotate', resource.kind, resource.name, 'kubernetes.io/change-cause=#{change_cause}', '--record=false', '--overwrite=true', '--dry-run=#{dry_run}']
+        out, _, status = @kubectl.run(*args)
+        unless status.success?
+          raise FatalDeploymentError, "Failed to annotate change-cause"
+        end
+        out
+    end
+
+
     def kubectl_cluster_name
       args = ['config', 'view', '--minify', '--output=jsonpath={..clusters[0].name}']
       name, _, status = @kubectl.run(*args)
