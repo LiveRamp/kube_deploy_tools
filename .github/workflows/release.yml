@@ -33,7 +33,13 @@ jobs:
       ### BELOW: ONLY RUN WHEN MASTER IS PUSHED ###
       - name: push kube_deploy_tools:latest
         if: github.ref == 'refs/heads/master'
-        run: bundle exec kdt push --tag=latest kube_deploy_tools
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS=$(mktemp)
+          trap "rm -f ${GOOGLE_APPLICATION_CREDENTIALS}" EXIT
+          echo -n "${GOOGLE_APPLICATION_CREDENTIALS_TEXT}" >"$GOOGLE_APPLICATION_CREDENTIALS"
+
+          gcloud auth configure-docker
+          bundle exec kdt push --tag=latest kube_deploy_tools
       - uses: toolmantim/release-drafter@v5.2.0
         if: github.ref == 'refs/heads/master'
         env:
