@@ -32,10 +32,10 @@ jobs:
         run: docker build -t local-registry/kube_deploy_tools .
       ### BELOW: ONLY RUN WHEN MASTER IS PUSHED ###
       - name: push kube_deploy_tools:latest
-        if: github.branch == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         run: bundle exec kdt push --tag=latest kube_deploy_tools
       - uses: toolmantim/release-drafter@v5.2.0
-        if: github.branch == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ### BELOW: ONLY RUN WHEN A TAG IS PUSHED ###
