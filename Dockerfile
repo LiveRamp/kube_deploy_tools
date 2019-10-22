@@ -59,9 +59,11 @@ RUN mkdir -p "${GOOGLE_SDK_LOCATION}" && \
 #      https://www.jeffgeerling.com/blog/2018/install-kubectl-your-docker-image-easy-way
 ENV KUBECTL_LATEST_VERSION="v1.11.7"
 RUN AVAILABLE_KUBECTL_VERSIONS="v1.7.2 v1.9.6 v1.10.12 ${KUBECTL_LATEST_VERSION}" && \
+  install -d /usr/local/bin/kubernetes/versions -o root -g root -m 0755 && \
   for VERSION in ${AVAILABLE_KUBECTL_VERSIONS}; do \
     MAJOR_MINOR_VERSION=${VERSION%.*} && \
-    curl -fSL --create-dirs -o /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl \
+    install -d /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION} -o root -g root -m 0755 && \
+    curl -fSL -o /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl \
       https://storage.googleapis.com/kubernetes-release/release/${VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl && \
     ln -s /usr/local/bin/kubernetes/versions/${MAJOR_MINOR_VERSION}/kubectl /usr/local/bin/kubectl${MAJOR_MINOR_VERSION}; \
