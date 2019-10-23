@@ -40,6 +40,9 @@ jobs:
 
           gcloud auth configure-docker
           bundle exec kdt push --tag=latest kube_deploy_tools
+        env:
+          # keyfile for svc-jenkins service account
+          GOOGLE_APPLICATION_CREDENTIALS_TEXT: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TEXT }}
       - uses: toolmantim/release-drafter@v5.2.0
         if: github.ref == 'refs/heads/master'
         env:
