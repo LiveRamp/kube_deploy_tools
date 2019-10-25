@@ -50,20 +50,4 @@ else
   $drop_privileges_command gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
 fi
 
-# Drop a docker config file to make sure docker push uses the gcloud strategy
-# for authentication.
-install -o kdt -g kdt -d /home/kdt/.docker
-cat >/home/kdt/.docker/config.json <<EOF
-{
-  "credHelpers": {
-    "asia.gcr.io": "gcloud",
-    "eu.gcr.io": "gcloud",
-    "gcr.io": "gcloud",
-    "marketplace.gcr.io": "gcloud",
-    "staging-k8s.gcr.io": "gcloud",
-    "us.gcr.io": "gcloud"
-  }
-}
-EOF
-
 exec $drop_privileges_command "$@"

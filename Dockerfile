@@ -1,9 +1,10 @@
 FROM ruby:2.6-alpine as build
 
-WORKDIR /opt/kube_deploy_tools
-COPY . /opt/kube_deploy_tools/
-
 RUN apk add --no-cache git
+
+WORKDIR /app
+COPY . /app
+
 RUN bundle install
 RUN bundle exec rake
 
@@ -71,11 +72,14 @@ RUN AVAILABLE_KUBECTL_VERSIONS="v1.7.2 v1.9.6 v1.10.12 ${KUBECTL_LATEST_VERSION}
   ln -s /usr/local/bin/kubernetes/versions/${KUBECTL_LATEST_VERSION%.*}/kubectl /usr/local/bin/kubectl
 
 # Install kube_deploy_tools
-COPY --from=build /opt/kube_deploy_tools/*.gem /opt/kube_deploy_tools/install.gem
-RUN gem install /opt/kube_deploy_tools/install.gem
+COPY --from=build /app/*.gem /app/install.gem
+RUN gem install /app/install.gem
 
 WORKDIR /app
 
 COPY entrypoint /opt/bin/entrypoint
+COPY docker-config.json /etc/docker/config.json
+RUN chmod 0644 /etc/docker/config.json
 
+ENV DOCKER_CONFIG /etc/docker
 ENTRYPOINT ["/opt/bin/entrypoint"]
