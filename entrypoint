@@ -7,31 +7,21 @@
 
 set -e
 
+KDT_USER=kdt
+RUN_AS_KDT="su-exec $KDT_USER"
 LOCAL_UID=$(stat -c '%u' /app)
-if [ ${LOCAL_UID} != 0 ]; then
-  # Use a local user to properly share volume mounts under /app.
-  adduser -u ${LOCAL_UID} -s /bin/bash -D kdt
-  # Allow local user to create directories under /app.
-  chown --quiet kdt /app
 
-  # Allow local user to share docker daemon socket.
-  DOCKER_HOST="/var/run/docker.sock"
-  if [[ -S ${DOCKER_HOST} ]]; then
-    DOCKER_GID=$(stat -c '%g' ${DOCKER_HOST})
-    if ! getent group "${DOCKER_GID}" >/dev/null; then
-      # The gid is not used, so create a new group called 'docker'
-      DOCKER_GROUP_NAME=docker
-      addgroup -g "${DOCKER_GID}" "${DOCKER_GROUP_NAME}"
-    else
-      # The gid is used, so use the existing one
-      # This is mainly because addgroup doesn't support looking up by gid. Grr.
-      DOCKER_GROUP_NAME=$(getent group "${DOCKER_GID}" | cut -d: -f1)
-    fi
-    addgroup kdt "${DOCKER_GROUP_NAME}"
-  fi
-
-  drop_privileges_command='su-exec kdt'
+# Allow local user to share docker daemon socket.
+DOCKER_HOST="/var/run/docker.sock"
+if [[ -S ${DOCKER_HOST} ]]; then
+  DOCKER_GID=$(stat -c '%g' "${DOCKER_HOST}")
 fi
+
+# Use a local user to properly share volume mounts under /app.
+/usr/sbin/useradd -o -u "${LOCAL_UID}" -g "${DOCKER_GID}" -d "/home/$KDT_USER" -m -s /bin/bash "$KDT_USER"
+
+# Allow local user to create directories under /app.
+chown --quiet "$KDT_USER" /app
 
 # If set, symlink kubectl version based on environment variable
 if [[ -n "$KUBECTL_VERSION" ]]; then
@@ -47,7 +37,7 @@ fi
 if [[ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
   echo "WARNING: no Google Credentials set, gcloud commands might fail"
 else
-  $drop_privileges_command gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+  $RUN_AS_KDT gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
 fi
 
-exec $drop_privileges_command "$@"
+exec $RUN_AS_KDT "$@"

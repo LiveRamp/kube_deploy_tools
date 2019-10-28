@@ -15,6 +15,7 @@ RUN apk add --no-cache \
     curl \
     git \
     python \
+    shadow \
     su-exec \
     tar
 
