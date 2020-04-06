@@ -22,6 +22,7 @@ app = KubeDeployTools::Generate.new(
   options.input_path,
   options.output_path,
   file_filters: options.file_filters,
-  print_flags_only: options.print_flags_only
+  print_flags_only: options.print_flags_only,
+  literals: options.literals,
 )
 app.generate

@@ -20,11 +20,12 @@ module KubeDeployTools
     'tag' => tag_from_local_env,
   }.freeze
   class Generate
-    def initialize(manifest, input_dir, output_dir, file_filters: [], print_flags_only: false)
+    def initialize(manifest, input_dir, output_dir, file_filters: [], print_flags_only: false, literals: {})
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
 
       @config = DeployConfigFile.new(manifest)
+      @literals = literals
 
       @input_dir = input_dir
       @output_dir = output_dir
@@ -72,6 +73,8 @@ module KubeDeployTools
             'git_commit' => git_commit,
             'git_project' => git_project
           })
+
+          full_flags.merge!(@literals)
 
           # Print all flags for each artifact-flavor
           puts "artifact '#{artifact}', flavor '#{flavor}'"

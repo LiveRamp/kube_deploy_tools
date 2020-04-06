@@ -193,4 +193,21 @@ YAML
       expect(Dir["#{tmp_dir}/*"].empty?).to be true
     end
   end
+
+  it "can set ERB context values from literals" do
+    Dir.mktmpdir do |tmp_dir|
+      expected_value = "my_image_tag"
+      app = KubeDeployTools::Generate.new(
+        MANIFEST_FILE,
+        INPUT_DIR,
+        tmp_dir,
+        literals: {'image_tag' => expected_value},
+      )
+      app.generate
+      expected = Dir["#{tmp_dir}/**/other.yaml"]
+      expected.each do |rendered|
+        expect(File.read(rendered)).to include("kube_deploy_tools:#{expected_value}")
+      end
+    end
+  end
 end
