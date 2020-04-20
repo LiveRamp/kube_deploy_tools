@@ -5,7 +5,6 @@ require 'time'
 require 'yaml'
 
 require 'kube_deploy_tools/render_deploys_hook'
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/file_filter'
 require 'kube_deploy_tools/shellrunner'
@@ -20,7 +19,7 @@ module KubeDeployTools
     'tag' => tag_from_local_env,
   }.freeze
   class Generate
-    def initialize(manifest, input_dir, output_dir, file_filters: [], print_flags_only: false, literals: {})
+    def initialize(manifest, input_dir, output_dir, file_filters: [], print_flags_only: false, literals: {}, artifact_registry:)
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
 
@@ -34,6 +33,8 @@ module KubeDeployTools
       @file_filters = file_filters
 
       @print_flags_only = print_flags_only
+
+      @artifact_registry = artifact_registry.driver
     end
 
     def git_commit
@@ -112,10 +113,14 @@ module KubeDeployTools
               end
             end
 
-            # Pack up contents of each flavor_dir to a correctly named artifact tarball.
-            tarball = KubeDeployTools.build_deploy_artifact_name(name: artifact, flavor: flavor)
-            tarball_full_path = File.join(@output_dir, tarball)
-            Shellrunner.check_call('tar', '-C', flavor_dir, '-czf', tarball_full_path, '.')
+            # Pack up contents of each flavor_dir to a correctly named artifact.
+            @artifact_registry.generate(
+              name: artifact,
+              flavor: flavor,
+
+              input_dir: flavor_dir,
+              output_dir: @output_dir,
+            )
           end
 
           permutations[pid] = "#{artifact}_#{flavor}"

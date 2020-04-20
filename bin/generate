@@ -8,6 +8,8 @@ require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/generate'
 require 'kube_deploy_tools/generate/options'
+require 'kube_deploy_tools/deploy_config_file'
+require 'kube_deploy_tools/artifact_registry'
 
 def options
   parser = KubeDeployTools::Generate::Optparser.new
@@ -17,6 +19,9 @@ end
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 
+config = KubeDeployTools::DeployConfigFile.new(options.manifest_file)
+artifact_registry = config.artifact_registries[config.artifact_registry]
+
 app = KubeDeployTools::Generate.new(
   options.manifest_file,
   options.input_path,
@@ -24,5 +29,6 @@ app = KubeDeployTools::Generate.new(
   file_filters: options.file_filters,
   print_flags_only: options.print_flags_only,
   literals: options.literals,
+  artifact_registry: artifact_registry,
 )
 app.generate

@@ -1,16 +1,14 @@
-require 'artifactory'
 require 'uri'
 require 'yaml'
 
 require 'kube_deploy_tools/built_artifacts_file'
 require 'kube_deploy_tools/deploy_config_file'
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/object'
 
 module KubeDeployTools
   class Publish
-    def initialize(manifest:, output_dir:, extra_files:)
+    def initialize(manifest:, artifact_registry:, output_dir:, extra_files:)
       @config = DeployConfigFile.new(manifest)
       @output_dir = output_dir
       @extra_files = extra_files
@@ -18,43 +16,35 @@ module KubeDeployTools
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
 
-      if Artifactory.endpoint.blank?
-        Logger.warn("No Artifactory endpoint given")
-      end
-      if Artifactory.username.blank?
-        Logger.warn("No Artifactory username given")
-      end
-      if Artifactory.password.blank?
-        Logger.warn("No Artifactory password given")
-      end
+      @artifact_registry = artifact_registry.driver
     end
 
     def publish()
       @config.artifacts.each do |c|
         name = c.fetch('name')
+
         # Allow deploy.yaml to gate certain flavors to certain targets.
         cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
+
         cluster_flavors.each do |flavor, _|
-          tarball = KubeDeployTools.build_deploy_artifact_name(
+
+          local_artifact_path = @artifact_registry.get_local_artifact_path(
+            local_dir: @output_dir,
             name: name,
-            flavor: flavor
-          )
-          tarball_full_path = File.join(@output_dir, tarball)
-          artifactory_repo_key = KubeDeployTools.get_remote_deploy_artifact_key(
-            project: @project,
-            build_number: @build_number,
-            name: name,
-            flavor: flavor
+            flavor: flavor,
           )
 
-          if File.exist?(tarball_full_path)
-            upload_artifact(
-              file_path: tarball_full_path,
-              artifactory_repo_key: artifactory_repo_key,
-            )
-          else
-            Logger.warn("Expected artifact to exist, but #{tarball_full_path} does not exist")
-          end
+          registry_artifact_path = @artifact_registry.get_registry_artifact_path(
+            project: @project,
+            name: name,
+            flavor: flavor,
+            build_number: @build_number,
+          )
+
+          @artifact_registry.publish(
+            local_artifact_path: local_artifact_path,
+            registry_artifact_path: registry_artifact_path,
+          )
         end
       end
 
@@ -62,10 +52,9 @@ module KubeDeployTools
 
       @extra_files.each do |f|
         base = File.basename(f)
-        upload_artifact(
-          file_path: f,
-          artifactory_repo_key:
-          "#{@project}/#{@build_number}/#{base}",
+        @artifact_registry.publish(
+          local_artifact_path: f,
+          registry_artifact_path: "#{@project}/#{@build_number}/#{base}",
         )
 
         manifest = KubeDeployTools::BuiltArtifactsFile.new(images_yaml)
@@ -74,21 +63,10 @@ module KubeDeployTools
         Logger.info("Registered #{f} as extra artifact of the build")
       end
 
-      if File.exist?(images_yaml)
-        upload_artifact(
-          file_path: images_yaml,
-          artifactory_repo_key: "#{@project}/#{@build_number}/images.yaml",
-        )
-      else
-        Logger.warn("Expected artifact to exist, but #{images_yaml} does not exist")
-      end
-    end
-
-    def upload_artifact(file_path:, artifactory_repo_key:)
-      artifactory_url = "#{Artifactory.endpoint}/#{KubeDeployTools::ARTIFACTORY_REPO}/#{artifactory_repo_key}"
-      Logger.info("Uploading #{file_path} to #{artifactory_url}")
-      artifact = Artifactory::Resource::Artifact.new(local_path: file_path)
-      artifact.upload(KubeDeployTools::ARTIFACTORY_REPO, artifactory_repo_key)
+      @artifact_registry.publish(
+        local_artifact_path: images_yaml,
+        registry_artifact_path: "#{@project}/#{@build_number}/images.yaml",
+      )
     end
   end
 end

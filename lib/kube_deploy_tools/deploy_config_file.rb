@@ -5,14 +5,18 @@ require 'yaml'
 require 'kube_deploy_tools/deploy_config_file/util'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
+require 'kube_deploy_tools/artifact_registry'
 
 DEPLOY_YAML = 'deploy.yaml'
 DEPLOY_YML_V1 = 'deploy.yml'
 
 module KubeDeployTools
+  PROJECT = ENV['JOB_NAME'] || File.basename(`git config remote.origin.url`.chomp, '.git')
+  BUILD_NUMBER = ENV.fetch('BUILD_ID', 'dev')
+
   # Read-only model for the deploy.yaml configuration file.
   class DeployConfigFile
-    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :valid_image_registries, :expiration
+    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :valid_image_registries, :expiration, :artifact_registries, :artifact_registry
 
     include DeployConfigFileUtil
 
@@ -64,14 +68,28 @@ module KubeDeployTools
       check_and_warn(
         config.has_key?('version'),
         'Expected .version to be specified, but .version is missing. Falling back to version 1 config schema')
-      check_and_err([1, 2].include?(version), "Expected valid version, but received unsupported version '#{version}'")
+      check_and_err([1, 2, 3].include?(version), "Expected valid version, but received unsupported version '#{version}'")
 
       case version
+      when 3
+        fetch_and_parse_version3_config!
       when 2
         fetch_and_parse_version2_config!
       when 1
         fetch_and_parse_version1_config!
       end
+    end
+
+    def fetch_and_parse_version3_config!
+      config = @original_config
+      @image_registries = parse_image_registries(config.fetch('image_registries', []))
+      @default_flags = parse_default_flags(config.fetch('default_flags', {}))
+      @artifacts = parse_artifacts(config.fetch('artifacts', []), @default_flags, @image_registries)
+      @flavors = parse_flavors(config.fetch('flavors', {}))
+      @hooks = parse_hooks(config.fetch('hooks', ['default']))
+      @expiration = parse_expiration(config.fetch('expiration', []))
+      @artifact_registries = parse_artifact_registries(config.fetch('artifact_registries', []))
+      @artifact_registry = parse_artifact_registry(config.fetch('artifact_registry', ''), @artifact_registries)
     end
 
     def fetch_and_parse_version2_config!
@@ -82,6 +100,17 @@ module KubeDeployTools
       @flavors = parse_flavors(config.fetch('flavors', {}))
       @hooks = parse_hooks(config.fetch('hooks', ['default']))
       @expiration = parse_expiration(config.fetch('expiration', []))
+      @artifact_registries = parse_artifact_registries(config.fetch('artifact_registries', [
+        {
+          'name' => 'artifactory',
+          'driver' => 'artifactory',
+          'config' => {
+            'endpoint' => 'https://***REMOVED***/artifactory',
+            'repo' => 'kubernetes-snapshot-local',
+          },
+        },
+      ]))
+      @artifact_registry = parse_artifact_registry(config.fetch('artifact_registry', 'artifactory'), @artifact_registries)
     end
 
     # Fetches and parse a version 1 config as a version 2 config, with the
@@ -242,6 +271,40 @@ module KubeDeployTools
       expiration
     end
 
+    def parse_artifact_registries(artifact_registries)
+      check_and_err(artifact_registries.is_a?(Array), '.artifact_registries is not an Array')
+      artifact_registries = artifact_registries.map { |i| ArtifactRegistry.new(i) }
+
+      # Validate that each artifact registry is named uniquely
+      duplicates = select_duplicates(artifact_registries.map { |i| i.name })
+      check_and_err(
+        duplicates.count == 0,
+        "Expected .artifact_registries names to be unique, but found duplicates: #{duplicates}"
+      )
+
+      unsupported_drivers = artifact_registries.
+        select { |i| !ArtifactRegistry::Driver::MAPPINGS.key? i.driver_name }.
+        map { |i| i.driver_name }
+      check_and_err(
+        unsupported_drivers.count == 0,
+        "Expected .artifact_registries drivers to be valid, but found unsupported drivers: #{unsupported_drivers}. Must be a driver in: #{ArtifactRegistry::Driver::MAPPINGS.keys}",
+      )
+
+      artifact_registries
+        .map { |i| [i.name, i] }
+        .to_h
+    end
+
+    def parse_artifact_registry(artifact_registry, artifact_registries)
+      check_and_err(artifact_registry.is_a?(String), '.artifact_registry is not a String')
+      check_and_err(
+        artifact_registry.empty? || artifact_registries.key?(artifact_registry),
+        "#{artifact_registry} is not a valid Artifact Registry. Has to be one of #{artifact_registries.keys}"
+      )
+
+      artifact_registry
+    end
+
     # upgrade! converts the config to a YAML string in the format
     # of the latest supported version
     # e.g. with the latest supported version as v2,
@@ -249,7 +312,10 @@ module KubeDeployTools
     def upgrade!
       version = @original_config.fetch('version', 1)
       case version
+      when 3
+        config = @original_config
       when 2
+        Logger.warn('Upgrade from v2 deploy.yml to v3 deploy.yaml not yet supported')
         config = @original_config
       when 1
         Logger.info('Upgrading v1 deploy.yml to v2 deploy.yaml')

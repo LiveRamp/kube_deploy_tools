@@ -7,7 +7,6 @@ require 'set'
 require 'uri'
 require 'yaml'
 
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
@@ -22,7 +21,7 @@ module KubeDeployTools
     def initialize(config_file, artifactory_repo, artifactory_pattern, retention, dryrun)
       @artifactory_username = ENV.fetch('ARTIFACTORY_USERNAME')
       @artifactory_password = ENV.fetch('ARTIFACTORY_PASSWORD')
-      @artifactory_host = ENV.fetch('ARTIFACTORY_HOST', KubeDeployTools::ARTIFACTORY_ENDPOINT)
+      @artifactory_host = ENV.fetch('ARTIFACTORY_HOST', 'https://***REMOVED***/artifactory')
 
       @config_file = config_file
       @dryrun = dryrun

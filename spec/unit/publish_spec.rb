@@ -16,7 +16,6 @@ describe KubeDeployTools::Publish do
     uploads = Set.new
     allow_any_instance_of(Artifactory::Resource::Artifact).to receive(:upload) do |artifact, repo, path|
       # Expect to upload to kubernetes-snapshots-local/<project>
-      expect(repo).to eq(KubeDeployTools::ARTIFACTORY_REPO)
       expect(path).to start_with(PROJECT)
 
       # add only the basenames of the files to the set as the BUILD_ID
@@ -39,6 +38,9 @@ describe KubeDeployTools::Publish do
       'images.yaml',
     ]
 
+    config = KubeDeployTools::DeployConfigFile.new(MANIFEST_FILE)
+    artifact_registry = config.artifact_registries[config.artifact_registry]
+
     Dir.mktmpdir do |dir|
       expected_uploads.each do |f|
         FileUtils.touch File.join(dir, f)
@@ -50,6 +52,7 @@ describe KubeDeployTools::Publish do
         # create an extra data fixture in the repo.
         extra_files: [MANIFEST_FILE],
         manifest: MANIFEST_FILE,
+        artifact_registry: artifact_registry,
         output_dir: dir,
       ).publish
     end

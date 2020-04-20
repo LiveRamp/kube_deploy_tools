@@ -1,5 +1,5 @@
 # This deploy.yaml is a testing fixture
-version: 2
+version: 3
 default_flags:
   food: bar
   baz: bing
@@ -71,6 +71,18 @@ artifacts:
       target: us-east-1
       environment: staging
       cloud: aws
+artifact_registry: artifactory
+artifact_registries:
+- name: artifactory
+  driver: artifactory
+  config:
+    endpoint: https://***REMOVED***/artifactory
+    repo: kubernetes-snapshot-local
+# - name: gcs
+#   driver: google_cloud_storage
+#   config:
+#     bucket: ""
+#     path: ""
 flavors:
   default:
     test_bool: true

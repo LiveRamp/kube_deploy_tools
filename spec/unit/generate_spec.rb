@@ -13,6 +13,8 @@ GIT_PROJECT='git@git.***REMOVED***:MasterRepos/kube_deploy_tools_spec_test.git'
 describe KubeDeployTools::Generate do
   let(:logger) { KubeDeployTools::FormattedLogger.build }
   let(:shellrunner) { instance_double("shellrunner", :check_call => nil) }
+  let(:config) { KubeDeployTools::DeployConfigFile.new(MANIFEST_FILE) }
+  let(:artifact_registry) { config.artifact_registries[config.artifact_registry] }
 
   before(:example) do
     KubeDeployTools::Logger.logger = logger
@@ -39,7 +41,8 @@ describe KubeDeployTools::Generate do
       app = KubeDeployTools::Generate.new(
         MANIFEST_FILE,
         INPUT_DIR,
-        tmp_dir
+        tmp_dir,
+        artifact_registry: artifact_registry,
       )
       app.generate
       expected = Dir["#{tmp_dir}/**/other.yaml"]
@@ -97,7 +100,8 @@ YAML
       app = KubeDeployTools::Generate.new(
         manifest,
         input_dir,
-        tmp_dir
+        tmp_dir,
+        artifact_registry: artifact_registry,
       )
       app.generate
       expected = Dir["#{tmp_dir}/**/statefulset-nginx*.yaml"]
@@ -126,7 +130,8 @@ YAML
       app = KubeDeployTools::Generate.new(
         MANIFEST_FILE,
         INPUT_DIR,
-        tmp_dir
+        tmp_dir,
+        artifact_registry: artifact_registry,
       )
 
       app.generate
@@ -185,7 +190,8 @@ YAML
         MANIFEST_FILE,
         INPUT_DIR,
         tmp_dir,
-        print_flags_only: true
+        print_flags_only: true,
+        artifact_registry: artifact_registry,
       )
 
       app.generate
@@ -202,6 +208,7 @@ YAML
         INPUT_DIR,
         tmp_dir,
         literals: {'image_tag' => expected_value},
+        artifact_registry: artifact_registry,
       )
       app.generate
       expected = Dir["#{tmp_dir}/**/other.yaml"]

@@ -18,8 +18,12 @@ end
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build
 KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 
+config = KubeDeployTools::DeployConfigFile.new(options.manifest_file)
+artifact_registry = config.artifact_registries[config.artifact_registry]
+
 KubeDeployTools::Publish.new(
   manifest: options.manifest_file,
+  artifact_registry: artifact_registry,
   output_dir: options.output_path,
   extra_files: options.extra_files,
 ).publish

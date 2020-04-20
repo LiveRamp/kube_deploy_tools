@@ -1,7 +1,6 @@
 require 'artifactory'
 require 'optparse'
 
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/object'
 
 module KubeDeployTools
@@ -27,8 +26,6 @@ module KubeDeployTools
         self.dry_run = true
         self.send_report = true
         self.glob_files = []
-
-        Artifactory.endpoint = KubeDeployTools::ARTIFACTORY_ENDPOINT
       end
 
       def define_options(parser)

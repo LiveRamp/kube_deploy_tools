@@ -3,12 +3,13 @@
 
 require 'tmpdir'
 
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/kubectl'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
+require 'kube_deploy_tools/deploy_config_file'
+require 'kube_deploy_tools/artifact_registry'
 
 def options
   @options ||= KubeDeployTools::Deploy::Optparser.new.parse(ARGV)
@@ -24,23 +25,24 @@ kubectl = KubeDeployTools::Kubectl.new(
   kubeconfig: options.kubeconfig,
 )
 
+config = KubeDeployTools::DeployConfigFile.new('deploy.yaml')
+artifact_registry = config.artifact_registries[config.artifact_registry].driver
+
 Dir.mktmpdir { |tmpdir|
   if options.from_files
-    deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
-      input_path: options.from_files,
-    ).path
+    deploy_artifact_path = options.from_files
   else
-    deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
-      input_path: KubeDeployTools.get_remote_deploy_artifact_url(
-        project: options.project,
-        build_number: options.build_number,
-        flavor: options.flavor,
-        name: options.artifact,
-      ),
-      output_dir_path: tmpdir,
-      pre_apply_hook: options.pre_apply_hook
-    ).path
+    deploy_artifact_path = artifact_registry.download(
+      project: options.project,
+      build_number: options.build_number,
+      flavor: options.flavor,
+      name: options.artifact,
+
+      pre_apply_hook: options.pre_apply_hook,
+      output_dir: tmpdir,
+    )
   end
+
 
   deploy = KubeDeployTools::Deploy.new(
     kubectl: kubectl,
