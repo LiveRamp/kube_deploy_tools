@@ -24,8 +24,6 @@ describe KubeDeployTools::Publish do
       uploads.add(File.basename(path))
     end
 
-    # tarballs, and bare deploy.yaml to test extra file
-    # support
     expected_uploads = [
       'manifests_colo-service-prod_default.tar.gz',
       'manifests_colo-service-staging_default.tar.gz',
@@ -44,16 +42,12 @@ describe KubeDeployTools::Publish do
       end
 
       KubeDeployTools::Publish.new(
-        # This extra file happens to be a yaml file, but any existent file
-        # can be put here. This is just convenient so we don't need to
-        # create an extra data fixture in the repo.
-        extra_files: [MANIFEST_FILE],
         manifest: MANIFEST_FILE,
         output_dir: dir,
       ).publish
     end
 
-    all_uploads = expected_uploads + ['deploy.yaml']
+    all_uploads = expected_uploads
     expect(uploads).to contain_exactly(*all_uploads)
   end
 end

@@ -10,10 +10,9 @@ require 'kube_deploy_tools/object'
 
 module KubeDeployTools
   class Publish
-    def initialize(manifest:, output_dir:, extra_files:)
+    def initialize(manifest:, output_dir:)
       @config = DeployConfigFile.new(manifest)
       @output_dir = output_dir
-      @extra_files = extra_files
 
       @project = KubeDeployTools::PROJECT
       @build_number = KubeDeployTools::BUILD_NUMBER
@@ -56,17 +55,6 @@ module KubeDeployTools
             Logger.warn("Expected artifact to exist, but #{tarball_full_path} does not exist")
           end
         end
-      end
-
-      @extra_files.each do |f|
-        base = File.basename(f)
-        upload_artifact(
-          file_path: f,
-          artifactory_repo_key:
-          "#{@project}/#{@build_number}/#{base}",
-        )
-
-        Logger.info("Registered #{f} as extra artifact of the build")
       end
     end
 

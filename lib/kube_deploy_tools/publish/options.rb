@@ -5,11 +5,10 @@ require 'kube_deploy_tools/deploy_artifact'
 module KubeDeployTools
   class Publish::Optparser
     class Options
-      attr_accessor :extra_files, :manifest_file, :output_path
+      attr_accessor :manifest_file, :output_path
 
       def initialize
         Artifactory.endpoint = KubeDeployTools::ARTIFACTORY_ENDPOINT
-        self.extra_files = []
         self.output_path = File.join('build', 'kubernetes')
       end
 
@@ -30,10 +29,6 @@ module KubeDeployTools
 
         parser.on('--password PASSWORD', 'Artifactory password') do |p|
           Artifactory.password = p
-        end
-
-        parser.on('-iEXTRAFILE', '--include EXTRAFILE', 'Include extra files in the artifactory payload.') do |f|
-          self.extra_files.push f
         end
 
         parser.on('-mMANIFEST', '--manifest MANIFEST', 'The configuration MANIFEST to render deploys with.') do |f|
