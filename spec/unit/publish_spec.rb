@@ -24,7 +24,7 @@ describe KubeDeployTools::Publish do
       uploads.add(File.basename(path))
     end
 
-    # images.yaml, tarballs, and bare deploy.yaml to test extra file
+    # tarballs, and bare deploy.yaml to test extra file
     # support
     expected_uploads = [
       'manifests_colo-service-prod_default.tar.gz',
@@ -36,7 +36,6 @@ describe KubeDeployTools::Publish do
       'manifests_pippio-production_default.tar.gz',
       'manifests_platforms-prod_default.tar.gz',
       'manifests_filtered-artifact_default.tar.gz',
-      'images.yaml',
     ]
 
     Dir.mktmpdir do |dir|

@@ -58,8 +58,6 @@ module KubeDeployTools
         end
       end
 
-      images_yaml = File.join(@output_dir, 'images.yaml')
-
       @extra_files.each do |f|
         base = File.basename(f)
         upload_artifact(
@@ -68,19 +66,7 @@ module KubeDeployTools
           "#{@project}/#{@build_number}/#{base}",
         )
 
-        manifest = KubeDeployTools::BuiltArtifactsFile.new(images_yaml)
-        manifest.extra_files.add base
-
         Logger.info("Registered #{f} as extra artifact of the build")
-      end
-
-      if File.exist?(images_yaml)
-        upload_artifact(
-          file_path: images_yaml,
-          artifactory_repo_key: "#{@project}/#{@build_number}/images.yaml",
-        )
-      else
-        Logger.warn("Expected artifact to exist, but #{images_yaml} does not exist")
       end
     end
 

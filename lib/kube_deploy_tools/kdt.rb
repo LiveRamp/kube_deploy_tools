@@ -1,4 +1,3 @@
-require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/version'
 
 module KubeDeployTools
@@ -8,7 +7,6 @@ module KubeDeployTools
       'push'     => 'Tags and pushes images to defined image registries',
       'generate' => 'Generates artifacts based on templates in kubernetes/ and your deploy.yaml.',
       'publish'  => 'Publishes generated artifacts to your artifact store.',
-      'expire'   => 'Removes artifacts from your artifact store and images from registries, based on a time horizon.',
       'upgrade'   => 'Upgrades a KDT 1.x deploy.yml to a KDT 2.x deploy.yaml',
 
       # Deprecated entrypoints (will go away soon)
@@ -21,7 +19,6 @@ module KubeDeployTools
       'render_deploys'    => 'generate',
       'publish_artifacts' => 'publish',
       'publish_container' => 'push',
-      'sweeper'           => 'expire',
     }
 
     def initialize(path, args)
