@@ -70,7 +70,7 @@ image_registries:
     prefix: local-registry
   - name: gcp
     driver: gcp
-    prefix: ***REMOVED***
+    prefix: gcr.io/my-org
 YAML
     manifest.close
     input_dir = Dir.mktmpdir

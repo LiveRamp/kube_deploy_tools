@@ -9,7 +9,6 @@ require 'kube_deploy_tools/image_registry'
 require 'kube_deploy_tools/shellrunner'
 
 DEPLOY_YAML = 'deploy.yaml'
-DEPLOY_YML_V1 = 'deploy.yml'
 
 module KubeDeployTools
   # Read-only model for the deploy.yaml configuration file.
@@ -40,11 +39,6 @@ module KubeDeployTools
             filename = DEPLOY_YAML
             config = YAML.load_file(filename)
             break
-          elsif filename.nil? && File.exist?(DEPLOY_YML_V1)
-            Logger.warn('Found deprecated v1 deploy.yml. Please run `kdt upgrade` to v2 deploy.yaml')
-            filename = DEPLOY_YML_V1
-            config = YAML.load_file(filename)
-            break
           end
 
           # KDT should run in the directory containing the deploy config file.
@@ -56,7 +50,7 @@ module KubeDeployTools
           if ! filename.nil?
             raise "Could not locate file: config file '#{filename}' in any directory"
           else
-            raise "Could not locate file: config file '#{DEPLOY_YAML}' nor '#{DEPLOY_YML_V1}' in any directory"
+            raise "Could not locate file: config file '#{DEPLOY_YAML}' in any directory"
           end
         end
         if changed_dir
@@ -75,6 +69,8 @@ module KubeDeployTools
       case version
       when 2
         fetch_and_parse_version2_config!
+      else
+        raise "Unsupported version #{version}"
       end
     end
 

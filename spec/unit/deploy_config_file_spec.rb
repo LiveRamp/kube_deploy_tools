@@ -57,29 +57,6 @@ describe KubeDeployTools::DeployConfigFile do
       expect(config.artifacts).to include(include('name' => 'colo-service-prod'))
       expect(config.artifacts).to include(include('name' => 'us-east-1-prod'))
     end
-
-    it 'outputs the same yaml when trying to upgrade to the current version' do
-      # Convert fixture to yaml, then re-read it
-      Tempfile.open("deploy.yaml from fixture") do |t|
-        fixture = File.open(DEPLOY_YAML) { |f| f.read() }
-        t << fixture
-        t.close
-
-        # Test fixing a v2 yaml: it should do nothing
-        before = KubeDeployTools::DeployConfigFile.new(t.path)
-        before.upgrade!
-
-        # Re-read fixed v1-as-v2 yaml
-        after = KubeDeployTools::DeployConfigFile.new(t.path)
-
-        actual = after
-        expected = config
-
-        expect(actual.artifacts).to eq(expected.artifacts)
-        expect(actual.flavors).to eq(expected.flavors)
-        expect(actual.hooks).to match_array(expected.hooks)
-      end
-    end
   end
 
   context 'deploy.yamls with library files' do
