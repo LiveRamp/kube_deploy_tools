@@ -4,11 +4,22 @@ require 'kube_deploy_tools/deploy_config_file'
 
 # File fixtures
 DEPLOY_YAML = 'spec/resources/deploy.yaml'
-DEPLOY_YML_V1 = 'spec/resources/deploy_v1.yml'
-DEPLOY_YAML_V1_AS_V2 = 'spec/resources/deploy_v1_as_v2.yaml'
+DEPLOY_YAML_MERGE_1 = 'spec/resources/merge_1.yaml'
+DEPLOY_YAML_MERGE_2 = 'spec/resources/merge_2.yaml'
+DEPLOY_YAML_MERGE_3 = 'spec/resources/merge_3.yaml'
 
 describe KubeDeployTools::DeployConfigFile do
   let(:logger) { KubeDeployTools::FormattedLogger.build() }
+  let(:expected_merge_three) do
+    {
+      "artifacts" => [{"name" => "gcp", "image_registry" => "gcp", "flags" => {"marco" => "polo", "and" => "that"}}],
+      "default_flags" => {"hey" => "ho", "lo" => "last", "beatles" => "band"},
+      "expiration" => [{"repository" => "https://***REMOVED***/artifactory", "prefixes"=>[{"pattern" => "asdf", "retention" => "30d"}]}],
+      "flavors" => {"default" => {"one" => "two"}},
+      "hooks" => ["run_me_first", "default"],
+      "image_registries" => [{"name" => "gcp", "driver" => "gcp", "prefix" => "***REMOVED***3", "config" => nil}],
+    }
+  end
 
   before(:example) do
     KubeDeployTools::Logger.logger = logger
@@ -71,38 +82,46 @@ describe KubeDeployTools::DeployConfigFile do
     end
   end
 
-  describe 'KDT 1.x compatibility' do
-    it 'reads a KDT 1.x deploy.yml' do
-      actual = KubeDeployTools::DeployConfigFile.new(DEPLOY_YML_V1)
-      expected = KubeDeployTools::DeployConfigFile.new(DEPLOY_YAML_V1_AS_V2)
+  context 'deploy.yamls with library files' do
+    let(:shellrunner) { instance_double("shellrunner") }
 
-      expect(actual.artifacts).to eq(expected.artifacts)
-      expect(actual.flavors).to eq(expected.flavors)
-      expect(actual.hooks).to match_array(expected.hooks)
+    before(:example) do
+      KubeDeployTools::Shellrunner.shellrunner = shellrunner
     end
 
-    it 'upgrades a KDT 1.x deploy.yml' do
-      # Convert fixture to yaml, then re-read it
-      Tempfile.open("deploy.yml from fixture") do |t|
-        fixture = File.open(DEPLOY_YML_V1) { |f| f.read() }
-        t << fixture
-        t.close
+    it 'can reference local libraries from a deploy.yaml' do
+      config = KubeDeployTools::DeployConfigFile.new('spec/resources/library_local.yaml')
+      expect(config.to_h).to eq(expected_merge_three)
+    end
 
-        # Test fixing a v1 yaml to a v2 yaml
-        before = KubeDeployTools::DeployConfigFile.new(t.path)
-        before.upgrade!
+    it 'can reference gcs based libraries from a deploy.yaml' do
+      allow(shellrunner).to receive(:check_call).with('gsutil', 'cat', 'gs://my-kdt-libraries/merge_2.yaml').
+        and_return(File.read(DEPLOY_YAML_MERGE_2))
 
-        # Re-read fixed v1-as-v2 yaml
-        after = KubeDeployTools::DeployConfigFile.new(t.path)
+      allow(shellrunner).to receive(:check_call).with('gsutil', 'cat', 'gs://my-kdt-libraries/merge_3.yaml').
+        and_return(File.read(DEPLOY_YAML_MERGE_3))
 
-        actual = after
-        expected = KubeDeployTools::DeployConfigFile.new(DEPLOY_YAML_V1_AS_V2)
+      config = KubeDeployTools::DeployConfigFile.new('spec/resources/library_gcs.yaml')
+      expect(config.to_h).to eq(expected_merge_three)
+    end
+  end
 
-        expect(actual.artifacts).to eq(expected.artifacts)
-        expect(actual.flavors).to eq(expected.flavors)
-        expect(actual.hooks).to match_array(expected.hooks)
-        expect(actual.image_registries).to match_array(expected.image_registries)
-      end
+  context 'config extension' do
+    let(:library) { KubeDeployTools::DeployConfigFile.new(DEPLOY_YAML_MERGE_1) }
+    let(:parent) { KubeDeployTools::DeployConfigFile.new(DEPLOY_YAML_MERGE_2) }
+
+    it 'can extend one config with another' do
+      expected = {
+        "artifacts" => [{"name" => "gcp", "image_registry" => "gcp", "flags" => {"marco" => "holo", "also" => "this"}}],
+        "default_flags" => {"hey" => "yo", "lo" => "hi", "beatles" => "band"},
+        "expiration" => [{"repository" => "https://***REMOVED***/artifactory", "prefixes"=>[{"pattern" => "asdf", "retention" => "30d"}]}],
+        "flavors" => {"default" => {"one" => "two"}},
+        "hooks" => ["default", "run_me_first"],
+        "image_registries" => [{"name" => "gcp", "driver" => "gcp", "prefix" => "***REMOVED***2", "config" => nil}],
+      }
+
+      parent.extend!(library)
+      expect(parent.to_h).to eq(expected)
     end
   end
 end

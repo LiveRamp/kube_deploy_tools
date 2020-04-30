@@ -3,8 +3,10 @@ require 'set'
 require 'yaml'
 
 require 'kube_deploy_tools/deploy_config_file/util'
+require 'kube_deploy_tools/deploy_config_file/deep_merge'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
+require 'kube_deploy_tools/shellrunner'
 
 DEPLOY_YAML = 'deploy.yaml'
 DEPLOY_YML_V1 = 'deploy.yml'
@@ -16,6 +18,10 @@ module KubeDeployTools
 
     include DeployConfigFileUtil
 
+    # TODO(joshk): Refactor into initialize(fp) which takes a file-like object;
+    # after this, auto discovery should go into DeployConfigFile.locate
+    # classmethod.  This would require erasing auto-upgrade capability, which
+    # should be possible if we major version bump.
     def initialize(filename)
       config = nil
       if !filename.nil? && Pathname.new(filename).absolute?
@@ -69,93 +75,36 @@ module KubeDeployTools
       case version
       when 2
         fetch_and_parse_version2_config!
-      when 1
-        fetch_and_parse_version1_config!
       end
     end
 
     def fetch_and_parse_version2_config!
+      # The literal contents of your deploy.yaml are now populated into |self|.
       config = @original_config
+
       @image_registries = parse_image_registries(config.fetch('image_registries', []))
-      @default_flags = parse_default_flags(config.fetch('default_flags', {}))
-      @artifacts = parse_artifacts(config.fetch('artifacts', []), @default_flags, @image_registries)
-      @flavors = parse_flavors(config.fetch('flavors', {}))
-      @hooks = parse_hooks(config.fetch('hooks', ['default']))
-      @expiration = parse_expiration(config.fetch('expiration', []))
-    end
+      @default_flags = config.fetch('default_flags', {})
+      @artifacts = config.fetch('artifacts', [])
+      @flavors = config.fetch('flavors', {})
+      @hooks = config.fetch('hooks', ['default'])
+      @expiration = config.fetch('expiration', [])
 
-    # Fetches and parse a version 1 config as a version 2 config, with the
-    # defaults set as previously with KDT 1.x behavior
-    def fetch_and_parse_version1_config!
-      config = @original_config
-      @image_registries = parse_image_registries([
-        {
-          'name' => 'aws',
-          'driver' => 'aws',
-          'prefix' => '***REMOVED***',
-          'config' => {
-            'region' => 'us-west-2'
-          }
-        },
-        {
-          'name' => 'gcp',
-          'driver' => 'gcp',
-          'prefix' => '***REMOVED***'
-        },
-        {
-          'name' => 'local',
-          'driver' => 'noop',
-          'prefix' => 'local-registry'
-        }
-      ])
-      @default_flags = parse_default_flags({
-        'pull_policy' => 'IfNotPresent',
-      })
-      @artifacts = parse_artifacts(config.fetch('deploy').fetch('clusters', [])
-        .map.with_index { |c, i|
-          target = c.fetch('target')
-          environment = c.fetch('environment')
-          case target
-          when 'local'
-            cloud = 'local'
-            image_registry = 'local'
-          when 'colo-service'
-            cloud = 'colo'
-            image_registry = 'aws'
-          when 'us-east-1', 'us-west-2', 'eu-west-1'
-            cloud = 'aws'
-            image_registry = 'aws'
-          when 'gcp'
-            cloud = 'gcp'
-            image_registry = 'gcp'
-          else
-            raise ArgumentError, "Expected a valid KDT 1.x .target for .deploy.clusters[#{i}].target, but got '#{target}'"
-          end
+      validate_default_flags
+      validate_flavors
+      validate_hooks
+      validate_expiration
 
-          flags = c.fetch('extra_flags', {})
-            .merge({
-              'target' => target,
-              'environment' => environment,
-              'cloud' => cloud
-            })
+      # Augment these literal contents by resolving all libraries.
+      # extend! typically gives the current file precedence when merge conflicts occur,
+      # but the expected precedence of library inclusion is the reverse (library 2 should
+      # overwrite what library 1 specifies), so reverse the libraries list first.
+      config.fetch('libraries', []).reverse.each do |libfn|
+        extend!(load_library(libfn))
+      end
 
-          if flags.key?('pull_policy') && flags.fetch('pull_policy') == @default_flags.fetch('pull_policy')
-            flags.delete('pull_policy')
-          end
-
-          artifact = {
-            'name' => target + '-' + environment,
-            'image_registry' => image_registry,
-            'flags' => flags,
-          }
-
-          artifact
-        },
-        @default_flags,
-        @image_registries
-      )
-      @flavors = parse_flavors(config.fetch('deploy', {}).fetch('flavors', {}))
-      @hooks = parse_hooks(config.fetch('deploy', {}).fetch('hooks', ['default']))
+      # Now that we have a complete list of image registries, validation is now possible.
+      # Note that this also populates @valid_image_registries.
+      validate_artifacts!
     end
 
     def parse_image_registries(image_registries)
@@ -182,8 +131,8 @@ module KubeDeployTools
       valid_image_registries
     end
 
-    # .artifacts depends on .default_flags
-    def parse_artifacts(artifacts, default_flags, image_registries)
+    # .artifacts depends on .default_flags and .image_registries
+    def validate_artifacts!
       check_and_err(artifacts.is_a?(Array), '.artifacts is not an Array')
 
       duplicates = select_duplicates(artifacts.map { |i| i.fetch('name') })
@@ -192,7 +141,7 @@ module KubeDeployTools
         "Expected .artifacts names to be unique, but found duplicates: #{duplicates}"
       )
 
-      @valid_image_registries = map_image_registry(image_registries)
+      @valid_image_registries = map_image_registry(@image_registries)
 
       artifacts.each_with_index { |artifact, index|
         check_and_err(
@@ -218,28 +167,20 @@ module KubeDeployTools
       }
     end
 
-    def parse_default_flags(default_flags)
-      check_and_err(default_flags.is_a?(Hash), '.default_flags is not a Hash')
-
-      default_flags
+    def validate_default_flags
+      check_and_err(@default_flags.is_a?(Hash), '.default_flags is not a Hash')
     end
 
-    def parse_flavors(flavors)
-      check_and_err(flavors.is_a?(Hash), '.flavors is not a Hash')
-
-      flavors
+    def validate_flavors
+      check_and_err(@flavors.is_a?(Hash), '.flavors is not a Hash')
     end
 
-    def parse_hooks(hooks)
-      check_and_err(hooks.is_a?(Array), '.hooks is not an Array')
-
-      hooks
+    def validate_hooks
+      check_and_err(@hooks.is_a?(Array), '.hooks is not an Array')
     end
 
-    def parse_expiration(expiration)
-      check_and_err(expiration.is_a?(Array), '.expiration is not an Array')
-
-      expiration
+    def validate_expiration
+      check_and_err(@expiration.is_a?(Array), '.expiration is not an Array')
     end
 
     # upgrade! converts the config to a YAML string in the format
@@ -250,48 +191,55 @@ module KubeDeployTools
       version = @original_config.fetch('version', 1)
       case version
       when 2
-        config = @original_config
-      when 1
-        Logger.info('Upgrading v1 deploy.yml to v2 deploy.yaml')
-        config = {
-          'version' => 2,
-          'artifacts' => @artifacts.map { |a|
-            {
-              'name' => a.fetch('name'),
-              'image_registry' => a.fetch('image_registry'),
-              'flags' => a.fetch('flags', {})
-            }
-          },
-          'flavors' => @flavors,
-          'default_flags' => @default_flags,
-          'hooks' => @hooks,
-          'image_registries' => @image_registries.map { |_, i|
-            image_registry = {
-              'name' => i.name,
-              'driver' => i.driver,
-              'prefix' => i.prefix,
-            }
-
-            image_registry['config'] = i.config if !i.config.nil?
-
-            image_registry
-          }
-        }
-      end
-
-      File.open(@filename, 'w+') { |file| file.write(config.to_yaml) }
-
-      # Rename deploy.yml to deploy.yaml, if necessary
-      dirname  = File.dirname(@filename)
-      basename = File.basename(@filename)
-      if basename == DEPLOY_YML_V1
-        Logger.info('Renaming deploy.yml => deploy.yaml')
-        File.rename(@filename, "#{dirname}/#{DEPLOY_YAML}")
+        # TODO(joshk): Any required updates to v3 or remove this entire method
+        true
       end
     end
 
     def select_duplicates(array)
       array.select { |n| array.count(n) > 1 }.uniq
+    end
+
+    # Extend this DeployConfigFile with another instance.
+    def extend!(other)
+      # Any image_registries entry in |self| should take precedence
+      # over any identical key in |other|. The behavior of merge is that
+      # the 'other' hash wins.
+      @image_registries = other.image_registries.merge(@image_registries)
+
+      # Same behavior as above for #default_flags.
+      @default_flags = other.default_flags.merge(@default_flags)
+
+      # artifacts should be merged by 'name'. In other words, if |self| and |other|
+      # specify the same 'name' of a registry, self's config for that registry
+      # should win wholesale (no merging of flags.)
+      @artifacts = (@artifacts + other.artifacts).uniq { |h| h.fetch('name') }
+
+      # Same behavior as for flags and registries, but the flags within the flavor
+      # are in a Hash, so we need a deep merge.
+      @flavors = other.flavors.deep_merge(@flavors)
+
+      # A break from the preceding merging logic - Dependent hooks have to come
+      # first and a given named hook can only be run once. But seriously, you
+      # probably don't want to make a library that specifies hooks.
+      @hooks = (other.hooks + @hooks).uniq
+
+      @expiration = (@expiration + other.expiration).uniq { |h| h.fetch('repository') }
+    end
+
+    def to_h
+      {
+        'image_registries' => @image_registries.values.map(&:to_h),
+        'default_flags' => @default_flags,
+        'artifacts' => @artifacts,
+        'flavors' => @flavors,
+        'hooks' => @hooks,
+        'expiration' => @expiration,
+      }
+    end
+
+    def self.deep_merge(h, other)
+
     end
   end
 end

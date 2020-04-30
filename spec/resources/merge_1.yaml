@@ -1,0 +1,22 @@
+version: 2
+artifacts:
+  - name: gcp
+    image_registry: gcp
+    flags:
+      marco: polo
+      and: that
+default_flags:
+  hey: ho
+  beatles: band
+flavors:
+  default:
+    one: two
+expiration:
+  - repository: https://***REMOVED***/artifactory
+    prefixes:
+      - pattern: asdf
+        retention: 30d
+image_registries:
+  - name: gcp
+    driver: gcp
+    prefix: gcr.io/hoho

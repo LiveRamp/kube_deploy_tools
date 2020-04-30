@@ -1,0 +1,21 @@
+version: 2
+libraries:
+  - spec/resources/merge_2.yaml
+  - spec/resources/merge_3.yaml
+artifacts:
+  - name: gcp
+    image_registry: gcp
+    flags:
+      marco: polo
+      and: that
+default_flags:
+  hey: ho
+  beatles: band
+flavors:
+  default:
+    one: two
+expiration:
+  - repository: https://***REMOVED***/artifactory
+    prefixes:
+      - pattern: asdf
+        retention: 30d

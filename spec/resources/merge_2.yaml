@@ -1,0 +1,16 @@
+version: 2
+artifacts:
+  - name: gcp
+    image_registry: gcp
+    flags:
+      marco: holo
+      also: this
+default_flags:
+  hey: yo
+  lo: hi
+hooks:
+  - run_me_first
+image_registries:
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***2

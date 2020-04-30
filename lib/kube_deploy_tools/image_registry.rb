@@ -17,5 +17,14 @@ module KubeDeployTools
       @prefix == o.prefix
       @config == o.config
     end
+
+    def to_h
+      {
+        'name' => @name,
+        'driver' => @driver,
+        'prefix' => @prefix,
+        'config' => @config,
+      }
+    end
   end
 end
