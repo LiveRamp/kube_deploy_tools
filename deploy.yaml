@@ -1,0 +1,10 @@
+version: 2
+default_flags:
+  pull_policy: IfNotPresent
+artifacts: []
+flavors:
+  default: {}
+image_registries:
+  - name: gcp
+    driver: gcp
+    prefix: ***REMOVED***
