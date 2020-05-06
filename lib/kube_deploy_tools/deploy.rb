@@ -46,10 +46,23 @@ module KubeDeployTools
       @kubectl = kubectl
       @namespace = namespace
       @input_path = input_path
-      @glob_files = glob_files
-      @filtered_files = FileFilter
-                        .filter_files(filters: @glob_files, files_path: @input_path)
-                        .select { |f| f.end_with?('.yml', '.yaml') }
+
+      if !File.exists?(@input_path)
+        Logger.error("Path doesn't exist: #{@input_path}")
+        raise ArgumentError, "Path doesn't exist #{@input_path}"
+      elsif File.directory?(@input_path)
+        @glob_files = glob_files
+        @filtered_files = FileFilter
+                          .filter_files(filters: @glob_files, files_path: @input_path)
+                          .select { |f| f.end_with?('.yml', '.yaml') }
+      elsif File.file?(@input_path)
+        @filtered_files = [@input_path]
+        if !@glob_files.nil? && @glob_files.length > 0
+          Logger.error("Single-file artifacts do not support glob exclusions: #{@input_path}")
+          raise ArgumentError
+        end
+      end
+
       @max_retries = max_retries.nil? ? 3 : max_retries.to_i
       @retry_delay = retry_delay.to_i
     end

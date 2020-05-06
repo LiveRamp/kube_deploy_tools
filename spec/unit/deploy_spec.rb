@@ -1,6 +1,7 @@
 require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
 require 'kube_deploy_tools/errors'
+require 'kube_deploy_tools/shellrunner'
 
 KUBERNETES_MANIFESTS_INVALID_NGINX="spec/resources/kubernetes/invalid-nginx/"
 KUBERNETES_MANIFESTS_TEST_NGINX="spec/resources/kubernetes/test-nginx/"
@@ -106,6 +107,9 @@ describe KubeDeployTools::Deploy do
       max_retries: 3,
       retry_delay: 1
     )
+
+    allow(deploy).to receive(:sleep).with(1)
+
     resources = deploy.read_resources
 
     expect(resources.find { |resource| resource.definition["kind"] == "Deployment" }).to_not be_nil

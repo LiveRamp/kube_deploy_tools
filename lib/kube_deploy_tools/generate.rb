@@ -5,7 +5,6 @@ require 'time'
 require 'yaml'
 
 require 'kube_deploy_tools/render_deploys_hook'
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/deploy_config_file'
 require 'kube_deploy_tools/file_filter'
 require 'kube_deploy_tools/shellrunner'
@@ -111,11 +110,6 @@ module KubeDeployTools
                 Shellrunner.check_call(hook, rendered.path, @input_dir, flavor_dir)
               end
             end
-
-            # Pack up contents of each flavor_dir to a correctly named artifact tarball.
-            tarball = KubeDeployTools.build_deploy_artifact_name(name: artifact, flavor: flavor)
-            tarball_full_path = File.join(@output_dir, tarball)
-            Shellrunner.check_call('tar', '-C', flavor_dir, '-czf', tarball_full_path, '.')
           end
 
           permutations[pid] = "#{artifact}_#{flavor}"

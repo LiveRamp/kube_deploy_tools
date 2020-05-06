@@ -13,6 +13,7 @@ GIT_PROJECT='git@git.***REMOVED***:MasterRepos/kube_deploy_tools_spec_test.git'
 describe KubeDeployTools::Generate do
   let(:logger) { KubeDeployTools::FormattedLogger.build }
   let(:shellrunner) { instance_double("shellrunner", :check_call => nil) }
+  let(:config) { KubeDeployTools::DeployConfigFile.new(MANIFEST_FILE) }
 
   before(:example) do
     KubeDeployTools::Logger.logger = logger
@@ -39,7 +40,7 @@ describe KubeDeployTools::Generate do
       app = KubeDeployTools::Generate.new(
         MANIFEST_FILE,
         INPUT_DIR,
-        tmp_dir
+        tmp_dir,
       )
       app.generate
       expected = Dir["#{tmp_dir}/**/other.yaml"]
@@ -97,7 +98,7 @@ YAML
       app = KubeDeployTools::Generate.new(
         manifest,
         input_dir,
-        tmp_dir
+        tmp_dir,
       )
       app.generate
       expected = Dir["#{tmp_dir}/**/statefulset-nginx*.yaml"]
@@ -117,7 +118,7 @@ YAML
     end
   end
 
-  it "renders deploys for all clusters" do
+  it "doesn't render deploys for any clusters on print only" do
     Dir.mktmpdir do |tmp_dir|
       # Stub out ENV
       ENV["JOB_NAME"] = JOB_NAME
@@ -126,7 +127,43 @@ YAML
       app = KubeDeployTools::Generate.new(
         MANIFEST_FILE,
         INPUT_DIR,
-        tmp_dir
+        tmp_dir,
+        print_flags_only: true,
+      )
+
+      app.generate
+
+      expect(Dir["#{tmp_dir}/*"].empty?).to be true
+    end
+  end
+
+  it "can set ERB context values from literals" do
+    Dir.mktmpdir do |tmp_dir|
+      expected_value = "my_image_tag"
+      app = KubeDeployTools::Generate.new(
+        MANIFEST_FILE,
+        INPUT_DIR,
+        tmp_dir,
+        literals: {'image_tag' => expected_value},
+      )
+      app.generate
+      expected = Dir["#{tmp_dir}/**/other.yaml"]
+      expected.each do |rendered|
+        expect(File.read(rendered)).to include("kube_deploy_tools:#{expected_value}")
+      end
+    end
+  end
+
+  it "renders deploys for all clusters" do
+    Dir.tmpdir do |tmp_dir|
+      # Stub out ENV
+      ENV["JOB_NAME"] = JOB_NAME
+      ENV["BUILD_ID"] = BUILD_ID
+
+      app = KubeDeployTools::Generate.new(
+        MANIFEST_FILE,
+        INPUT_DIR,
+        tmp_dir,
       )
 
       app.generate
@@ -170,43 +207,6 @@ YAML
       expected.select{ |f| f =~ /nginx/ }.each do |rendered|
         rendered_no_tag = File.read(rendered).gsub(/tag: .*/, 'tag: REMOVED')
         expect(rendered_no_tag).to eq(expectation)
-      end
-      expect(shellrunner).to have_received(:check_call).with('tar', any_args).exactly(MANIFEST_FILE_NUM_CLUSTERS).times
-    end
-  end
-
-  it "doesn't render deploys for any clusters on print only" do
-    Dir.mktmpdir do |tmp_dir|
-      # Stub out ENV
-      ENV["JOB_NAME"] = JOB_NAME
-      ENV["BUILD_ID"] = BUILD_ID
-
-      app = KubeDeployTools::Generate.new(
-        MANIFEST_FILE,
-        INPUT_DIR,
-        tmp_dir,
-        print_flags_only: true
-      )
-
-      app.generate
-
-      expect(Dir["#{tmp_dir}/*"].empty?).to be true
-    end
-  end
-
-  it "can set ERB context values from literals" do
-    Dir.mktmpdir do |tmp_dir|
-      expected_value = "my_image_tag"
-      app = KubeDeployTools::Generate.new(
-        MANIFEST_FILE,
-        INPUT_DIR,
-        tmp_dir,
-        literals: {'image_tag' => expected_value},
-      )
-      app.generate
-      expected = Dir["#{tmp_dir}/**/other.yaml"]
-      expected.each do |rendered|
-        expect(File.read(rendered)).to include("kube_deploy_tools:#{expected_value}")
       end
     end
   end

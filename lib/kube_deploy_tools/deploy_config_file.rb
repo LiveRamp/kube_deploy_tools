@@ -7,13 +7,17 @@ require 'kube_deploy_tools/deploy_config_file/deep_merge'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/image_registry'
 require 'kube_deploy_tools/shellrunner'
+require 'kube_deploy_tools/artifact_registry'
 
 DEPLOY_YAML = 'deploy.yaml'
 
 module KubeDeployTools
+  PROJECT = ENV['JOB_NAME'] || File.basename(`git config remote.origin.url`.chomp, '.git')
+  BUILD_NUMBER = ENV.fetch('BUILD_ID', 'dev')
+
   # Read-only model for the deploy.yaml configuration file.
   class DeployConfigFile
-    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :valid_image_registries, :expiration
+    attr_accessor :artifacts, :default_flags, :flavors, :hooks, :image_registries, :valid_image_registries, :expiration, :artifact_registries, :artifact_registry
 
     include DeployConfigFileUtil
 
@@ -77,13 +81,14 @@ module KubeDeployTools
     def fetch_and_parse_version2_config!
       # The literal contents of your deploy.yaml are now populated into |self|.
       config = @original_config
-
       @image_registries = parse_image_registries(config.fetch('image_registries', []))
       @default_flags = config.fetch('default_flags', {})
       @artifacts = config.fetch('artifacts', [])
       @flavors = config.fetch('flavors', {})
       @hooks = config.fetch('hooks', ['default'])
       @expiration = config.fetch('expiration', [])
+      @artifact_registries = parse_artifact_registries(config.fetch('artifact_registries', []))
+      @artifact_registry = parse_artifact_registry(config.fetch('artifact_registry', ''), @artifact_registries)
 
       validate_default_flags
       validate_flavors
@@ -177,6 +182,46 @@ module KubeDeployTools
 
     def validate_expiration
       check_and_err(@expiration.is_a?(Array), '.expiration is not an Array')
+    end
+
+    def parse_artifact_registries(artifact_registries)
+      check_and_err(artifact_registries.is_a?(Array), '.artifact_registries is not an Array')
+      artifact_registries = artifact_registries.map { |r| ArtifactRegistry.new(r) }
+
+      # Validate that each artifact registry is named uniquely
+      duplicates = select_duplicates(artifact_registries.map { |r| r.name })
+      check_and_err(
+        duplicates.count == 0,
+        "Expected .artifact_registries names to be unique, but found duplicates: #{duplicates}"
+      )
+
+      unsupported_drivers = artifact_registries.
+        select { |r| !ArtifactRegistry::Driver::MAPPINGS.key? r.driver_name }.
+        map { |r| r.driver_name }
+      check_and_err(
+        unsupported_drivers.count == 0,
+        "Expected .artifact_registries drivers to be valid, but found unsupported drivers: #{unsupported_drivers}. Must be a driver in: #{ArtifactRegistry::Driver::MAPPINGS.keys}",
+      )
+
+      artifact_registries
+        .select { |r| r.driver_name == "gcs" }
+        .select { |r| !r.config.has_key? "bucket" }
+        .each { |r| check_and_err(false, "Expected .artifact_registries['#{r.config.name}'].config.bucket to exist, but no GCS bucket is specified") }
+
+
+      artifact_registries
+        .map { |r| [r.name, r] }
+        .to_h
+    end
+
+    def parse_artifact_registry(artifact_registry, artifact_registries)
+      check_and_err(artifact_registry.is_a?(String), '.artifact_registry is not a String')
+      check_and_err(
+        artifact_registry.empty? || artifact_registries.key?(artifact_registry),
+        "#{artifact_registry} is not a valid Artifact Registry. Has to be one of #{artifact_registries.keys}"
+      )
+
+      artifact_registry
     end
 
     # upgrade! converts the config to a YAML string in the format

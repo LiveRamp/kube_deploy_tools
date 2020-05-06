@@ -71,6 +71,17 @@ artifacts:
       target: us-east-1
       environment: staging
       cloud: aws
+artifact_registry: artifactory
+artifact_registries:
+- name: artifactory
+  driver: artifactory
+  config:
+    endpoint: https://my.artifactory/artifactory
+    repo: kubernetes-snapshot-local
+- name: gcs
+  driver: gcs
+  config:
+    bucket: gs://my-bucket
 flavors:
   default:
     test_bool: true

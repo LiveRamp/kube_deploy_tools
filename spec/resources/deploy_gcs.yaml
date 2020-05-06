@@ -1,0 +1,20 @@
+# This deploy.yaml is a testing fixture
+version: 2
+artifacts:
+  - name: local
+    image_registry: local
+    flags:
+      target: local
+      environment: staging
+      cloud: local
+artifact_registry: gcs
+artifact_registries:
+- name: gcs
+  driver: gcs
+  config:
+    bucket: gs://my-bucket
+flavors:
+  default: {}
+image_registries:
+  - name: local
+    driver: noop

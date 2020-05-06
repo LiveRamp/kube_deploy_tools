@@ -1,5 +1,4 @@
 
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/kubectl'
 require 'kube_deploy_tools/shellrunner'

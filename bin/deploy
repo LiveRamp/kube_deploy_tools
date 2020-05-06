@@ -3,12 +3,13 @@
 
 require 'tmpdir'
 
-require 'kube_deploy_tools/deploy_artifact'
 require 'kube_deploy_tools/formatted_logger'
 require 'kube_deploy_tools/kubectl'
 require 'kube_deploy_tools/shellrunner'
 require 'kube_deploy_tools/deploy'
 require 'kube_deploy_tools/deploy/options'
+require 'kube_deploy_tools/deploy_config_file'
+require 'kube_deploy_tools/artifact_registry'
 
 def options
   @options ||= KubeDeployTools::Deploy::Optparser.new.parse(ARGV)
@@ -21,25 +22,28 @@ namespace = KubeDeployTools::Deploy::kube_namespace(context: context, kubeconfig
 KubeDeployTools::Logger.logger = KubeDeployTools::FormattedLogger.build(context: context, namespace: namespace)
 kubectl = KubeDeployTools::Kubectl.new(
   context: options.context,
-  kubeconfig: options.kubeconfig,
+  kubeconfig: options.kubeconfig
 )
 
-Dir.mktmpdir { |tmpdir|
+config = KubeDeployTools::DeployConfigFile.new('deploy.yaml')
+artifact_registry = config.artifact_registries[config.artifact_registry].driver
+
+Dir.mktmpdir do |tmpdir|
   if options.from_files
-    deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
-      input_path: options.from_files,
-    ).path
+    deploy_artifact_path = options.from_files
   else
-    deploy_artifact_path = KubeDeployTools::DeployArtifact.new(
-      input_path: KubeDeployTools.get_remote_deploy_artifact_url(
-        project: options.project,
-        build_number: options.build_number,
-        flavor: options.flavor,
-        name: options.artifact,
-      ),
-      output_dir_path: tmpdir,
-      pre_apply_hook: options.pre_apply_hook
-    ).path
+    if options.build_number == 'latest'
+      build_number = artifact_registry.get_latest_build_number(options.project)
+    end
+
+    deploy_artifact_path = artifact_registry.download(
+      project: options.project,
+      build_number: build_number,
+      flavor: options.flavor,
+      name: options.artifact,
+      pre_apply_hook: options.pre_apply_hook,
+      output_dir: tmpdir
+    )
   end
 
   deploy = KubeDeployTools::Deploy.new(
@@ -54,4 +58,4 @@ Dir.mktmpdir { |tmpdir|
     dry_run: options.dry_run,
     send_report: options.send_report
   )
-}
+end

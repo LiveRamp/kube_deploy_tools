@@ -1,0 +1,17 @@
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: test-nginx
+spec:
+  replicas: 0
+  template:
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - name: web
+          containerPort: 80
+

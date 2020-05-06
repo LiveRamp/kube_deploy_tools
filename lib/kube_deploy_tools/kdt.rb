@@ -1,4 +1,5 @@
 require 'kube_deploy_tools/version'
+require 'kube_deploy_tools/formatted_logger'
 
 module KubeDeployTools
   class Kdt
@@ -8,17 +9,6 @@ module KubeDeployTools
       'generate' => 'Generates artifacts based on templates in kubernetes/ and your deploy.yaml.',
       'publish'  => 'Publishes generated artifacts to your artifact store.',
       'upgrade'   => 'Upgrades a KDT 1.x deploy.yml to a KDT 2.x deploy.yaml',
-
-      # Deprecated entrypoints (will go away soon)
-      'make_configmap'      => 'DISAPPEARING. Creates a new ConfigMap, alternative to |kubectl create configmap|',
-      'templater'           => 'DISAPPEARING. Renders ERB templates into Kubernetes manifests with a context defined in YAML',
-      'render_deploys_hook' => 'DISAPPEARING. The default hook used by render_deploys that uses templater to render Kubernetes manifests from the kubernetes/ directory into the build/kubernetes/ directory',
-    }
-
-    MAPPINGS = {
-      'render_deploys'    => 'generate',
-      'publish_artifacts' => 'publish',
-      'publish_container' => 'push',
     }
 
     def initialize(path, args)
@@ -45,11 +35,6 @@ module KubeDeployTools
 
     def execute!
       bin = @args.first
-      if MAPPINGS.member?(bin)
-        new_bin = MAPPINGS.fetch(bin)
-        Logger.warn("The `kdt #{bin}` subcommand is going away in a future version. Use `kdt #{new_bin}` instead.")
-        bin = new_bin
-      end
 
       raise "command '#{bin}' is not a valid command" unless valid_bin?(bin)
       bin_with_path = "#{@path}/#{bin}"
