@@ -34,7 +34,7 @@ module KubeDeployTools
       # change where all past clients will not be able to download new builds and
       # new clients will not be able to download old builds. Change with caution.
       #
-      "#{@bucket}/project=#{project}/build=#{build_number}/artifact=#{get_artifact_name(name: name, flavor: flavor)}"
+      "#{@bucket}/project/#{project}/build/#{build_number}/artifact/#{get_artifact_name(name: name, flavor: flavor)}"
     end
 
     def get_artifact_name(name:, flavor:)
