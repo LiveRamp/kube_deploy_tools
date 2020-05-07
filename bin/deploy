@@ -33,12 +33,12 @@ Dir.mktmpdir do |tmpdir|
     deploy_artifact_path = options.from_files
   else
     if options.build_number == 'latest'
-      build_number = artifact_registry.get_latest_build_number(options.project)
+      options.build_number = artifact_registry.get_latest_build_number(options.project)
     end
 
     deploy_artifact_path = artifact_registry.download(
       project: options.project,
-      build_number: build_number,
+      build_number: options.build_number,
       flavor: options.flavor,
       name: options.artifact,
       pre_apply_hook: options.pre_apply_hook,
