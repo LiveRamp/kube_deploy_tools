@@ -14,10 +14,10 @@ describe KubeDeployTools::DeployConfigFile do
     {
       "artifacts" => [{"name" => "gcp", "image_registry" => "gcp", "flags" => {"marco" => "polo", "and" => "that"}}],
       "default_flags" => {"hey" => "ho", "lo" => "last", "beatles" => "band"},
-      "expiration" => [{"repository" => "https://***REMOVED***/artifactory", "prefixes"=>[{"pattern" => "asdf", "retention" => "30d"}]}],
+      "expiration" => [{"repository" => "https://build.my-corp.com/artifactory", "prefixes"=>[{"pattern" => "asdf", "retention" => "30d"}]}],
       "flavors" => {"default" => {"one" => "two"}},
       "hooks" => ["run_me_first", "default"],
-      "image_registries" => [{"name" => "gcp", "driver" => "gcp", "prefix" => "***REMOVED***3", "config" => nil}],
+      "image_registries" => [{"name" => "gcp", "driver" => "gcp", "prefix" => "gcr.io/test-gcr3", "config" => nil}],
     }
   end
 
@@ -91,10 +91,10 @@ describe KubeDeployTools::DeployConfigFile do
       expected = {
         "artifacts" => [{"name" => "gcp", "image_registry" => "gcp", "flags" => {"marco" => "holo", "also" => "this"}}],
         "default_flags" => {"hey" => "yo", "lo" => "hi", "beatles" => "band"},
-        "expiration" => [{"repository" => "https://***REMOVED***/artifactory", "prefixes"=>[{"pattern" => "asdf", "retention" => "30d"}]}],
+        "expiration" => [{"repository" => "https://build.my-corp.com/artifactory", "prefixes"=>[{"pattern" => "asdf", "retention" => "30d"}]}],
         "flavors" => {"default" => {"one" => "two"}},
         "hooks" => ["default", "run_me_first"],
-        "image_registries" => [{"name" => "gcp", "driver" => "gcp", "prefix" => "***REMOVED***2", "config" => nil}],
+        "image_registries" => [{"name" => "gcp", "driver" => "gcp", "prefix" => "gcr.io/test-gcr2", "config" => nil}],
       }
 
       parent.extend!(library)

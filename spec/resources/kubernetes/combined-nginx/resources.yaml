@@ -7,7 +7,7 @@ metadata:
   name: test
   annotations:
     git_commit: deadbeefdeadbeef
-    git_project: git@git.***REMOVED***:MasterRepos/rspec_tests.git
+    git_project: git@github.com:my-org/rspec_tests.git
 ---
 
 apiVersion: apps/v1beta1
@@ -17,7 +17,7 @@ metadata:
   name: test-nginx
   annotations:
     git_commit: deadbeefdeadbeef
-    git_project: git@git.***REMOVED***:MasterRepos/rspec_tests.git
+    git_project: git@github.com:my-org/rspec_tests.git
 spec:
   replicas: 0
   template:
@@ -39,7 +39,7 @@ metadata:
     app: test-nginx
   annotations:
     git_commit: deadbeefdeadbeef
-    git_project: git@git.***REMOVED***:MasterRepos/rspec_tests.git
+    git_project: git@github.com:my-org/rspec_tests.git
 spec:
   ports:
   - port: 80

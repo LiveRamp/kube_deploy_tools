@@ -1,3 +1,0 @@
-source 'http://gemserver.***REMOVED***'
-
-gem 'kube_deploy_tools', '~> 1.0'

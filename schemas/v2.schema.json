@@ -1,0 +1,231 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://github.com/LiveRamp/kube_deploy_tools/tree/master/schemas/v2.schema.json",
+    "type": "object",
+    "title": "Deploy configuration",
+    "version": "2.1.0",
+    "description": "The deploy schema is used by kube_deploy_tools to configure itself.",
+    "default": {},
+    "required": [
+        "artifacts",
+        "image_registries",
+        "version"
+    ],
+    "properties": {
+        "artifacts": {
+            "type": "array",
+            "title": "artifacts",
+            "description": "Any usage of kdt must involve at least one artifact. These artifacts can help you create permutations of your deploy with slightly different configurations.",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/artifact"
+            }
+        },
+        "artifact_registries": {
+            "$id": "#/properties/artifact_registries",
+            "type": "array",
+            "title": "Artifact registries",
+            "description": "A deploy configuration requires at least one artifact registry. The image registry tells `kdt publish` how to store your deploy artifacts and tells `kdt deploy` where to find them.",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/definitions/artifact_registry"
+            }
+        },
+        "default_flags": {
+            "$ref": "#/definitions/flags"
+        },
+        "exclude_dir": {
+            "type": "array",
+            "title": "Directory exclusions",
+            "description": "Exclude these directory globs underneath `kubernetes/` from this artifact. Do not use together with `include_dir`.",
+            "items": {
+                "type": "string"
+            }
+        },
+        "flavors": {
+            "type": "object",
+            "title": "flavors",
+            "description": "The flavor is the most granular dimension for customizing the output of your Kubernetes manifests. Specify flavor names and associated flags in this field.",
+            "additionalProperties": true
+        },
+        "hooks": {
+            "$id": "#/properties/hooks",
+            "type": "array",
+            "title": "The hooks schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": [
+                "default"
+            ],
+            "items": {
+                "type": "string"
+            }
+        },
+        "image_registries": {
+            "$id": "#/properties/image_registries",
+            "type": "array",
+            "title": "Image registries",
+            "description": "A deploy configuration requires at least one image registry. The image registry tells `kdt push` how to retag and push your images and tells `kdt generate` what to populate for `config['image_registry']`.",
+            "items": {
+                "$ref": "#/definitions/image_registry"
+            }
+        },
+        "include_dir": {
+            "type": "array",
+            "title": "Directory inclusions",
+            "description": "Include only these directory globs underneath `kubernetes/` into this artifact. Do not use with `exclude_dir` together.",
+            "items": {
+                "type": "string"
+            }
+        },
+        "version": {
+            "type": "integer",
+            "title": "version",
+            "description": "Specify the major version of the deploy schema that you are using. The current version is 2.",
+            "default": 2
+        }
+    },
+    "definitions": {
+        "artifact": {
+            "type": "object",
+            "title": "artifact",
+            "description": "An explanation about the purpose of this instance.",
+            "default": {},
+            "examples": [
+                {
+                    "name": "local",
+                    "image_registry": "local",
+                    "flags": {
+                        "cool_config_value": "foobar"
+                    }
+                }
+            ],
+            "required": [
+                "image_registry",
+                "name"
+            ],
+            "properties": {
+                "flags": {
+                    "$ref": "#/definitions/flags"
+                },
+                "image_registry": {
+                    "type": "string",
+                    "title": "image_registry",
+                    "description": "Each artifact must specify the `name` of a value in `image_registries` to be used for images relating to this artifact.",
+                    "default": "",
+                    "examples": [
+                        "local"
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "title": "The name schema",
+                    "description": "The unique name of the artifact. Among other places, this ends up showing up in `build/kubernetes/<NAME>_<FLAVOR>`.",
+                    "default": "",
+                    "examples": [
+                        "local-staging"
+                    ]
+                }
+            }
+        },
+        "artifact_registry": {
+            "type": "object",
+            "title": "Artifact Registry",
+            "description": "An artifact registry is the instantiation of an artifact registry driver, configuration for that driver, and a unique name.",
+            "default": {},
+            "examples": [
+                {
+                    "driver": "artifactory",
+                    "name": "artifactory",
+                    "config": {
+                        "endpoint": "https://build.my-corp.com/artifactory",
+                        "repo": "kubernetes-snapshot-local"
+                    }
+                }
+            ],
+            "required": [
+                "driver",
+                "name"
+            ],
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "title": "Artifact registry configuration",
+                    "description": "Driver-specific key-value pairs used to configure this artifact registry.",
+                    "additionalProperties": true
+                },
+                "driver": {
+                    "type": "string",
+                    "title": "Artifact registry driver",
+                    "description": "Select a driver to use for this artifact registry. Supported destinations are `gcs` (Google Cloud Storage) and `artifactory`.",
+                    "enum": [
+                        "artifactory",
+                        "gcs"
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "title": "Artifact registry name",
+                    "description": "A unique name for this artifact registry."
+                }
+            }
+        },
+        "flags": {
+            "type": "object",
+            "title": "flags",
+            "description": "flags are used in various parts of the deploy schema to specify key-value pairs that will be placed into `config`. In ascending order, the precedence of flags overwriting each other are: `default_flags`, flags of an `artifact`, then flags of a `flavor`.",
+            "additionalProperties": true
+        },
+        "image_registry": {
+            "type": "object",
+            "title": "Image Registry",
+            "description": "An image registry is the instantiation of an image registry driver, configuration for that driver, and a unique name.",
+            "default": {},
+            "examples": [
+                {
+                    "driver": "gcp",
+                    "name": "gcp",
+                    "prefix": "gcr.io/my-gcr-project"
+                }
+            ],
+            "required": [
+                "driver",
+                "name",
+                "prefix"
+            ],
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "title": "Image registry configuration",
+                    "description": "Driver-specific key-value pairs used to configure this image registry.",
+                    "additionalProperties": true
+                },
+                "driver": {
+                    "type": "string",
+                    "title": "Image registry driver",
+                    "description": "Select a driver to use for this image registry. Supported destinations are local (no-op), AWS ECR, and GCP GCR.",
+                    "enum": [
+                        "aws",
+                        "gcp",
+                        "noop"
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "title": "Image registry name",
+                    "description": "A unique name for this image registry."
+                },
+                "prefix": {
+                    "type": "string",
+                    "title": "Image registry prefix",
+                    "description": "Images tagged with local-registry will be retagged with this prefix and an appropriate version tag.",
+                    "default": "",
+                    "examples": [
+                        "gcr.io/my-gcr-project",
+                        "local-registry",
+                        "123456789.dkr.ecr.amazonaws.com"
+                    ]
+                }
+            }
+        }
+    }
+}

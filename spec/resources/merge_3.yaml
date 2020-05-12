@@ -7,4 +7,4 @@ hooks:
 image_registries:
   - name: gcp
     driver: gcp
-    prefix: ***REMOVED***3
+    prefix: gcr.io/test-gcr3

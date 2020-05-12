@@ -15,7 +15,7 @@ flavors:
   default:
     one: two
 expiration:
-  - repository: https://***REMOVED***/artifactory
+  - repository: https://build.my-corp.com/artifactory
     prefixes:
       - pattern: asdf
         retention: 30d

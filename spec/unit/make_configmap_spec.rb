@@ -22,7 +22,7 @@ describe KubeDeployTools::ConfigMap do
       configmap = KubeDeployTools::ConfigMap.new(CONFIGMAP_NAME, configmap_from_file).target_hash
       configmap_content = YAML::dump(configmap)
 
-      expect(configmap_content).to eq(CONFIGMAP_FILE_CONTENT)
+      expect(configmap_content).to start_with(CONFIGMAP_FILE_CONTENT)
       expect(configmap['metadata']['name']).to eq(CONFIGMAP_NAME)
       expect(configmap['metadata']['namespace']).to eq(CONFIGMAP_DEFAULT_NAMESPACE)
       expect(configmap['metadata']['labels']).to be_nil
@@ -53,7 +53,7 @@ describe KubeDeployTools::ConfigMap do
       configmap = KubeDeployTools::ConfigMap.new(CONFIGMAP_NAME, configmap_from_file).target_hash
       configmap_content = YAML::dump(configmap)
 
-      expect(configmap_content).to eq(CONFIGMAP_FILE_CONTENT)
+      expect(configmap_content).to start_with(CONFIGMAP_FILE_CONTENT)
       expect(configmap['metadata']['name']).to eq(CONFIGMAP_NAME)
       expect(configmap['metadata']['namespace']).to eq(CONFIGMAP_DEFAULT_NAMESPACE)
       expect(configmap['data'][CONFIGMAP_DATA_FILE_NAME]).to eq(CONFIGMAP_DATA_FILE_CONTENT)
@@ -68,7 +68,7 @@ describe KubeDeployTools::ConfigMap do
       configmap = KubeDeployTools::ConfigMap.new(CONFIGMAP_NAME, configmap_from_file).target_hash
       configmap_content = YAML::dump(configmap)
 
-      expect(configmap_content).to eq(CONFIGMAP_FILE_CONTENT)
+      expect(configmap_content).to start_with(CONFIGMAP_FILE_CONTENT)
       expect(configmap['metadata']['name']).to eq(CONFIGMAP_NAME)
       expect(configmap['metadata']['namespace']).to eq(CONFIGMAP_DEFAULT_NAMESPACE)
       expect(configmap['data'][CONFIGMAP_DATA_FILE_NAME]).to eq(CONFIGMAP_DATA_FILE_CONTENT)

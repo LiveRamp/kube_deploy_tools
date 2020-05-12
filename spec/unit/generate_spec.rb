@@ -8,7 +8,7 @@ MANIFEST_FILE_NUM_CLUSTERS=9
 JOB_NAME="FAKE_PROJECT"
 BUILD_ID="12345"
 GIT_COMMIT='123456789deadbeef123456789deadbeef'
-GIT_PROJECT='git@git.***REMOVED***:MasterRepos/kube_deploy_tools_spec_test.git'
+GIT_PROJECT='git@github.com:test-org/kube_deploy_tools_spec_test.git'
 
 describe KubeDeployTools::Generate do
   let(:logger) { KubeDeployTools::FormattedLogger.build }

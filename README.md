@@ -1,113 +1,115 @@
-# kube_deploy_tools
+# kube_deploy_tools (kdt)
 
-kube_deploy_tools (kdt) is a tool to simplify kubernetes manifest generation
-and deployment.
+`kube_deploy_tools` (kdt) is a tool to simplify kubernetes manifest generation
+and deployment. In short, it is able to:
 
-kdt is not specific to ruby projects; it can be used with any project that
-deploys to kubernetes.   
+* ***generate*** Kubernetes manifests from flexible [ERB] templates.
+  Templating contexts have access to a `config` Hash of options.
+  Multiple versions of the same manifests can be defined by creating
+  separate *artifacts* and *flavors* which modify `config`.
+* ***push*** Docker images tagged with the prefix `local-registry/`
+  to your configured image registry/ies. kdt will retag images
+  appropriately for the destination and push in parallel.
+* ***publish*** a manifest of all generated manifests, docker images and
+  tags for archival and eventual expiration of all artifacts related
+  to a single build.
+* ***deploy*** manifests referencing your built and pushed images out to
+  production.
+
+kdt is written in Ruby, but can be used with any project that
+deploys to Kubernetes. It can be seen as a lightweight alternative to more
+popular products like [Helm].
+
+Each of the use cases described above is defined as a separate subcommand of
+the parent `kdt` command. The tools are singularly configured by a
+`deploy.yaml` document checked-in to the root of your repository. While all of
+these components are used today at [@LiveRamp](https://github.com/LiveRamp) for
+a complete production lifecycle, they are also designed to be used
+individually.
+
+[Helm]: https://helm.sh
 
 # Getting Started
 
 ## Install
-Start by adding a new `Gemfile` at the root of your project (or updating your existing `Gemfile`):
 
-```ruby
-source 'https://***REMOVED***' do
-end
-
-source 'https://***REMOVED***' do
-  group :kdt do
-    gem 'kube_deploy_tools', '~> 2.0'
-  end
-end
-```
-
-and then installing with [bundler](https://bundler.io/):
-
-```bash
-bundle install
-```
+Include the `gem 'kube_deploy_tools', '~> 3'` in your project via a Gemfile
+or gemspec.
 
 ## Configure
 
 Once kdt is installed, you will need to configure it. This is done by adding
 a new file named `deploy.yaml` at the root of your project. A minimal
-`deploy.yaml` is shown below:
+`deploy.yaml` for deploying to [Google Container Registry] is shown below:
 
 ```yaml
 version: 2                        # version of kdt to be used
 default_flags:
-  pull_policy: IfNotPresent
-artifacts:
+  pull_policy: IfNotPresent       # define default k-v pairs to be made available in ERB's `config` to all artifacts and flavors
+artifacts:                        # define groups of manifests as named artifacts for `kdt generate`
   - name: prod
     image_registry: gcp
-    flags: {}                     # define flags specific to this artifact accessible at generate-time
+    flags: {}                     # define extra k-v pairs for ERB `config` during `kdt generate` for a specific artifact
 flavors:
-  default: {}                     # define flags specific to this flavor accessible at generate-time
-image_registries:                 # define image registries used here
-  - name: gcp                     # deploy to gcr
+  default:                        # define extra k-v pairs for ERB `config` during `kdt generate` for a specific flavor
+    important_config: '42'        # appears in `config` for the prod/default flavor, but nowhere else
+artifact_registries:              # define destination for `kdt publish`
+image_registries:                 # define image registries for `kdt push`
+  - name: gcp                     # `kdt push` will deploy to Google Container Registry
     driver: gcp
-    prefix: ***REMOVED***
+    prefix: gcr.io/my-gcr-project
 ```
 
-Now that kdt is installed and configured for your project, see how you can
-add your kubernetes manifests in [documentation/setup.md](documentation/setup.md).
+You can check out a [complete description] of the `deploy.yaml` schema.
 
-# Usage
+Next, create a `kubernetes/deployment.yaml.erb` file as follows:
 
-To use kube_deploy_tools in your project, see
-[documentation/usage.md](documentation/usage.md).
-
-# Why KDT?
-
-KDT is helpful for tying together the following steps in a deployment chain, as described below. Note that the bash and `kdt` commands are closer to *pseudocode* and provided as examples only.
-
-| Step                                                                   | Goal                                                                                                                                               | Pseudo Command                                                                                                             | `kdt` Command                                                           |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 1. tagging and publishing Docker images to our image registry          | to make the Docker image pullable from Kubernetes workers for running Pods                                                                         | `docker tag local-registry/my-app gcr.io/my-registry/my-app:$TAG && docker push gcr.io/my-registry/my-app:$TAG`            | `kdt push my-app`                                        |
-| 2. rendering Kubernetes manifests with ERB                             | to allow for parametrization of Kubernetes manifests per environment target, such as parametrizing the Docker image tag published in the last step | `for $file in kubernetes/; do sed -i 's/IMAGE_NAME/gcr.io\/my-registry\/my-app:$TAG' $file > build/kubernetes/$file; done` | `kdt generate`                                                          |
-| 3. publishing Kubernetes manifests in a deploy artifact to Artifactory | to make release-ready Kubernetes manifests available at deploy time                                                                                | `gzip build/kubernetes $artifact && curl -X PUT my.artifactory.net/registry/artifact $artifact`                            | `kdt publish`                                                           |
-| 4. applying Kubernetes manifests to a cluster                          | to provide release tooling best-practices at deploy time                                                                                           | `curl -X GET my.artifactory.net/registry/artifact \| gunzip \| kubectl apply -f -`                                           | `kdt deploy --artifact=my-artifact --build=latest --context=production` |
-
-
-This deployment chain outputs release-ready artifacts, with appropriate tooling to configure and deploy these artifacts.
-
-i.e.
-```
-(baked, tagged + published Docker images) +
-(templated + rendered Kubernetes manifests)
-=
-your deployment
-```
-
-KDT will not:
-- build, compile or package your app (e.g. `mvn install || npm install # etc`)
-- build Docker images (e.g. `docker build -t local-registry/my-app .`)
-
-Putting this all together, all of the above commands should be run in your deployment chain, as appropriate within your CI/CD setup:
-
-```bash
-mvn install || npm install
-docker build -t ...
-
-kdt push ...
-kdt generate
-kdt publish
-
-kdt deploy ...
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-first-kdt-app
+  labels:
+    app: my-first-kdt-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-first-kdt-app
+  template:
+    metadata:
+      labels:
+        app: my-first-kdt-app
+    spec:
+      containers:
+        - name: my-app
+          image: <%= config['image_registry'] %>/my-app:<%= config['tag'] %>
+          imagePullPolicy: <%= config['pull_policy'] %>
+    env:
+      - name: IMPORTANT_CONFIG
+        value: <%= config['important_config'] %>
 ```
 
----
-- [kube_deploy_tools](#kubedeploytools)
-- [2.x NOTICE](#2x-notice)
-- [Setup](#setup)
-- [Usage](#usage)
-- [Changes](#changes)
-- [Contribute](#contribute)
+Observe the use of ERB tags to fill in various values from the `config` Hash. The `config` hash
+is generated from a combination of artifact `flags`, `flavors`, `default_flags`, and the settings
+from `image_registries`. `tag` is autogenerated from your Git SCM workspace.
 
-# 2.x NOTICE
-You're viewing docs for v2.x. To view docs for v1.x, please see:
-https://git.***REMOVED***/OpsRepos/kube_deploy_tools/tree/release-1.x
+Now, run `bundle exec kdt generate` and observe
+`build/kubernetes/prod_default/deployment.yaml` is created with all template
+variables filled in.
+
+To explore further,
+* Build a docker image tagged `local-registry/my-app`, then run `kdt push my-app`.
+* Run `kdt deploy -f build/kubernetes/prod_default --context my-kube-context` to send your generated
+  manifests to a Kubernetes API server.
+
+[complete description]: XXX
+
+# FAQ
+
+* ***Q***: Will KDT help me build my Docker images?
+* ***A***: No. The recommended usage is to build your docker images ahead of time and pre-tag them as local-registry/name-here.
+  Then running `kdt push name-here` will automatically retag your images with your target registry and send them off.
 
 # Changes
 

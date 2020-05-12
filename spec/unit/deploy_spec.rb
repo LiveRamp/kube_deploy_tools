@@ -182,7 +182,7 @@ describe KubeDeployTools::Deploy do
       project_info = deploy.project_info
 
       expect(project_info[:git_commit]).to eq('deadbeefdeadbeef')
-      expect(project_info[:git_project]).to eq('git@git.***REMOVED***:MasterRepos/rspec_tests.git')
+      expect(project_info[:git_project]).to eq('git@github.com:my-org/rspec_tests.git')
       expect(project_info[:time]).to be_a(DateTime)
       expect(project_info[:user]).to eq('bill@***REMOVED***')
       expect(project_info[:'kubernetes-cluster']).to eq('kubectl bogus output')
