@@ -13,7 +13,6 @@ module KubeDeployTools
         :artifact,
         :build_number,
         :dry_run,
-        :send_report,
         :glob_files,
         :pre_apply_hook,
         :max_retries,
@@ -23,7 +22,6 @@ module KubeDeployTools
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
         self.flavor = 'default'
         self.dry_run = true
-        self.send_report = true
         self.glob_files = []
       end
 
@@ -78,10 +76,6 @@ module KubeDeployTools
 
         parser.on("--pre-apply-hook CMD", "Shell command to run with the output directory before applying files") do |p|
           self.pre_apply_hook = p
-        end
-
-        parser.on('--send-report SEND_REPORT', TrueClass, "If true, records data about the deploy to a centralized log. Default is #{send_report}") do |p|
-          self.send_report = p
         end
 
         parser.on('--retry NUM', 'Maximum number of times to retry') do |p|

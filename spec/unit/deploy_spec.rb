@@ -78,7 +78,6 @@ describe KubeDeployTools::Deploy do
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered
 
-    expect(deploy).to receive(:notify).with(any_args)
     deploy.run(dry_run: false)
   end
 
@@ -122,8 +121,6 @@ describe KubeDeployTools::Deploy do
     # Services are deployed before Deployments
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered.exactly(3).times
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered.exactly(3).times
-
-    expect(deploy).to receive(:notify).with(any_args)
 
     # Ultimately deploy should fail
     expect {
@@ -222,12 +219,11 @@ describe KubeDeployTools::Deploy::Optparser do
       build: build_number,
       context: CONTEXT,
       'dry-run': 'false',
-      'send-report': 'false')
+    )
     expect(options.artifact).to match(artifact)
     expect(options.build_number).to match(build_number)
     expect(options.context).to match(CONTEXT)
     expect(options.dry_run).to be(false)
-    expect(options.send_report).to be(false)
 
     from_files = 'bogus/path/'
     options = parse('from-files': from_files,

@@ -56,6 +56,5 @@ Dir.mktmpdir do |tmpdir|
   )
   deploy.run(
     dry_run: options.dry_run,
-    send_report: options.send_report
   )
 end

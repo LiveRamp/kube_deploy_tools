@@ -29,10 +29,6 @@ PREDEPLOY_RESOURCES = %w[
   Service
 ].freeze
 
-# TODO: (aaron): make these configurable
-DEPLOY_LOG = 'projects/***REMOVED***/logs/deploys'
-DEPLOY_PROJECT = '***REMOVED***'
-
 module KubeDeployTools
   class Deploy
     def initialize(
@@ -102,8 +98,7 @@ module KubeDeployTools
       success
     end
 
-    def run(dry_run: true, send_report: true)
-      notify(project_info.merge({'type':'deploy'}).to_json) if !dry_run && send_report
+    def run(dry_run: true)
       do_deploy(dry_run)
     end
 
@@ -215,14 +210,6 @@ module KubeDeployTools
 
     def current_user
       Shellrunner.run_call('gcloud', 'config', 'list', 'account', '--format', 'value(core.account)')[0]
-    end
-
-    def notify(message)
-      args = [
-        'gcloud', 'logging', 'write', "--project=#{DEPLOY_PROJECT}",
-        '--payload-type=json', DEPLOY_LOG, message
-      ]
-      Shellrunner.check_call(*args)
     end
   end
 end
