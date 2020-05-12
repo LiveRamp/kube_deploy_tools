@@ -36,7 +36,7 @@ describe KubeDeployTools::Deploy do
     KubeDeployTools::Shellrunner.shellrunner = shellrunner
 
     allow(shellrunner).to receive(:run_call).with('gcloud', 'config', 'list', 'account', '--format', "value(core.account)") do
-      ['bill@***REMOVED***', '', double("status", success?: true)]
+      ['bill@liveramp.com', '', double("status", success?: true)]
     end
   end
 
@@ -181,7 +181,7 @@ describe KubeDeployTools::Deploy do
       expect(project_info[:git_commit]).to eq('deadbeefdeadbeef')
       expect(project_info[:git_project]).to eq('git@github.com:my-org/rspec_tests.git')
       expect(project_info[:time]).to be_a(DateTime)
-      expect(project_info[:user]).to eq('bill@***REMOVED***')
+      expect(project_info[:user]).to eq('bill@liveramp.com')
       expect(project_info[:'kubernetes-cluster']).to eq('kubectl bogus output')
       expect(project_info[:'kubernetes-cluster-name']).to eq('kubectl bogus output')
     end
@@ -196,7 +196,7 @@ describe KubeDeployTools::Deploy do
       expect(project_info[:git_commit]).to be_nil
       expect(project_info[:git_project]).to be_nil
       expect(project_info[:time]).to be_a(DateTime)
-      expect(project_info[:user]).to eq('bill@***REMOVED***')
+      expect(project_info[:user]).to eq('bill@liveramp.com')
       expect(project_info[:'kubernetes-cluster']).to eq('kubectl bogus output')
       expect(project_info[:'kubernetes-cluster-name']).to eq('kubectl bogus output')
     end

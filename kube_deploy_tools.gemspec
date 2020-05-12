@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
   gem.description = "Kubernetes deploy tools for LiveRamp"
 
   gem.authors  = ['ops']
-  gem.email    = 'ops@***REMOVED***'
+  gem.email    = 'ops@liveramp.com'
   gem.homepage = 'https://github.com/LiveRamp/kube_deploy_tools'
   gem.license  = 'MIT'
 
