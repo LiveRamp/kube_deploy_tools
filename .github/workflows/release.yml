@@ -34,12 +34,12 @@ jobs:
         if: github.ref == 'refs/heads/master'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: push tagged gem to github packages
+      - name: push tagged gem to rubygems
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           export VERSION=${GITHUB_REF##*/v}
-          echo ":github: Bearer ${{ secrets.GITHUB_TOKEN }}" > $HOME/.gem/credentials
+          echo ":rubygems_api_key: ${{ secrets.RUBYGEMS_API_KEY }}" > $HOME/.gem/credentials
           chmod 600 $HOME/.gem/credentials
-          gem push --key github --host https://rubygems.pkg.github.com/LiveRamp kube_deploy_tools-${VERSION}.gem
+          gem push kube_deploy_tools-${VERSION}.gem
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RUBYGEMS_API_KEY }}

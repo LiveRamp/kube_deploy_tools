@@ -7,12 +7,12 @@ Gem::Specification.new do |gem|
   gem.date    = Date.today.to_s
 
   gem.summary = "Kubernetes Deploy Tools"
-  gem.description = "Kubernetes deploy tools for LiveRamp"
+  gem.description = "Tools used by LiveRamp to facilitate generation, packaging, and deployment of Docker images and Kubernetes manifests."
 
   gem.authors  = ['ops']
   gem.email    = 'ops@liveramp.com'
   gem.homepage = 'https://github.com/LiveRamp/kube_deploy_tools'
-  gem.license  = 'MIT'
+  gem.license  = 'Apache-2.0'
 
   gem.required_ruby_version = '>= 2.5'
 
