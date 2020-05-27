@@ -9,7 +9,20 @@ Gem::Specification.new do |gem|
   gem.summary = "Kubernetes Deploy Tools"
   gem.description = "Tools used by LiveRamp to facilitate generation, packaging, and deployment of Docker images and Kubernetes manifests."
 
-  gem.authors  = ['ops']
+  # Anyone who has had more than 5 commits to this repo
+  # can be in here! Please preserve alpha-sorting.
+  gem.authors  = [
+    'Fabien Goncalves',
+    'Peter Hu',
+    'Joshua Kwan',
+    'Pratik Mallya',
+    'Julian Modesto',
+    'Renaud Pere',
+    'Aditya Sarang',
+    'Aaron Sproul',
+    'Tiantian Tang',
+  ]
+
   gem.email    = 'ops@liveramp.com'
   gem.homepage = 'https://github.com/LiveRamp/kube_deploy_tools'
   gem.license  = 'Apache-2.0'
