@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/kube_deploy_tools.svg)](https://badge.fury.io/rb/kube_deploy_tools)
+
 # kube_deploy_tools (kdt)
 
 `kube_deploy_tools` (kdt) is a tool to simplify kubernetes manifest generation
@@ -28,6 +30,7 @@ a complete production lifecycle, they are also designed to be used
 individually.
 
 [Helm]: https://helm.sh
+[ERB]: https://ruby-doc.org/stdlib-2.7.1/libdoc/erb/rdoc/ERB.html
 
 # Getting Started
 
@@ -103,7 +106,7 @@ To explore further,
 * Run `kdt deploy -f build/kubernetes/prod_default --context my-kube-context` to send your generated
   manifests to a Kubernetes API server.
 
-[complete description]: XXX
+[complete description]: schemas/v2.schema.json
 
 # FAQ
 
@@ -119,19 +122,6 @@ For breaking changes, new features, and new fixes, see
 # Contribute
 
 ```bash
-# Install ruby w/ Homebrew
-brew install ruby
-
-# Or install ruby w/ rbenv
-brew install rbenv ruby-build
-rbenv install 2.3.0
-rbenv global 2.3.0
-
-# Install gem
-gem install bundler
-```
-
-```bash
 bundle install --with development
 
 # Run tests
@@ -140,3 +130,7 @@ bundle exec rake test
 # Exec a binary in bin/
 bundle exec kdt generate
 ```
+
+We accept [pull requests]. They will be reviewed by a member of the LiveRamp development team as soon as possible.
+
+[pull requests]: https://github.com/LiveRamp/kube_deploy_tools/pulls
