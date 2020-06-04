@@ -1,3 +1,4 @@
+require 'tempfile'
 
 module KubeDeployTools
   module DeployConfigFileUtil
