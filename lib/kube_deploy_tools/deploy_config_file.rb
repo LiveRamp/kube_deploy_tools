@@ -248,6 +248,10 @@ module KubeDeployTools
       # the 'other' hash wins.
       @image_registries = other.image_registries.merge(@image_registries)
 
+      @artifact_registries = other.artifact_registries.merge(@artifact_registries)
+
+      @artifact_registry = other.artifact_registry if @artifact_registry.empty?
+
       # Same behavior as above for #default_flags.
       @default_flags = other.default_flags.merge(@default_flags)
 
