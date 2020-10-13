@@ -85,7 +85,7 @@ module KubeDeployTools
     end
 
     def get_latest_build_number(project)
-      out, err, status = Shellrunner.run_call('gsutil ls -l #{@bucket}/project/#{project}/build/')
+      out, err, status = Shellrunner.run_call('gsutil', 'ls -l', '#{@bucket}/project/#{project}/build/')
 
       if !status.success?
         raise "Failed to list latest builds for project"
