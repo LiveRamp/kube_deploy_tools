@@ -84,6 +84,22 @@ module KubeDeployTools
       output_path
     end
 
+    def get_latest_build_number(project)
+      out, err, status = Shellrunner.run_call('gsutil ls -l #{@bucket}/project/#{project}/build/')
+
+      if !status.success?
+        raise "Failed to list latest builds for project"
+      end
+      # pick out the build numbers from the list
+      build_regex = /[0-9]+\/$/
+      build_entries = out.scan(build_number_regex)
+      build_number_pattern = /^\d+/  # exclude last `/`
+      build_entries.
+      map { |x| x.match(build_number_pattern).to_s.to_i }.
+      max.
+      to_s
+    end
+
     def upload(local_dir:, name:, flavor:, project:, build_number:)
       # Pack up contents of each flavor_dir to a correctly named artifact.
       flavor_dir = File.join(local_dir, "#{name}_#{flavor}")
