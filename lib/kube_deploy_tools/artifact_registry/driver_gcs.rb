@@ -34,6 +34,9 @@ module KubeDeployTools
       # change where all past clients will not be able to download new builds and
       # new clients will not be able to download old builds. Change with caution.
       #
+      if flavor.empty? && name.empty? && build_number.empty?
+        return "#{@bucket}/project/#{project}/build/"
+      end
       "#{@bucket}/project/#{project}/build/#{build_number}/artifact/#{get_artifact_name(name: name, flavor: flavor)}"
     end
 
@@ -85,19 +88,15 @@ module KubeDeployTools
     end
 
     def get_latest_build_number(project)
-      out, err, status = Shellrunner.run_call('gsutil', 'ls -l', '#{@bucket}/project/#{project}/build/')
+      out = Shellrunner.check_call('gsutil', 'ls', get_registry_artifact_path(name: '', flavor: '', project: project, build_number: ''))
 
-      if !status.success?
-        raise "Failed to list latest builds for project"
-      end
       # pick out the build numbers from the list
-      build_regex = /[0-9]+\/$/
-      build_entries = out.scan(build_number_regex)
-      build_number_pattern = /^\d+/  # exclude last `/`
+      build_regex = /([0-9]+)\/$/
+      build_entries = out.scan(build_regex)
+
       build_entries.
-      map { |x| x.match(build_number_pattern).to_s.to_i }.
-      max.
-      to_s
+      map { |x| x[0].to_s.to_i }.
+      max.to_s
     end
 
     def upload(local_dir:, name:, flavor:, project:, build_number:)
