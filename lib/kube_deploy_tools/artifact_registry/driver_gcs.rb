@@ -29,15 +29,21 @@ module KubeDeployTools
       local_artifact_path
     end
 
+    def get_registry_build_path(project:)
+      # NOTE: If the naming format changes, it represents a breaking change
+      # where all past clients will not be able to list/download new builds
+      # and new clients will not be able to list/download old builds. Change
+      # with caution.
+      #
+      "#{@bucket}/project/#{project}/build"
+    end
+
     def get_registry_artifact_path(name:, flavor:, project:, build_number:)
       # NOTE(joshk): If the naming format changes, it represents a breaking
       # change where all past clients will not be able to download new builds and
       # new clients will not be able to download old builds. Change with caution.
       #
-      if flavor.empty? && name.empty? && build_number.empty?
-        return "#{@bucket}/project/#{project}/build/"
-      end
-      "#{@bucket}/project/#{project}/build/#{build_number}/artifact/#{get_artifact_name(name: name, flavor: flavor)}"
+      "#{get_registry_build_path(project: project)}/#{build_number}/artifact/#{get_artifact_name(name: name, flavor: flavor)}"
     end
 
     def get_artifact_name(name:, flavor:)
@@ -88,7 +94,7 @@ module KubeDeployTools
     end
 
     def get_latest_build_number(project)
-      out = Shellrunner.check_call('gsutil', 'ls', get_registry_artifact_path(name: '', flavor: '', project: project, build_number: ''))
+      out = Shellrunner.check_call('gsutil', 'ls', get_registry_build_path(project: project))
 
       # pick out the build numbers from the list
       build_regex = /([0-9]+)\/$/
