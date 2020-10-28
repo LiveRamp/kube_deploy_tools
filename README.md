@@ -133,7 +133,8 @@ bundle exec kdt generate
 
 We accept [pull requests]. They will be reviewed by a member of the LiveRamp development team as soon as possible.
 Once the PR is merged, GitHub will auto-draft the release. Be sure to
-add the same version as a tag (vX.Y.Z) and then publish it. [GitHub
-Workflow] will then publish the gems.
+add the same version as a tag (vX.Y.Z) and then publish it.
+[GitHub Workflow] will then publish the gems.
+
 [GitHub Workflow]: https://github.com/LiveRamp/kube_deploy_tools/blob/master/.github/workflows/release.yml
 [pull requests]: https://github.com/LiveRamp/kube_deploy_tools/pulls
