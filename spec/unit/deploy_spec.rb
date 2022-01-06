@@ -78,7 +78,7 @@ describe KubeDeployTools::Deploy do
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Service'), any_args).ordered
     expect(kubectl).to receive(:run).with('apply', '-f', be_kubernetes_resource_of_kind('Deployment'), any_args).ordered
 
-    deploy.run(dry_run: false)
+    deploy.run(dry_run: 'none')
   end
 
   it "retries kubectl apply 3 times" do
@@ -124,7 +124,7 @@ describe KubeDeployTools::Deploy do
 
     # Ultimately deploy should fail
     expect {
-      deploy.run(dry_run: false)
+      deploy.run(dry_run: 'none')
     }.to raise_error(KubeDeployTools::FatalDeploymentError)
   end
 
@@ -223,13 +223,44 @@ describe KubeDeployTools::Deploy::Optparser do
     expect(options.artifact).to match(artifact)
     expect(options.build_number).to match(build_number)
     expect(options.context).to match(CONTEXT)
-    expect(options.dry_run).to be(false)
+    expect(options.dry_run).to eq('none')
 
     from_files = 'bogus/path/'
     options = parse('from-files': from_files,
       context: CONTEXT)
     expect(options.from_files).to match(from_files)
     expect(options.context).to match(CONTEXT)
+  end
+
+  it "fails with invalid dry-run value" do
+    expect do
+      parse('dry-run': 'bogus')
+    end.to raise_error(/Expect one of /)
+  end
+
+  it "supports mapping of legacy dry-run values" do
+    inputs = {
+      artifact: artifact,
+      build: build_number,
+      context: CONTEXT,
+    }
+    inputs['dry-run'] = 'true'
+    expect(parse(inputs).dry_run).to eq('client')
+
+    inputs['dry-run'] = 'false'
+    expect(parse(inputs).dry_run).to eq('none')
+  end
+
+  it "supports additional dry-run values" do
+    inputs = {
+      artifact: artifact,
+      build: build_number,
+      context: CONTEXT,
+    }
+    VALID_DRY_RUN_VALUES.each do |x|
+      inputs['dry-run'] = x
+      expect(parse(inputs).dry_run).to eq(x), "#{x}"
+    end
   end
 
 end

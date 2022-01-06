@@ -64,10 +64,9 @@ module KubeDeployTools
     end
 
     def do_deploy(dry_run)
-      success = false
       Logger.reset
       Logger.phase_heading('Initializing deploy')
-      Logger.warn('Running in dry-run mode') if dry_run
+      Logger.warn('Running in dry-run mode') if dry_run != 'none'
 
       if !@namespace.nil? && @namespace != 'default'
         Logger.warn("Deploying to non-default Namespace: #{@namespace}")
@@ -98,7 +97,7 @@ module KubeDeployTools
       success
     end
 
-    def run(dry_run: true)
+    def run(dry_run: 'client')
       do_deploy(dry_run)
     end
 
@@ -161,7 +160,7 @@ module KubeDeployTools
       raise FatalDeploymentError, "Template '#{filepath}' cannot be parsed"
     end
 
-    def kubectl_apply(resources, dry_run: true)
+    def kubectl_apply(resources, dry_run: 'client')
       resources.each do |resource|
         @max_retries.times do |try|
           args = ['apply', '-f', resource.filepath, "--dry-run=#{dry_run}"]
