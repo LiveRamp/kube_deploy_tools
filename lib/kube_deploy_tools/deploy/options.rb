@@ -2,6 +2,9 @@ require 'optparse'
 
 require 'kube_deploy_tools/object'
 
+# As of kubernetes 1.23 valid dry-run options are: none, client, server.
+VALID_DRY_RUN_VALUES = %w[none client server].freeze
+
 module KubeDeployTools
   class Deploy::Optparser
     class Options
@@ -21,7 +24,7 @@ module KubeDeployTools
       def initialize
         self.project = File.basename(`git config remote.origin.url`.chomp, '.git')
         self.flavor = 'default'
-        self.dry_run = true
+        self.dry_run = 'client'
         self.glob_files = []
       end
 
@@ -54,8 +57,19 @@ module KubeDeployTools
           self.build_number = p
         end
 
-        parser.on('--dry-run DRY_RUN', TrueClass, "If true, will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: #{dry_run}.") do |p|
-          self.dry_run = p
+        # As of kubernetes 1.23 valid dry-run options are: none, client, server.
+        # Legacy values map accordingly: true => client, false => none
+        parser.on('--dry-run DRY_RUN', "Will only dry-run apply Kubernetes manifests without sending them to the apiserver. Default is dry-run mode: #{dry_run}. Must be '#{VALID_DRY_RUN_VALUES}'") do |p|
+          legacy_mapping = { 'true' => 'client', 'false' => 'none' }
+
+          if legacy_mapping.include?(p) then
+            self.dry_run = legacy_mapping[p]
+            Logger.warn("#{p} is no longer a supported dry-run value. Setting to value '#{self.dry_run}'.")
+          elsif VALID_DRY_RUN_VALUES.include?(p)
+            self.dry_run = p
+          else
+            raise ArgumentError, "#{p} is not a valid dry-run value. Expect one of '#{VALID_DRY_RUN_VALUES.join(', ')}'"
+          end
         end
 
         parser.on('--include INCLUDE', "Include glob pattern. Example: --include=**/* will include every file. Default is ''.") do |p|
