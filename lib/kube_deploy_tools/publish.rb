@@ -8,8 +8,9 @@ require 'kube_deploy_tools/object'
 
 module KubeDeployTools
   class Publish
-    def initialize(manifest:, artifact_registry:, output_dir:)
+    def initialize(manifest:, artifact_registry:, input_dir:, output_dir:)
       @config = DeployConfigFile.new(manifest)
+      @input_dir = input_dir
       @output_dir = output_dir
 
       @project = KubeDeployTools::PROJECT
@@ -27,7 +28,7 @@ module KubeDeployTools
 
         cluster_flavors.each do |flavor, _|
           @artifact_registry.upload(
-            local_dir: @output_dir,
+            local_dir: @input_dir,
             name: name,
             flavor: flavor,
             project: @project,
