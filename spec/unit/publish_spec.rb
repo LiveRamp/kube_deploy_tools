@@ -69,6 +69,7 @@ describe KubeDeployTools::Publish do
         KubeDeployTools::Publish.new(
           manifest: MANIFEST_FILE,
           artifact_registry: artifact_registry,
+          input_dir: dir,
           output_dir: dir,
         ).publish
       end
@@ -89,6 +90,7 @@ describe KubeDeployTools::Publish do
         KubeDeployTools::Publish.new(
           manifest: MANIFEST_GCS_FILE,
           artifact_registry: artifact_registry,
+          input_dir: dir,
           output_dir: dir,
         ).publish
 
