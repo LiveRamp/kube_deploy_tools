@@ -8,7 +8,7 @@ require 'kube_deploy_tools/object'
 
 module KubeDeployTools
   class Publish
-    def initialize(manifest:, artifact_registry:, input_dir:, output_dir:)
+    def initialize(manifest:, artifact_registry:, output_dir:, input_dir: "")
       @config = DeployConfigFile.new(manifest)
       @input_dir = input_dir
       @output_dir = output_dir
