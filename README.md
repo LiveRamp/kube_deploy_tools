@@ -119,6 +119,7 @@ bundle exec rake test
 
 # Exec a binary in bin/
 bundle exec kdt generate
+# bundle exec kdt generate -o <tmp_directory> -m <deploy_yaml_manifest_file> -i <tmp_input_directory>
 ```
 
 We accept [pull requests]. They will be reviewed by a member of the LiveRamp development team as soon as possible.
