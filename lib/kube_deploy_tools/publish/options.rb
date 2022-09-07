@@ -3,7 +3,7 @@ require 'optparse'
 module KubeDeployTools
   class Publish::Optparser
     class Options
-      attr_accessor :manifest_file, :input_path, :output_path
+      attr_accessor :manifest_file, :output_path
 
       def initialize
         self.output_path = File.join('build', 'kubernetes')
