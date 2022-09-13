@@ -1,6 +1,16 @@
 [![Gem Version](https://badge.fury.io/rb/kube_deploy_tools.svg)](https://badge.fury.io/rb/kube_deploy_tools)
 
+
+### Table of Contents
+- [Introduction - KDT](#kube_deploy_tools-kdt)
+- [Getting Started](#getting-started)
+    - [Install](#install)
+    - [Configure](#configure)
+    - [Parallel Generate/Publish](#parallel-action-in-jenkins)
+- [Branch Merge to Master (PR Merge)](#branch-merge-to-master)
+
 # kube_deploy_tools (kdt)
+
 
 `kube_deploy_tools` (kdt) is a tool to simplify kubernetes manifest generation
 and deployment. In short, it is able to:
@@ -98,7 +108,20 @@ To explore further,
 * Run `kdt deploy -f build/kubernetes/prod_default --context my-kube-context` to send your generated
   manifests to a Kubernetes API server.
 
-# Parallel Action in Jenkins
+# Usage
+
+```bash
+bundle install --with development
+
+# Run tests
+bundle exec rake test
+
+# Exec a binary in bin/
+bundle exec kdt generate
+# bundle exec kdt generate -o <tmp_directory> -m <deploy_yaml_manifest_file> -i <tmp_input_directory>
+```
+
+## Parallel Generate/Publish
 * Most KDT actions are able to run in parallel on Jenkins without extra configurations, but the KDT publish step requires an extra argument when calling the function.
   * This is due to an internal configuration which shares a temporary directory with any other module that is also being published on the same Jenkins pipeline unless otherwise specified.
 ```bash
@@ -116,24 +139,8 @@ bundle exec kdt publish -o <tmp_directory>
 * ***A***: No. The recommended usage is to build your docker images ahead of time and pre-tag them as local-registry/name-here.
   Then running `kdt push name-here` will automatically retag your images with your target registry and send them off.
 
-# Changes
-
-For breaking changes, new features, and new fixes, see
-[CHANGELOG.md](CHANGELOG.md).
 
 # Contribute
-
-```bash
-bundle install --with development
-
-# Run tests
-bundle exec rake test
-
-# Exec a binary in bin/
-bundle exec kdt generate
-# bundle exec kdt generate -o <tmp_directory> -m <deploy_yaml_manifest_file> -i <tmp_input_directory>
-```
-
 We accept [pull requests]. They will be reviewed by a member of the LiveRamp development team as soon as possible.
 Once the PR is merged, GitHub will auto-draft the release. Be sure to
 add the same version as a tag (vX.Y.Z) and then publish it.
@@ -145,3 +152,8 @@ add the same version as a tag (vX.Y.Z) and then publish it.
 
 [Helm]: https://helm.sh
 [ERB]: https://ruby-doc.org/stdlib-2.7.1/libdoc/erb/rdoc/ERB.html
+
+# Changes
+
+For breaking changes, new features, and new fixes, see
+[CHANGELOG.md](CHANGELOG.md).
