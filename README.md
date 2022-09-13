@@ -14,7 +14,7 @@
 
 ---
 
-## kube_deploy_tools (kdt)
+# kube_deploy_tools (kdt)
 
 `kube_deploy_tools` (kdt) is a tool to simplify kubernetes manifest generation
 and deployment. 
@@ -41,13 +41,13 @@ singularly configured by a `deploy.yaml` document checked-in to the root of your
 components are used today at [@LiveRamp](https://github.com/LiveRamp) for a complete production lifecycle, they are also 
 designed to be used individually.
 
-## Getting Started
+# Getting Started
 
-### Install
+## Install
 
 Include the `gem 'kube_deploy_tools', '~> 3'` in your project via a Gemfile or gemspec.
 
-### Configure
+## Configure
 
 Once kdt is installed, you will need to configure it. This is done by adding a new file named `deploy.yaml` at the 
 root of your project. A minimal `deploy.yaml` for deploying to [Google Container Registry] is shown below:
