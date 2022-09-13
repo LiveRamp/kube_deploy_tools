@@ -98,6 +98,18 @@ To explore further,
 * Run `kdt deploy -f build/kubernetes/prod_default --context my-kube-context` to send your generated
   manifests to a Kubernetes API server.
 
+# Parallel Action in Jenkins
+* Most KDT actions are able to run in parallel on Jenkins without extra configurations, but the KDT publish step requires an extra argument when calling the function.
+  * This is due to an internal configuration which shares a temporary directory with any other module that is also being published on the same Jenkins pipeline unless otherwise specified.
+```bash
+# Publish standard
+bundle exec kdt publish
+
+# Publish with extra argument capable of parallel runs in Jenkins
+bundle exec kdt publish -o <tmp_directory>
+```
+* See [Online Identity PR](https://github.com/LiveRamp/identity/pull/1939) for further implementation details.
+
 # FAQ
 
 * ***Q***: Will KDT help me build my Docker images?
