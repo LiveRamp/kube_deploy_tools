@@ -9,8 +9,9 @@
     - [Parallel Generate/Publish](#parallel-action-in-jenkins)
 - [Branch Merge to Master (PR Merge)](#branch-merge-to-master)
 
-# kube_deploy_tools (kdt)
+---
 
+### kube_deploy_tools (kdt)
 
 `kube_deploy_tools` (kdt) is a tool to simplify kubernetes manifest generation
 and deployment. In short, it is able to:
@@ -36,13 +37,13 @@ singularly configured by a `deploy.yaml` document checked-in to the root of your
 components are used today at [@LiveRamp](https://github.com/LiveRamp) for a complete production lifecycle, they are also 
 designed to be used individually.
 
-# Getting Started
+## Getting Started
 
-## Install
+### Install
 
 Include the `gem 'kube_deploy_tools', '~> 3'` in your project via a Gemfile or gemspec.
 
-## Configure
+### Configure
 
 Once kdt is installed, you will need to configure it. This is done by adding a new file named `deploy.yaml` at the 
 root of your project. A minimal `deploy.yaml` for deploying to [Google Container Registry] is shown below:
@@ -108,7 +109,7 @@ To explore further,
 * Run `kdt deploy -f build/kubernetes/prod_default --context my-kube-context` to send your generated
   manifests to a Kubernetes API server.
 
-# Usage
+## Usage
 
 ```bash
 bundle install --with development
@@ -133,14 +134,16 @@ bundle exec kdt publish -o <tmp_directory>
 ```
 * See [Online Identity PR](https://github.com/LiveRamp/identity/pull/1939) for further implementation details.
 
-# FAQ
+
+## FAQ
 
 * ***Q***: Will KDT help me build my Docker images?
 * ***A***: No. The recommended usage is to build your docker images ahead of time and pre-tag them as local-registry/name-here.
   Then running `kdt push name-here` will automatically retag your images with your target registry and send them off.
+---
 
 
-# Contribute
+### Contribute
 We accept [pull requests]. They will be reviewed by a member of the LiveRamp development team as soon as possible.
 Once the PR is merged, GitHub will auto-draft the release. Be sure to
 add the same version as a tag (vX.Y.Z) and then publish it.
