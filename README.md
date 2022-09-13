@@ -7,7 +7,7 @@
     - [Install](#install)
     - [Configure](#configure)
     - [Usage](#configure)
-        - [Parallel Generate/Publish](#parallel-generatepublish)
+        - [Parallel Generate/Publish in Jenkins Pipeline](#parallel-generatepublish-in-jenkins-pipeline)
 - [FAQ](#faq)
 - [Changelog](#changelog)
 - [Contribute](#contribute)
@@ -134,7 +134,7 @@ bundle exec kdt publish
     bundle exec kdt publish -o <tmp_directory>
 ```
 
-### Parallel Generate/Publish in Jenkins Pipeline
+## Parallel Generate/Publish in Jenkins Pipeline
 **Note:** Most other KDT actions are able to run in parallel on Jenkins without extra configurations. 
 But, the KDT `generate` & `publish` steps requires extra argument(s) to allow parallel generation & publishing of manifest files.
 - **Reason:**: Natively, the kdt generate & publish steps uses the same tmp directory. So, when using command 
