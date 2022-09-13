@@ -14,10 +14,14 @@
 
 ---
 
-### kube_deploy_tools (kdt)
+## kube_deploy_tools (kdt)
 
 `kube_deploy_tools` (kdt) is a tool to simplify kubernetes manifest generation
-and deployment. In short, it is able to:
+and deployment. 
+kdt is written in Ruby, but can be used with any project that deploys to Kubernetes. 
+It can be seen as a lightweight alternative to more popular products like [Helm].
+ 
+KDT is able to:
 
 * ***generate***: Kubernetes manifests from flexible [ERB] templates.
   - Templating contexts have access to a `config` Hash of options.
@@ -31,9 +35,6 @@ and deployment. In short, it is able to:
     - Options available to build in parallel. See below:.
 
 * ***deploy*** manifests referencing your built and pushed images out to production.
-
-kdt is written in Ruby, but can be used with any project that deploys to Kubernetes. 
-It can be seen as a lightweight alternative to more popular products like [Helm].
 
 Each of the use cases described above is defined as a separate subcommand of the parent `kdt` command. The tools are 
 singularly configured by a `deploy.yaml` document checked-in to the root of your repository. While all of these 
