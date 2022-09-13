@@ -123,27 +123,36 @@ bundle exec rake test
 
 # Exec a binary in bin/
 bundle exec kdt generate
-# bundle exec kdt generate -o <tmp_directory> -m <deploy_yaml_manifest_file> -i <tmp_input_directory>
-```
 
-## Parallel Generate/Publish
-* Most KDT actions are able to run in parallel on Jenkins without extra configurations, but the KDT publish step requires an extra argument when calling the function.
-  * This is due to an internal configuration which shares a temporary directory with any other module that is also being published on the same Jenkins pipeline unless otherwise specified.
-```bash
-# Publish standard
+    # Additional options 
+    bundle exec kdt generate -m <deploy_yaml_manifest_file> -i <tmp_input_directory> -o <tmp_directory> 
+
+# Can be tested only via running Unit tests
 bundle exec kdt publish
 
-# Publish with extra argument capable of parallel runs in Jenkins
-bundle exec kdt publish -o <tmp_directory>
+    # Publish with extra argument capable of parallel runs in Jenkins
+    bundle exec kdt publish -o <tmp_directory>
 ```
-* See [Online Identity PR](https://github.com/LiveRamp/identity/pull/1939) for further implementation details.
 
+### Parallel Generate/Publish in Jenkins Pipeline
+**Note:** Most other KDT actions are able to run in parallel on Jenkins without extra configurations. 
+But, the KDT `generate` & `publish` steps requires extra argument(s) to allow parallel generation & publishing of manifest files.
+- **Reason:**: Natively, the kdt generate & publish steps uses the same tmp directory. So, when using command 
+the commands `kdt generate` and `kdt publish` in Jenkins parallel steps, a manifests generated in one step 
+could be overwritten by another parallel step.
+
+Following steps can be added in the jenkins pipeline for parallel generation/ publishing the manifest files.
+```bash
+String uniqOutputPath = "build/kubernetes/${BRANCH_NAME}/build/${BUILD_ID}/${env}/${app}/"
+bundle exec kdt generate -i kubernetes/${env}/${app} -o ${uniqOutputPath}
+bundle exec kdt publish -o ${uniqOutputPath}
+```
 
 ## FAQ
 
-* ***Q***: Will KDT help me build my Docker images?
-* ***A***: No. The recommended usage is to build your docker images ahead of time and pre-tag them as local-registry/name-here.
-  Then running `kdt push name-here` will automatically retag your images with your target registry and send them off.
+***Q***: Will KDT help me build my Docker images?
+* No. The recommended usage is to build your docker images ahead of time and pre-tag them as local-registry/name-here.
+Then running `kdt push name-here` will automatically retag your images with your target registry and send them off.
 ---
 
 ### Changelog
