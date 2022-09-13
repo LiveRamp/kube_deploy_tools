@@ -6,8 +6,11 @@
 - [Getting Started](#getting-started)
     - [Install](#install)
     - [Configure](#configure)
-    - [Parallel Generate/Publish](#parallel-action-in-jenkins)
-- [Branch Merge to Master (PR Merge)](#branch-merge-to-master)
+    - [Usage](#configure)
+        - [Parallel Generate/Publish](#parallel-generatepublish)
+- [FAQ](#faq)
+- [Changelog](#changelog)
+- [Contribute](#contribute)
 
 ---
 
@@ -142,6 +145,11 @@ bundle exec kdt publish -o <tmp_directory>
   Then running `kdt push name-here` will automatically retag your images with your target registry and send them off.
 ---
 
+### Changelog
+
+For breaking changes, new features, and new fixes, see
+[CHANGELOG.md](CHANGELOG.md).
+
 
 ### Contribute
 We accept [pull requests]. They will be reviewed by a member of the LiveRamp development team as soon as possible.
@@ -155,8 +163,3 @@ add the same version as a tag (vX.Y.Z) and then publish it.
 
 [Helm]: https://helm.sh
 [ERB]: https://ruby-doc.org/stdlib-2.7.1/libdoc/erb/rdoc/ERB.html
-
-# Changes
-
-For breaking changes, new features, and new fixes, see
-[CHANGELOG.md](CHANGELOG.md).
