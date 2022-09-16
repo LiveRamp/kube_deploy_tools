@@ -36,6 +36,7 @@ describe KubeDeployTools::Publish do
     let(:artifact_registry) { config.artifact_registries[config.artifact_registry] }
 
     it 'publishes artifacts according to deploy.yaml' do
+
       KubeDeployTools::Logger.logger = logger
 
       # Mock artifact upload
@@ -43,6 +44,12 @@ describe KubeDeployTools::Publish do
       allow_any_instance_of(Artifactory::Resource::Artifact).to receive(:upload) do |artifact, repo, path|
         # Expect to upload to kubernetes-snapshots-local/<project>
         expect(path).to start_with(PROJECT)
+
+
+          puts "path == "
+          puts path.inspect
+          puts "File.basename(path)"
+          puts File.basename(path).inspect
 
         # add only the basenames of the files to the set as the BUILD_ID
         # will vary on each build
@@ -61,10 +68,26 @@ describe KubeDeployTools::Publish do
         'manifests_filtered-artifact_default.tar.gz',
       ]
 
+
       Dir.mktmpdir do |dir|
+        puts "dir == "
+        puts dir.inspect
+
         expected_uploads.each do |f|
+
+          puts "File.join(dir, f) == "
           FileUtils.touch File.join(dir, f)
+          puts File.join(dir, f).inspect
         end
+
+        puts "MANIFEST_FILE == "
+        puts MANIFEST_FILE.inspect
+
+        puts "artifact_registry == "
+        puts artifact_registry.inspect
+
+        puts "output dir == "
+        puts dir.inspect
 
         KubeDeployTools::Publish.new(
           manifest: MANIFEST_FILE,

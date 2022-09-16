@@ -3,7 +3,15 @@ require 'optparse'
 module KubeDeployTools
   class Publish::Optparser
     class Options
-      attr_accessor :manifest_file, :output_path
+      attr_accessor :manifest_file, :output_path, :env, :app
+
+      def env
+          @env || nil
+        end
+
+      def app
+          @app || nil
+        end
 
       def initialize
         self.output_path = File.join('build', 'kubernetes')
@@ -16,6 +24,14 @@ module KubeDeployTools
 
         parser.on('-oPATH', '--output-path PATH', 'Path where rendered manifests are written.') do |p|
           self.output_path = p
+        end
+
+        parser.on('-e', '--env-name NAME', 'Env name') do |p|
+          self.env = p
+        end
+
+        parser.on('-a', '--app-name NAME', 'App name') do |p|
+          self.app = p
         end
 
         parser.on('-')

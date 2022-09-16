@@ -21,8 +21,19 @@ KubeDeployTools::Shellrunner.shellrunner = KubeDeployTools::Shellrunner.new
 config = KubeDeployTools::DeployConfigFile.new(options.manifest_file)
 artifact_registry = config.artifact_registries[config.artifact_registry]
 
-KubeDeployTools::Publish.new(
-  manifest: options.manifest_file,
-  artifact_registry: artifact_registry,
-  output_dir: options.output_path,
-).publish
+
+if options.env && options.app
+  KubeDeployTools::Publish.new(
+    manifest: options.manifest_file,
+    artifact_registry: artifact_registry,
+    output_dir: options.output_path,
+  ).publish_with_env_app(options.env, options.app)
+
+else
+  KubeDeployTools::Publish.new(
+    manifest: options.manifest_file,
+    artifact_registry: artifact_registry,
+    output_dir: options.output_path,
+  ).publish
+
+end

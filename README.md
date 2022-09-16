@@ -128,10 +128,10 @@ bundle exec kdt generate
     bundle exec kdt generate -m <deploy_yaml_manifest_file> -i <tmp_input_directory> -o <tmp_directory> 
 
 # Can be tested only via running Unit tests
-bundle exec kdt publish
+bundle exec kdt publish -m spec/resources/deploy.yaml
 
     # Publish with extra argument capable of parallel runs in Jenkins
-    bundle exec kdt publish -o <tmp_directory>
+    bundle exec kdt publish -m spec/resources/deploy.yaml -o <tmp_directory> -e <env> -a <app>
 ```
 
 ## Parallel Generate/Publish in Jenkins Pipeline

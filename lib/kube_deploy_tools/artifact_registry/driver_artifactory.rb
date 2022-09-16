@@ -67,6 +67,51 @@ module KubeDeployTools
         build_number: build_number,
       )
       artifactory_url = "#{Artifactory.endpoint}/#{@repo}/#{registry_artifact_path}"
+
+
+      puts "artifactory_url == "
+      puts artifactory_url.inspect
+
+      Logger.info("Uploading #{local_artifact_path} to #{artifactory_url}")
+      artifact = Artifactory::Resource::Artifact.new(local_path: local_artifact_path)
+      artifact.upload(@repo, registry_artifact_path)
+    end
+
+    def upload_with_env_app(local_dir:, name:, flavor:, project:, build_number:, env:, app:)
+      # Pack up contents of each flavor_dir to a correctly named artifact.
+      flavor_dir = File.join(local_dir, "#{name}_#{flavor}")
+
+      puts "flavor_dir == "
+      puts flavor_dir.inspect
+
+
+      package(
+        name: name,
+        flavor: flavor,
+        input_dir: flavor_dir,
+        output_dir: local_dir,
+      )
+
+      local_artifact_path = get_local_artifact_path(
+        local_dir: local_dir,
+        name: name,
+        flavor: flavor,
+      )
+
+      registry_artifact_path = get_registry_artifact_path_env_app(
+        project: project,
+        name: name,
+        flavor: flavor,
+        build_number: build_number,
+        env: env,
+        app: app,
+      )
+      artifactory_url = "#{Artifactory.endpoint}/#{@repo}/#{registry_artifact_path}"
+
+
+      puts "artifactory_url == "
+      puts artifactory_url.inspect
+
       Logger.info("Uploading #{local_artifact_path} to #{artifactory_url}")
       artifact = Artifactory::Resource::Artifact.new(local_path: local_artifact_path)
       artifact.upload(@repo, registry_artifact_path)
