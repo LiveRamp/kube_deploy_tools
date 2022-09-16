@@ -127,7 +127,7 @@ bundle exec kdt generate
     # Additional options 
     bundle exec kdt generate -m <deploy_yaml_manifest_file> -i <tmp_input_directory> -o <tmp_directory> 
 
-# Can be tested only via running Unit tests
+# Can be tested only via
 bundle exec kdt publish -m spec/resources/deploy.yaml
 
     # Publish with extra argument capable of parallel runs in Jenkins
