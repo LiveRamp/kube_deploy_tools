@@ -99,6 +99,75 @@ describe KubeDeployTools::Publish do
       all_uploads = expected_uploads
       expect(uploads).to contain_exactly(*all_uploads)
     end
+#   end
+#
+#   context 'Artifactory driver' do
+#     let(:artifact_registry) { config.artifact_registries[config.artifact_registry] }
+
+    it 'publishes artifacts according to deploy.yaml & given env & app name' do
+
+      KubeDeployTools::Logger.logger = logger
+
+      # Mock artifact upload
+      uploads = Set.new
+      allow_any_instance_of(Artifactory::Resource::Artifact).to receive(:upload) do |artifact, repo, path|
+        # Expect to upload to kubernetes-snapshots-local/<project>
+        expect(path).to start_with(PROJECT)
+
+
+          puts "path == "
+          puts path.inspect
+          puts "File.basename(path)"
+          puts File.basename(path).inspect
+
+        # add only the basenames of the files to the set as the BUILD_ID
+        # will vary on each build
+        uploads.add(File.basename(path))
+      end
+
+      expected_uploads = [
+        'manifests_colo-service-prod_default.tar.gz',
+        'manifests_colo-service-staging_default.tar.gz',
+        'manifests_local_default.tar.gz',
+        'manifests_us-east-1-prod_default.tar.gz',
+        'manifests_us-east-1-staging_default.tar.gz',
+        'manifests_ingestion-prod_default.tar.gz',
+        'manifests_pippio-production_default.tar.gz',
+        'manifests_platforms-prod_default.tar.gz',
+        'manifests_filtered-artifact_default.tar.gz',
+      ]
+
+
+      Dir.mktmpdir do |dir|
+        puts "dir == "
+        puts dir.inspect
+
+        expected_uploads.each do |f|
+
+          puts "File.join(dir, f) == "
+          FileUtils.touch File.join(dir, f)
+          puts File.join(dir, f).inspect
+        end
+
+        puts "MANIFEST_FILE == "
+        puts MANIFEST_FILE.inspect
+
+        puts "artifact_registry == "
+        puts artifact_registry.inspect
+
+        puts "output dir == "
+        puts dir.inspect
+
+        KubeDeployTools::Publish.new(
+          manifest: MANIFEST_FILE,
+          artifact_registry: artifact_registry,
+          output_dir: dir,
+        ).publish_with_env_app("env", "app")
+      end
+
+      all_uploads = expected_uploads
+      expect(uploads).to contain_exactly(*all_uploads)
+    end
   end
 
   context 'GCS driver' do
