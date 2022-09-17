@@ -19,7 +19,6 @@ module KubeDeployTools
     end
 
     def publish()
-
       @config.artifacts.each do |c|
         name = c.fetch('name')
 
@@ -27,7 +26,6 @@ module KubeDeployTools
         cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
 
         cluster_flavors.each do |flavor, _|
-
           @artifact_registry.upload(
             local_dir: @output_dir,
             name: name,
