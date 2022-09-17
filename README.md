@@ -126,8 +126,10 @@ bundle exec kdt generate
 
     # Additional options 
     bundle exec kdt generate -m <deploy_yaml_manifest_file> -i <tmp_input_directory> -o <tmp_directory> 
+    e.g:
+    bundle exec kdt generate -m spec/resources/deploy.yaml 
 
-# Can be tested only via
+# Requires mock aritifactory to run. Test changes using `rake test` cmd instead
 bundle exec kdt publish -m spec/resources/deploy.yaml
 
     # Publish with extra argument capable of parallel runs in Jenkins
