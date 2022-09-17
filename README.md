@@ -146,8 +146,8 @@ could be overwritten by another parallel step.
 Following steps can be added in the jenkins pipeline for parallel generation/ publishing the manifest files.
 ```bash
 String uniqOutputPath = "build/kubernetes/${BRANCH_NAME}/build/${BUILD_ID}/${env}/${app}/"
-bundle exec kdt generate -i kubernetes/${env}/${app} -o ${uniqOutputPath}
-bundle exec kdt publish -o ${uniqOutputPath}
+bundle exec kdt generate -i kubernetes/${env}/${app} -o ${uniqOutputPath} 
+bundle exec kdt publish -o ${uniqOutputPath} -e ${env} -a ${app}
 ```
 
 ## FAQ
