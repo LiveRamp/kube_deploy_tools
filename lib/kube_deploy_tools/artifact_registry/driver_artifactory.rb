@@ -43,6 +43,11 @@ module KubeDeployTools
       "#{project}/#{build_number}/#{get_artifact_name(name: name, flavor: flavor)}"
     end
 
+    def get_registry_artifact_path_env_app(name:, flavor:, project:, build_number:, env:, app:)
+      "#{project}/#{build_number}/#{env}/#{app}/#{get_artifact_name(name: name, flavor: flavor)}"
+    end
+
+
     def upload(local_dir:, name:, flavor:, project:, build_number:)
       # Pack up contents of each flavor_dir to a correctly named artifact.
       flavor_dir = File.join(local_dir, "#{name}_#{flavor}")
