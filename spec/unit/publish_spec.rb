@@ -36,7 +36,6 @@ describe KubeDeployTools::Publish do
     let(:artifact_registry) { config.artifact_registries[config.artifact_registry] }
 
     it 'publishes artifacts according to deploy.yaml' do
-
       KubeDeployTools::Logger.logger = logger
 
       # Mock artifact upload
@@ -62,11 +61,8 @@ describe KubeDeployTools::Publish do
         'manifests_filtered-artifact_default.tar.gz',
       ]
 
-
       Dir.mktmpdir do |dir|
-
         expected_uploads.each do |f|
-
           FileUtils.touch File.join(dir, f)
         end
 
@@ -82,7 +78,6 @@ describe KubeDeployTools::Publish do
     end
 
     it 'publishes artifacts according to deploy.yaml and given env & app name' do
-
       KubeDeployTools::Logger.logger = logger
 
       # Mock artifact upload
@@ -108,11 +103,8 @@ describe KubeDeployTools::Publish do
         'manifests_filtered-artifact_default.tar.gz',
       ]
 
-
       Dir.mktmpdir do |dir|
-
         expected_uploads.each do |f|
-
           FileUtils.touch File.join(dir, f)
         end
 
