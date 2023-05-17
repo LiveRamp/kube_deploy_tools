@@ -1,0 +1,14 @@
+# BEGIN TERRAFORM MANAGED BLOCK
+"apiVersion": "backstage.io/v1alpha1"
+"kind": "Location"
+"metadata":
+  "annotations":
+    "github.com/project-slug": "LiveRamp/kube_deploy_tools"
+  "description": "LiveRamp Kubernetes Build/Release Tools"
+  "name": "kube_deploy_tools"
+  "tags":
+  - "kubernetes"
+  - "buildtools"
+  - "devops"
+"spec": {}
+# END TERRAFORM MANAGED BLOCK  
