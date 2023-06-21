@@ -8,10 +8,10 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Ruby 2.7
+      - name: Set up Ruby 2.6
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7.x
+          ruby-version: 2.6.6
       - name: Check out source code
         uses: actions/checkout@v1
       - name: generate lib/kube_deploy_tools/version.rb for release
