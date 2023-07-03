@@ -126,12 +126,14 @@ bundle exec kdt generate
 
     # Additional options 
     bundle exec kdt generate -m <deploy_yaml_manifest_file> -i <tmp_input_directory> -o <tmp_directory> 
+    e.g:
+    bundle exec kdt generate -m spec/resources/deploy.yaml 
 
-# Can be tested only via running Unit tests
-bundle exec kdt publish
+# Requires mock aritifactory to run. Test changes using `rake test` cmd instead
+bundle exec kdt publish -m spec/resources/deploy.yaml
 
     # Publish with extra argument capable of parallel runs in Jenkins
-    bundle exec kdt publish -o <tmp_directory>
+    bundle exec kdt publish -m spec/resources/deploy.yaml -o <tmp_directory> -e <env> -a <app>
 ```
 
 ## Parallel Generate/Publish in Jenkins Pipeline
@@ -144,8 +146,8 @@ could be overwritten by another parallel step.
 Following steps can be added in the jenkins pipeline for parallel generation/ publishing the manifest files.
 ```bash
 String uniqOutputPath = "build/kubernetes/${BRANCH_NAME}/build/${BUILD_ID}/${env}/${app}/"
-bundle exec kdt generate -i kubernetes/${env}/${app} -o ${uniqOutputPath}
-bundle exec kdt publish -o ${uniqOutputPath}
+bundle exec kdt generate -i kubernetes/${env}/${app} -o ${uniqOutputPath} 
+bundle exec kdt publish -o ${uniqOutputPath} -e ${env} -a ${app}
 ```
 
 ## FAQ

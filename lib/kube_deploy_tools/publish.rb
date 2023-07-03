@@ -36,5 +36,28 @@ module KubeDeployTools
         end
       end
     end
+
+
+    def publish_with_env_app(env, app)
+
+      @config.artifacts.each do |c|
+        name = c.fetch('name')
+
+        # Allow deploy.yaml to gate certain flavors to certain targets.
+        cluster_flavors = @config.flavors.select { |key, value| c['flavors'].nil? || c['flavors'].include?(key) }
+
+        cluster_flavors.each do |flavor, _|
+          @artifact_registry.upload_with_env_app(
+            local_dir: @output_dir,
+            name: name,
+            flavor: flavor,
+            project: @project,
+            build_number: @build_number,
+            env: env,
+            app: app,
+          )
+        end
+      end
+    end
   end
 end

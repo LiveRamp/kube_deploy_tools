@@ -46,6 +46,10 @@ module KubeDeployTools
       "#{get_registry_build_path(project: project)}/#{build_number}/artifact/#{get_artifact_name(name: name, flavor: flavor)}"
     end
 
+    def get_registry_artifact_path_env_app(name:, flavor:, project:, build_number:, env:, app:)
+      "#{get_registry_build_path(project: project)}/#{build_number}/artifact/#{env}/#{app}/#{get_artifact_name(name: name, flavor: flavor)}"
+    end
+
     def get_artifact_name(name:, flavor:)
       "manifests_#{name}_#{flavor}.yaml"
     end
@@ -127,6 +131,41 @@ module KubeDeployTools
         name: name,
         flavor: flavor,
         build_number: build_number,
+      )
+
+      Logger.info("Uploading #{local_artifact_path} to #{registry_artifact_path}")
+      out, err, status = Shellrunner.run_call('gsutil',  '-m', 'cp', local_artifact_path, registry_artifact_path)
+      if !status.success?
+        raise "Failed to upload remote deploy artifact from #{local_artifact_path} to #{registry_artifact_path}"
+      end
+
+      registry_artifact_path
+    end
+
+    def upload_with_env_app(local_dir:, name:, flavor:, project:, build_number:, env:, app:)
+      # Pack up contents of each flavor_dir to a correctly named artifact.
+      flavor_dir = File.join(local_dir, "#{name}_#{flavor}")
+
+      package(
+        name: name,
+        flavor: flavor,
+        input_dir: flavor_dir,
+        output_dir: local_dir,
+      )
+
+      local_artifact_path = get_local_artifact_path(
+        local_dir: local_dir,
+        name: name,
+        flavor: flavor,
+      )
+
+      registry_artifact_path = get_registry_artifact_path_env_app(
+        project: project,
+        name: name,
+        flavor: flavor,
+        build_number: build_number,
+        env: env,
+        app: app,
       )
 
       Logger.info("Uploading #{local_artifact_path} to #{registry_artifact_path}")

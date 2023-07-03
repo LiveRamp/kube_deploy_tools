@@ -76,6 +76,48 @@ describe KubeDeployTools::Publish do
       all_uploads = expected_uploads
       expect(uploads).to contain_exactly(*all_uploads)
     end
+
+    it 'publishes artifacts according to deploy.yaml and given env & app name' do
+      KubeDeployTools::Logger.logger = logger
+
+      # Mock artifact upload
+      uploads = Set.new
+      allow_any_instance_of(Artifactory::Resource::Artifact).to receive(:upload) do |artifact, repo, path|
+        # Expect to upload to kubernetes-snapshots-local/<project>
+        expect(path).to start_with(PROJECT)
+
+        # add only the basenames of the files to the set as the BUILD_ID
+        # will vary on each build
+        uploads.add(File.basename(path))
+      end
+
+      expected_uploads = [
+        'manifests_colo-service-prod_default.tar.gz',
+        'manifests_colo-service-staging_default.tar.gz',
+        'manifests_local_default.tar.gz',
+        'manifests_us-east-1-prod_default.tar.gz',
+        'manifests_us-east-1-staging_default.tar.gz',
+        'manifests_ingestion-prod_default.tar.gz',
+        'manifests_pippio-production_default.tar.gz',
+        'manifests_platforms-prod_default.tar.gz',
+        'manifests_filtered-artifact_default.tar.gz',
+      ]
+
+      Dir.mktmpdir do |dir|
+        expected_uploads.each do |f|
+          FileUtils.touch File.join(dir, f)
+        end
+
+        KubeDeployTools::Publish.new(
+          manifest: MANIFEST_FILE,
+          artifact_registry: artifact_registry,
+          output_dir: dir,
+        ).publish_with_env_app("env", "app")
+      end
+
+      all_uploads = expected_uploads
+      expect(uploads).to contain_exactly(*all_uploads)
+    end
   end
 
   context 'GCS driver' do
@@ -91,6 +133,31 @@ describe KubeDeployTools::Publish do
           artifact_registry: artifact_registry,
           output_dir: dir,
         ).publish
+
+        artifacts = Find.find(dir).
+          select { |path| path =~ /.*manifests_.*\.yaml$/ }
+
+        expect(artifacts.length).to eq(1)
+
+        # Check that the local artifact contains 2 concatenated resources
+        local_artifact = artifacts.select { |path| path =~ /local/ }.first
+        local_artifact_contents = YAML.load_file(local_artifact)
+        local_artifact_resources = []
+        YAML.load_stream(File.read local_artifact) { |doc| local_artifact_resources << doc }
+        expect(local_artifact_resources.length).to eq(2)
+      end
+    end
+
+    it 'publishes artifacts according to deploy.yaml and given env & app name' do
+      KubeDeployTools::Logger.logger = logger
+
+      Dir.tmpdir do |dir|
+        FileUtils.cp_r INPUT_DIR, dir, :verbose => true
+        KubeDeployTools::Publish.new(
+          manifest: MANIFEST_GCS_FILE,
+          artifact_registry: artifact_registry,
+          output_dir: dir,
+        ).publish_with_env_app("env", "app")
 
         artifacts = Find.find(dir).
           select { |path| path =~ /.*manifests_.*\.yaml$/ }

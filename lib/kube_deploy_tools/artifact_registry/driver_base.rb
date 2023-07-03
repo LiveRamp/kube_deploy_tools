@@ -18,6 +18,11 @@ module KubeDeployTools
           raise "#{self.class}#publish not implemented"
         end
 
+        # Same as above but with 2 more parameters: env, app
+        def upload_with_env_app(local_dir:, name:, flavor:, project:, build_number:, env:, app:)
+          raise "#{self.class}#publish not implemented"
+        end
+
         # download should retrieve the artifact namespaced with the given
         # project and build number and identified by the name and flavor.
         # The artifact should be put into the output directory.
